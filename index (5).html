@@ -485,9 +485,17 @@
         <input type="tel" class="modal-input-lg" id="rendaValor" placeholder="R$ 0,00" oninput="maskInput(this)">
         <select id="rendaCat" class="modal-select">
             <option value="" disabled selected>Categoria</option>
-            <option value="Salario">Salario</option>
+            <option value="Salario">Salário</option>
             <option value="Freelance">Freelance</option>
             <option value="Investimentos">Investimentos</option>
+            <option value="Aluguel">Aluguel</option>
+            <option value="Dividendos">Dividendos</option>
+            <option value="Comissao">Comissão</option>
+            <option value="Bonus">Bônus</option>
+            <option value="Venda">Venda</option>
+            <option value="Reembolso">Reembolso</option>
+            <option value="Premio">Prêmio</option>
+            <option value="Pensao">Pensão/Aposentadoria</option>
             <option value="Outros">Outros</option>
         </select>
         <input type="text" class="modal-input-desc" id="rendaDesc" placeholder="Descricao (opcional)">
@@ -710,6 +718,8 @@ window.addNewCategory = function(){if(window._addNewCategory)window._addNewCateg
 window.toggleAssetCat = function(id){if(window._toggleAssetCat)window._toggleAssetCat(id);};
 window.deleteAssetEntry = function(catId, entryId){if(window._deleteAssetEntry)window._deleteAssetEntry(catId, entryId);};
 window.deleteAssetCategory = function(catId){if(window._deleteAssetCategory)window._deleteAssetCategory(catId);};
+window.startRenameAssetCat = function(catId){if(window._startRenameAssetCat)window._startRenameAssetCat(catId);};
+window.saveAssetCatName = function(catId,name){if(window._saveAssetCatName)window._saveAssetCatName(catId,name);};
 
 window.openRendaModal = function(){
     document.getElementById('rendaModal').style.display='flex';
@@ -836,11 +846,21 @@ const CAT_DEFAULTS={
     moradia:   ['Aluguel/Parcela','Seguros','Conta de Luz','Conta de Agua','Telefone','Streaming','Internet','Eletrodomesticos','Melhorias','Outros'],
     transporte:['Parcela Carro','Seguro Carro','Combustivel','Onibus/App','Outros'],
     saude:     ['Seguro Vida','Consulta','Dentista','Medicamentos','Veterinario','Outros'],
-    obrigacoes:['Dividas','Emprestimo Estudantil','Outros Emprestimos','Cartao de Credito','Taxas e Impostos','Outros'],
+    obrigacoes:['Dividas','Emprestimo Estudantil','Outros Emprestimos','Cartao de Credito','Taxas e Impostos','Investimento','Capital de Giro','Outros'],
     vida:      ['Supermercado','Suprimentos Pessoais','Roupas','Produtos de Limpeza','Jantar/Comer Fora','Salao/Barbearia','PetShop','Outros'],
     entret:    ['Filmes/Cinema','Musica','Games','Show','Livros','Hobbies','Esportes','Academia','Passeios','Ferias','Viagem','Teatro','Outros'],
     economias: ['Para Reserva','Para Investimentos','Outros']
 };
+
+const DEFAULT_ASSET_CATEGORIES = [
+    {id:'rf',          name:'Renda Fixa',        color:'#ffcc00'},
+    {id:'reserva',     name:'Reserva de Emergencia', color:'#c8960c'},
+    {id:'rv',          name:'Renda Variavel',     color:'#d8d8d8'},
+    {id:'imoveis',     name:'Imoveis/FIIs',       color:'#999999'},
+    {id:'cripto',      name:'Criptoativos',       color:'#555555'},
+    {id:'internacional',name:'Internacional',     color:'#444444'},
+    {id:'outros_ativos',name:'Outros',            color:'#7a5c1e'}
+];
 
 function monthKey(){return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;}
 
@@ -1101,7 +1121,12 @@ function renderAssetList() {
                 <div class="asset-cat-info">
                     <button class="btn-del-cat" onclick="event.stopPropagation();deleteAssetCategory('${cat.id}')">&times;</button>
                     <div class="asset-color-dot" style="background:${cat.color}"></div>
-                    <span class="asset-cat-name">${cat.name}</span>
+                    <span class="asset-cat-name" id="asset-name-${cat.id}">${cat.name}</span>
+                    <input class="asset-cat-rename-input" id="asset-rename-${cat.id}" value="${cat.name}"
+                        onclick="event.stopPropagation()"
+                        onblur="saveAssetCatName('${cat.id}',this.value)"
+                        onkeydown="if(event.key==='Enter'){this.blur();}">
+                    <button class="btn-rename-cat" onclick="event.stopPropagation();startRenameAssetCat('${cat.id}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button>
                 </div>
                 <div style="display:flex;align-items:center">
                     <span class="asset-cat-total val-sensitive">${window.formatBRL(catTotal)}</span>
@@ -1179,6 +1204,30 @@ window._deleteAssetCategory = function(catId) {
     assetsData.categories = assetsData.categories.filter(c => c.id !== catId);
     renderAssetList();
     window._updateAssets(true);
+};
+
+window._startRenameAssetCat = function(catId) {
+    var input = document.getElementById('asset-rename-' + catId);
+    var nameEl = document.getElementById('asset-name-' + catId);
+    if(!input) return;
+    nameEl.style.display = 'none';
+    input.style.display = 'block';
+    input.focus();
+    input.select();
+};
+
+window._saveAssetCatName = function(catId, newName) {
+    newName = (newName||'').trim();
+    var input = document.getElementById('asset-rename-' + catId);
+    var nameEl = document.getElementById('asset-name-' + catId);
+    if(!newName) { if(input) input.style.display='none'; if(nameEl) nameEl.style.display=''; return; }
+    var cat = assetsData.categories.find(c => c.id === catId);
+    if(cat && newName !== cat.name) {
+        cat.name = newName;
+        window._updateAssets(true);
+    }
+    if(nameEl) { nameEl.textContent = newName; nameEl.style.display = ''; }
+    if(input) input.style.display = 'none';
 };
 
 function animateValue(obj, start, end, duration) {
@@ -1808,18 +1857,18 @@ async function loadData(){
         
         // MIGRATION LOGIC FOR ASSETS
         var av = data.ativos || {};
-        if(av.categories) {
+        if(av.categories && av.categories.length > 0) {
             assetsData = av;
         } else {
-            // Migrar formato antigo
+            // Migrar formato antigo ou inicializar padrão
             assetsData = { categories: [], meta: av.metaVal || 0 };
             var oldMap = [
                 {k:'rf', n:'Renda Fixa', c:'#ffcc00'},
-                {k:'reserva', n:'Reserva Emerg.', c:'#c8960c'},
+                {k:'reserva', n:'Reserva de Emergencia', c:'#c8960c'},
                 {k:'rv', n:'Renda Variavel', c:'#d8d8d8'},
                 {k:'imoveis', n:'Imoveis/FIIs', c:'#999999'},
                 {k:'cripto', n:'Criptoativos', c:'#555555'},
-                {k:'internacional', n:'Internacional', c:'#333333'},
+                {k:'internacional', n:'Internacional', c:'#444444'},
                 {k:'outros_ativos', n:'Outros', c:'#7a5c1e'}
             ];
             oldMap.forEach(m => {
@@ -1828,9 +1877,14 @@ async function loadData(){
                 assetsData.categories.push({ id: m.k, name: m.n, color: m.c, entries: entries });
             });
         }
-        renderAssetList();
-        window.fillInput('metaVal', assetsData.meta);
-        
+    } else {
+        // Novo usuário — inicializa categorias padrão
+        assetsData = { categories: DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries:[]})), meta: 0 };
+    }
+    renderAssetList();
+    window.fillInput('metaVal', assetsData.meta);
+    
+    if(data) {
         var cv=data.calc||{};
         if(cv.txJuros){var e=document.getElementById('txJuros');if(e)e.value=cv.txJuros;}
         if(cv.txInf){var e=document.getElementById('txInf');if(e)e.value=cv.txInf;}
