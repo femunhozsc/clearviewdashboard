@@ -117,7 +117,8 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
     transition: 0.2s;
 }
 .privacy-toggle:active { color: var(--text-main); }
-body.privacy-active .val-sensitive { color:transparent !important; text-shadow:0 0 7px rgba(255,255,255,0.5); user-select:none; }
+body.privacy-active .val-sensitive { color:transparent !important; text-shadow: none !important; filter: blur(6px); user-select:none; transition: filter 0.3s ease; }
+body.privacy-active .val-sensitive * { color:transparent !important; }
 
 /* SIDENAV */
 .sidenav { height:100%; width:0; position:fixed; z-index:200; top:0; right:0; background:#0d0d0d; overflow-x:hidden; transition:0.3s; padding-top:64px; border-left:1px solid var(--card-border); }
@@ -650,3 +651,37 @@ body.calc-mode .calc-fullscreen-header { display:block; }
     to   { opacity: 1; transform: translateY(0); }
 }
 
+
+/* ============================================================
+   AUTH METHOD TOGGLE (Email / Celular)
+============================================================ */
+.auth-method-toggle {
+    display: flex; gap: 6px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 4px;
+    margin-bottom: 20px;
+}
+.auth-method-btn {
+    flex: 1; padding: 10px 12px;
+    background: transparent; border: none;
+    color: var(--text-muted); font-size: 0.8rem;
+    font-weight: 500; font-family: 'DM Sans', sans-serif;
+    border-radius: 9px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: 0.2s;
+}
+.auth-method-btn.active {
+    background: rgba(255,204,0,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(255,204,0,0.2);
+}
+.auth-method-btn:active { opacity: 0.8; }
+
+#recaptcha-container { margin-bottom: 8px; }
+
+/* Blur nos inputs de valor em modo privacidade */
+body.privacy-active .box-input,
+body.privacy-active .money-input,
+body.privacy-active .renda-total-val,
+body.privacy-active .saldo-val { filter: blur(6px); color: transparent !important; }
