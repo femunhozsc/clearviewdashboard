@@ -1610,14 +1610,23 @@ window._switchLoginMethod = function(method) {
 
 /* Máscara phone no login */
 window.maskPhoneLogin = function(el) {
+    // Pega só dígitos
     var v = el.value.replace(/\D/g,'');
-    // Formata como +55 (DD) 9XXXX-XXXX enquanto digita
-    if(v.length > 0 && !el.value.startsWith('+')) {
-        if(!v.startsWith('55')) v = '55' + v;
+    
+    // Remove prefixo 55 se o usuário começou a digitar DDI
+    if(v.startsWith('55') && v.length > 11) v = v.slice(2);
+    
+    // Limita a 11 dígitos (DDD + 9 dígitos)
+    v = v.slice(0, 11);
+    
+    // Formata: (11) 99999-9999
+    if(v.length <= 2) {
+        el.value = v.length ? '(' + v : '';
+    } else if(v.length <= 7) {
+        el.value = '(' + v.slice(0,2) + ') ' + v.slice(2);
     } else {
-        v = el.value.replace(/\D/g,'');
+        el.value = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
     }
-    el.value = '+' + v;
 };
 
 /* Login por celular: busca email cadastrado no Firestore pelo telefone, então faz login normal */
@@ -1626,19 +1635,20 @@ window._handleLoginPhone = async function() {
     var pass = document.getElementById('loginPhonePass').value;
     if(!phone || !pass) return alert("Preencha o número e a senha.");
 
-    // Normaliza: apenas dígitos precedidos de +
-    var cleanPhone = '+' + phone.replace(/\D/g,'');
-    if(cleanPhone.length < 10) return alert("Número de celular inválido.");
+    // Extrai apenas dígitos e monta +55...
+    var digits = phone.replace(/\D/g,'');
+    if(!digits.startsWith('55')) digits = '55' + digits;
+    var cleanPhone = '+' + digits;
+    if(digits.length < 12) return alert("Número inválido. Use o formato (11) 99999-9999");
 
     var btn = document.getElementById('btnLoginPhone');
     var origHTML = btn.innerHTML;
     btn.innerHTML = "Buscando conta..."; btn.disabled = true;
 
     try {
-        // Busca o documento de índice telefone→email
         var phoneDoc = await getDoc(doc(db, 'telefones', cleanPhone));
         if(!phoneDoc.exists()) {
-            alert("Nenhuma conta encontrada com esse número.");
+            alert("Nenhuma conta encontrada com esse número. Verifique se o número foi cadastrado.");
             btn.innerHTML = origHTML; btn.disabled = false;
             return;
         }
@@ -1677,8 +1687,10 @@ window._handleRegister = function() {
                 await setDoc(doc(db, 'clientes', user.uid, 'perfil', 'dados'), userData);
                 // Salva índice telefone→email para permitir login por celular
                 if(phone) {
-                    var cleanPhone = '+' + phone.replace(/\D/g,'');
-                    if(cleanPhone.length >= 10) {
+                    var digits = phone.replace(/\D/g,'');
+                    if(!digits.startsWith('55')) digits = '55' + digits;
+                    var cleanPhone = '+' + digits;
+                    if(digits.length >= 12) {
                         await setDoc(doc(db, 'telefones', cleanPhone), { email: email, uid: user.uid });
                     }
                 }

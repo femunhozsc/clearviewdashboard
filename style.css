@@ -117,8 +117,8 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
     transition: 0.2s;
 }
 .privacy-toggle:active { color: var(--text-main); }
-body.privacy-active .val-sensitive { color:transparent !important; text-shadow: none !important; filter: blur(6px); user-select:none; transition: filter 0.3s ease; }
-body.privacy-active .val-sensitive * { color:transparent !important; }
+body.privacy-active .val-sensitive { filter: blur(4px); user-select:none; transition: filter 0.3s ease; }
+body.privacy-active .val-sensitive * { filter: none; }
 
 /* SIDENAV */
 .sidenav { height:100%; width:0; position:fixed; z-index:200; top:0; right:0; background:#0d0d0d; overflow-x:hidden; transition:0.3s; padding-top:64px; border-left:1px solid var(--card-border); }
@@ -505,7 +505,7 @@ body.calc-mode .calc-fullscreen-header { display:block; }
     font-family: 'DM Sans', sans-serif;
     -webkit-text-fill-color: var(--text-main);
 }
-.auth-field-input::placeholder { color: rgba(255,255,255,0.2); }
+.auth-field-input::placeholder { color: rgba(255,255,255,0.35); font-weight: 300; }
 .auth-field-input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0 100px #0d0d0d inset;
     -webkit-text-fill-color: #efefef;
@@ -684,4 +684,4 @@ body.calc-mode .calc-fullscreen-header { display:block; }
 body.privacy-active .box-input,
 body.privacy-active .money-input,
 body.privacy-active .renda-total-val,
-body.privacy-active .saldo-val { filter: blur(6px); color: transparent !important; }
+body.privacy-active .saldo-val { filter: blur(4px); }
