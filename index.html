@@ -29,7 +29,7 @@
     <div id="auth-login" class="auth-view" style="display:none;">
         <div class="auth-input-group"><input type="email" id="loginEmail" class="auth-input" placeholder="E-mail"></div>
         <div class="auth-input-group"><input type="password" id="loginPass" class="auth-input" placeholder="Senha"></div>
-        <button class="btn-auth btn-auth-primary" onclick="handleLogin()">Entrar</button>
+        <button class="btn-auth btn-auth-primary" id="btnLoginAction" onclick="handleLogin()">Entrar</button>
         <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
     </div>
 
@@ -39,10 +39,10 @@
         <div class="auth-input-group"><input type="text" id="regSurname" class="auth-input" placeholder="Sobrenome"></div>
         <div class="auth-input-group"><input type="email" id="regEmail" class="auth-input" placeholder="E-mail"></div>
         <div class="auth-input-group"><input type="text" id="regDob" class="auth-input" placeholder="Nascimento (DD/MM/AAAA)" oninput="maskDate(this)"></div>
-        <div class="auth-input-group"><input type="tel" id="regPhone" class="auth-input" placeholder="+55 (DDD) 9xxxx-xxxx" oninput="maskPhone(this)"></div>
+        <div class="auth-input-group"><input type="tel" id="regPhone" class="auth-input" placeholder="+55 (DD) 90000 0000" oninput="maskPhone(this)"></div>
         <div class="auth-input-group"><input type="password" id="regPass" class="auth-input" placeholder="Senha"></div>
         
-        <button class="btn-auth btn-auth-primary" onclick="handleRegister()">Criar Conta</button>
+        <button class="btn-auth btn-auth-primary" id="btnRegAction" onclick="handleRegister()">Criar Conta</button>
         <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
     </div>
 </div>
@@ -512,12 +512,12 @@ window.maskDate = function(el){
 };
 window.maskPhone = function(el){
     var v = el.value.replace(/\D/g,'');
-    if(v.startsWith('55')) v = v.substring(2); // Remove 55 se digitado
+    if(v.startsWith('55')) v = v.substring(2);
     v = v.substring(0, 11); // Limita tamanho
     var r = '+55';
     if(v.length > 0) r += ' (' + v.substring(0, 2);
     if(v.length > 2) r += ') ' + v.substring(2, 7);
-    if(v.length > 7) r += ' ' + v.substring(7, 11);
+    if(v.length > 7) r += ' ' + v.substring(7);
     el.value = r;
 };
 
@@ -1159,15 +1159,28 @@ window._showMainAuth = function() {
     document.getElementById('auth-main').style.display = 'flex';
 };
 
+function getFriendlyError(error) {
+    console.error(error);
+    if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') return 'E-mail ou senha incorretos.';
+    if (error.code === 'auth/email-already-in-use') return 'Este e-mail já está cadastrado.';
+    if (error.code === 'auth/weak-password') return 'A senha deve ter pelo menos 6 caracteres.';
+    if (error.code === 'auth/invalid-email') return 'E-mail inválido.';
+    return 'Erro: ' + error.message;
+}
+
 window._handleLogin = function() {
     var email = document.getElementById('loginEmail').value;
     var pass = document.getElementById('loginPass').value;
     if(!email || !pass) return alert("Preencha e-mail e senha.");
+    
+    var btn = document.getElementById('btnLoginAction');
+    var originalText = btn.textContent;
+    btn.textContent = "Entrando..."; btn.disabled = true;
 
     signInWithEmailAndPassword(auth, email, pass)
         .catch((error) => {
-            console.error(error);
-            alert("Erro no login: " + error.message);
+            alert(getFriendlyError(error));
+            btn.textContent = originalText; btn.disabled = false;
         });
 };
 
@@ -1180,16 +1193,21 @@ window._handleRegister = function() {
     var pass = document.getElementById('regPass').value;
 
     if(!name || !surname || !email || !pass) return alert("Preencha todos os campos obrigatórios.");
+    
+    var btn = document.getElementById('btnRegAction');
+    var originalText = btn.textContent;
+    btn.textContent = "Criando conta..."; btn.disabled = true;
 
     createUserWithEmailAndPassword(auth, email, pass)
         .then(async (userCredential) => {
             var user = userCredential.user;
             var userData = { nome: name, sobrenome: surname, email: email, nascimento: dob, telefone: phone, createdAt: new Date().toISOString() };
-            try { await setDoc(doc(db, 'clientes', user.uid, 'perfil', 'dados'), userData); } catch(e) { console.error("Erro ao salvar perfil:", e); }
+            // Tenta salvar. Se falhar (ex: regras), o login ainda ocorre, mas sem perfil.
+            try { await setDoc(doc(db, 'clientes', user.uid, 'perfil', 'dados'), userData); } catch(e) { console.error("Erro Firestore:", e); }
         })
         .catch((error) => {
-            console.error(error);
-            alert("Erro no cadastro: " + error.message);
+            alert(getFriendlyError(error));
+            btn.textContent = originalText; btn.disabled = false;
         });
 };
 
@@ -1215,8 +1233,7 @@ window._authGoogle = function() {
             } catch(e) { console.error(e); }
         })
         .catch((error) => {
-        console.error(error);
-        alert("Erro no login com Google: " + error.message + "\nVerifique se o domínio do Vercel está autorizado no Firebase Console.");
+        alert("Erro no Google: " + error.message + "\nVerifique 'Authorized Domains' no Firebase.");
     });
 };
 
