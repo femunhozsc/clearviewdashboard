@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Clearview Capital</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SF Pro equivalente: DM Sans — legível, profissional, sem serifas, espírito Apple -->
+    <!-- SF Pro equivalente: DM Sans -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -16,9 +16,10 @@
     <div class="auth-logo"><img src="logo.png" alt="Clearview"></div>
     
     <!-- Initial View -->
-    <div id="auth-main" style="width:100%; display:flex; flex-direction:column; align-items:center;">
-        <button class="btn-auth" onclick="showPhoneAuth('login')">Login</button>
-        <button class="btn-auth btn-auth-primary" onclick="showPhoneAuth('register')">Cadastrar-se</button>
+    <div id="auth-main" class="auth-view">
+        <div class="auth-greeting">Olá, seja bem-vindo ao Clearview Dashboard, sua plataforma de organização financeira completa.</div>
+        <button class="btn-auth" onclick="showLoginScreen()">Login</button>
+        <button class="btn-auth btn-auth-primary" onclick="showRegisterScreen()">Cadastrar-se</button>
         <button class="btn-auth btn-auth-google" onclick="authGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Entrar com Google
         </button>
@@ -47,7 +48,7 @@
 </div>
 
 <!-- ============================= SPLASH SCREEN ============================= -->
-<div id="splash" style="display:none"> <!-- Oculto inicialmente, controlado pelo JS -->
+<div id="splash" style="display:none">
     <div class="splash-logo">
         <img src="logo.png" alt="Clearview Logo">
     </div>
@@ -351,6 +352,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ============================================================
    FUNÇÕES DE INTERFACE (UI)
@@ -534,7 +536,6 @@ const firebaseConfig = {
 };
 const fbApp = initializeApp(firebaseConfig);
 const db    = getFirestore(fbApp);
-import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const auth = getAuth(fbApp);
 auth.languageCode = 'pt';
 
@@ -1230,12 +1231,24 @@ function formatName(name) {
     return name.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
-function startApp(user) {
+async function startApp(user) {
     CLIENT_ID = user.uid; // Define ID único do usuário
     
-    // Atualiza nome no Splash
-    var displayName = user.displayName || user.phoneNumber || "Usuário";
-    document.getElementById('splashName').textContent = formatName(displayName);
+    // Tenta buscar nome do perfil no Firestore
+    var nameToDisplay = "Usuário";
+    try {
+        var docSnap = await getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
+        if(docSnap.exists()) {
+            var data = docSnap.data();
+            nameToDisplay = data.nome + ' ' + data.sobrenome;
+        } else if(user.displayName) {
+            nameToDisplay = user.displayName;
+        }
+    } catch(e) {
+        console.log("Erro ao buscar nome:", e);
+    }
+    
+    document.getElementById('splashName').textContent = formatName(nameToDisplay);
 
     // Esconde Auth, Mostra Splash e Inicia
     document.getElementById('auth-screen').classList.add('hidden');
