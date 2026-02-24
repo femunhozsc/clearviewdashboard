@@ -27,10 +27,8 @@
 
     <!-- Logo + Brand -->
     <div class="auth-header">
-        <div class="auth-logo-wrap">
-            <img src="logo.png" alt="Clearview" class="auth-logo-img">
-        </div>
-        <div class="auth-brand-tag">CLEARVIEW CAPITAL</div>
+        <img src="logo.png" alt="Clearview" class="auth-logo-img">
+        <div class="auth-brand-tag">Clearview Dashboard</div>
     </div>
 
     <!-- Sliding Panels Container -->
@@ -60,7 +58,7 @@
             </div>
 
             <!-- PANEL 1: Login -->
-            <div class="auth-panel" id="auth-login" style="display:none">
+            <div class="auth-panel" id="auth-login">
                 <div class="auth-panel-inner">
                     <button class="auth-back-btn" onclick="showMainAuth()">
                         <i class="fa-solid fa-arrow-left"></i>
@@ -68,34 +66,71 @@
                     <h1 class="auth-title">Entrar</h1>
                     <p class="auth-subtitle">Acesse sua conta Clearview</p>
 
-                    <div class="auth-field-group">
-                        <div class="auth-field">
-                            <label class="auth-field-label">E-mail</label>
-                            <div class="auth-field-wrap">
-                                <i class="fa-regular fa-envelope auth-field-icon"></i>
-                                <input type="email" id="loginEmail" class="auth-field-input" placeholder="seu@email.com" autocomplete="email">
-                            </div>
-                        </div>
-                        <div class="auth-field">
-                            <label class="auth-field-label">Senha</label>
-                            <div class="auth-field-wrap">
-                                <i class="fa-solid fa-lock auth-field-icon"></i>
-                                <input type="password" id="loginPass" class="auth-field-input" placeholder="••••••••" autocomplete="current-password">
-                                <button class="auth-field-eye" onclick="togglePass('loginPass', this)"><i class="fa-regular fa-eye"></i></button>
-                            </div>
-                        </div>
+                    <!-- Toggle email/phone -->
+                    <div class="auth-method-toggle">
+                        <button class="auth-method-btn active" id="toggleEmail" onclick="switchLoginMethod('email')">
+                            <i class="fa-regular fa-envelope"></i> E-mail
+                        </button>
+                        <button class="auth-method-btn" id="togglePhone" onclick="switchLoginMethod('phone')">
+                            <i class="fa-solid fa-mobile-screen"></i> Celular
+                        </button>
                     </div>
 
-                    <button class="btn-auth-v2 btn-auth-gold" id="btnLoginAction" onclick="handleLogin()">
-                        Entrar <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;margin-left:4px"></i>
-                    </button>
+                    <!-- Email login -->
+                    <div id="login-email-section">
+                        <div class="auth-field-group">
+                            <div class="auth-field">
+                                <label class="auth-field-label">E-mail</label>
+                                <div class="auth-field-wrap">
+                                    <i class="fa-regular fa-envelope auth-field-icon"></i>
+                                    <input type="email" id="loginEmail" class="auth-field-input" placeholder="seu@email.com" autocomplete="email">
+                                </div>
+                            </div>
+                            <div class="auth-field">
+                                <label class="auth-field-label">Senha</label>
+                                <div class="auth-field-wrap">
+                                    <i class="fa-solid fa-lock auth-field-icon"></i>
+                                    <input type="password" id="loginPass" class="auth-field-input" placeholder="••••••••" autocomplete="current-password">
+                                    <button class="auth-field-eye" onclick="togglePass('loginPass', this)"><i class="fa-regular fa-eye"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-auth-v2 btn-auth-gold" id="btnLoginAction" onclick="handleLogin()">
+                            Entrar <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;margin-left:4px"></i>
+                        </button>
+                    </div>
+
+                    <!-- Phone login -->
+                    <div id="login-phone-section" style="display:none">
+                        <div class="auth-field-group">
+                            <div class="auth-field">
+                                <label class="auth-field-label">Número do Celular</label>
+                                <div class="auth-field-wrap">
+                                    <i class="fa-solid fa-mobile-screen auth-field-icon"></i>
+                                    <input type="tel" id="loginPhone" class="auth-field-input" placeholder="+55 (11) 99999-9999" oninput="maskPhoneLogin(this)">
+                                </div>
+                            </div>
+                            <div class="auth-field">
+                                <label class="auth-field-label">Senha</label>
+                                <div class="auth-field-wrap">
+                                    <i class="fa-solid fa-lock auth-field-icon"></i>
+                                    <input type="password" id="loginPhonePass" class="auth-field-input" placeholder="••••••••">
+                                    <button class="auth-field-eye" onclick="togglePass('loginPhonePass', this)"><i class="fa-regular fa-eye"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="recaptcha-container"></div>
+                        <button class="btn-auth-v2 btn-auth-gold" id="btnLoginPhone" onclick="handleLoginPhone()">
+                            Entrar <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;margin-left:4px"></i>
+                        </button>
+                    </div>
 
                     <p class="auth-switch-text">Não tem conta? <span class="auth-link" onclick="showRegisterScreen()">Cadastre-se</span></p>
                 </div>
             </div>
 
             <!-- PANEL 2: Register -->
-            <div class="auth-panel" id="auth-register" style="display:none">
+            <div class="auth-panel" id="auth-register">
                 <div class="auth-panel-inner">
                     <button class="auth-back-btn" onclick="showMainAuth()">
                         <i class="fa-solid fa-arrow-left"></i>
@@ -164,8 +199,7 @@
         </div>
     </div>
 
-    <!-- Bottom Indicator -->
-    <div class="auth-footer-brand">Clearview Capital Dashboard · v2</div>
+    <!-- (no footer) -->
 </div>
 
 <!-- ============================= SPLASH SCREEN ============================= -->
@@ -301,7 +335,7 @@
 
                 <div style="margin-top:24px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-end">
                     <span style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:500">Meta Patrimonial</span>
-                    <span id="percText" style="font-size:0.65rem;color:var(--accent)">0%</span>
+                    <span id="percText" style="font-size:0.65rem;color:var(--accent)" class="val-sensitive">0%</span>
                 </div>
                 <div class="input-group" style="margin-bottom:0;border:1px solid var(--card-border)">
                     <span class="input-label">Definir Valor</span>
@@ -344,10 +378,10 @@
                 
                 <div class="projection-container" id="projContainer">
                     <div class="stats-grid">
-                        <div class="stat-box"><span class="stat-lbl">Patrimonio Bruto</span><span class="stat-val" style="color:var(--accent)" id="resFinal">--</span></div>
-                        <div class="stat-box"><span class="stat-lbl">Total Investido</span><span class="stat-val" id="resInvestido">--</span></div>
-                        <div class="stat-box"><span class="stat-lbl">Total Juros</span><span class="stat-val" style="color:var(--success)" id="resJuros">--</span></div>
-                        <div class="stat-box"><span class="stat-lbl">Poder de Compra</span><span class="stat-val" style="color:#fff" id="resReal">--</span></div>
+                        <div class="stat-box"><span class="stat-lbl">Patrimonio Bruto</span><span class="stat-val val-sensitive" style="color:var(--accent)" id="resFinal">--</span></div>
+                        <div class="stat-box"><span class="stat-lbl">Total Investido</span><span class="stat-val val-sensitive" id="resInvestido">--</span></div>
+                        <div class="stat-box"><span class="stat-lbl">Total Juros</span><span class="stat-val val-sensitive" style="color:var(--success)" id="resJuros">--</span></div>
+                        <div class="stat-box"><span class="stat-lbl">Poder de Compra</span><span class="stat-val val-sensitive" style="color:#fff" id="resReal">--</span></div>
                     </div>
                     <div class="calc-info" id="calcInfo"></div>
                     <div class="chart-line-container"><canvas id="lineChart"></canvas></div>
@@ -377,9 +411,9 @@
                     <button class="btn-calc" onclick="calcSimples()">Calcular</button>
                     <div class="projection-container" id="cs_res_container">
                         <div class="stats-grid">
-                            <div class="stat-box"><span class="stat-lbl">Total Bruto</span><span class="stat-val" style="color:var(--accent)" id="cs_total">--</span></div>
-                            <div class="stat-box"><span class="stat-lbl">Investido</span><span class="stat-val" id="cs_invest">--</span></div>
-                            <div class="stat-box"><span class="stat-lbl">Juros</span><span class="stat-val" style="color:var(--success)" id="cs_juros">--</span></div>
+                            <div class="stat-box"><span class="stat-lbl">Total Bruto</span><span class="stat-val val-sensitive" style="color:var(--accent)" id="cs_total">--</span></div>
+                            <div class="stat-box"><span class="stat-lbl">Investido</span><span class="stat-val val-sensitive" id="cs_invest">--</span></div>
+                            <div class="stat-box"><span class="stat-lbl">Juros</span><span class="stat-val val-sensitive" style="color:var(--success)" id="cs_juros">--</span></div>
                         </div>
                     </div>
                 </div>
@@ -425,10 +459,10 @@
                     
                     <div class="projection-container" id="cc_res_container">
                         <div class="stats-grid" style="grid-template-columns:1fr 1fr;">
-                            <div class="stat-box"><span class="stat-lbl">Total Bruto</span><span class="stat-val" id="cc_bruto">--</span></div>
-                            <div class="stat-box"><span class="stat-lbl">Total Investido</span><span class="stat-val" id="cc_invest">--</span></div>
-                            <div class="stat-box"><span class="stat-lbl">Imposto Pago</span><span class="stat-val" style="color:var(--danger)" id="cc_tax_paid">--</span></div>
-                            <div class="stat-box"><span class="stat-lbl">Resultado Liquido</span><span class="stat-val" style="color:var(--success);font-size:1rem" id="cc_liq">--</span></div>
+                            <div class="stat-box"><span class="stat-lbl">Total Bruto</span><span class="stat-val val-sensitive" id="cc_bruto">--</span></div>
+                            <div class="stat-box"><span class="stat-lbl">Total Investido</span><span class="stat-val val-sensitive" id="cc_invest">--</span></div>
+                            <div class="stat-box"><span class="stat-lbl">Imposto Pago</span><span class="stat-val val-sensitive" style="color:var(--danger)" id="cc_tax_paid">--</span></div>
+                            <div class="stat-box"><span class="stat-lbl">Resultado Liquido</span><span class="stat-val val-sensitive" style="color:var(--success);font-size:1rem" id="cc_liq">--</span></div>
                         </div>
                         <div class="chart-line-container"><canvas id="ccChart"></canvas></div>
                         <div class="calc-info" id="cc_info"></div>
@@ -451,9 +485,17 @@
         <input type="tel" class="modal-input-lg" id="rendaValor" placeholder="R$ 0,00" oninput="maskInput(this)">
         <select id="rendaCat" class="modal-select">
             <option value="" disabled selected>Categoria</option>
-            <option value="Salario">Salario</option>
+            <option value="Salario">Salário</option>
             <option value="Freelance">Freelance</option>
             <option value="Investimentos">Investimentos</option>
+            <option value="Aluguel">Aluguel</option>
+            <option value="Dividendos">Dividendos</option>
+            <option value="Comissao">Comissão</option>
+            <option value="Bonus">Bônus</option>
+            <option value="Venda">Venda</option>
+            <option value="Reembolso">Reembolso</option>
+            <option value="Premio">Prêmio</option>
+            <option value="Pensao">Pensão/Aposentadoria</option>
             <option value="Outros">Outros</option>
         </select>
         <input type="text" class="modal-input-desc" id="rendaDesc" placeholder="Descricao (opcional)">
@@ -676,6 +718,8 @@ window.addNewCategory = function(){if(window._addNewCategory)window._addNewCateg
 window.toggleAssetCat = function(id){if(window._toggleAssetCat)window._toggleAssetCat(id);};
 window.deleteAssetEntry = function(catId, entryId){if(window._deleteAssetEntry)window._deleteAssetEntry(catId, entryId);};
 window.deleteAssetCategory = function(catId){if(window._deleteAssetCategory)window._deleteAssetCategory(catId);};
+window.startRenameAssetCat = function(catId){if(window._startRenameAssetCat)window._startRenameAssetCat(catId);};
+window.saveAssetCatName = function(catId,name){if(window._saveAssetCatName)window._saveAssetCatName(catId,name);};
 
 window.openRendaModal = function(){
     document.getElementById('rendaModal').style.display='flex';
@@ -729,9 +773,11 @@ window.showLoginScreen = function(){if(window._showLoginScreen)window._showLogin
 window.showRegisterScreen = function(){if(window._showRegisterScreen)window._showRegisterScreen();};
 window.showMainAuth = function(){if(window._showMainAuth)window._showMainAuth();};
 window.handleLogin = function(){if(window._handleLogin)window._handleLogin();};
+window.handleLoginPhone = function(){if(window._handleLoginPhone)window._handleLoginPhone();};
 window.handleRegister = function(){if(window._handleRegister)window._handleRegister();};
 window.authGoogle = function(){if(window._authGoogle)window._authGoogle();};
 window.logoutApp = function(){if(window._logoutApp)window._logoutApp();};
+window.switchLoginMethod = function(m){if(window._switchLoginMethod)window._switchLoginMethod(m);};
 window.maskDate = function(el){
     var v=el.value.replace(/\D/g,'').slice(0,8);
     if(v.length>=5)v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);
@@ -800,11 +846,21 @@ const CAT_DEFAULTS={
     moradia:   ['Aluguel/Parcela','Seguros','Conta de Luz','Conta de Agua','Telefone','Streaming','Internet','Eletrodomesticos','Melhorias','Outros'],
     transporte:['Parcela Carro','Seguro Carro','Combustivel','Onibus/App','Outros'],
     saude:     ['Seguro Vida','Consulta','Dentista','Medicamentos','Veterinario','Outros'],
-    obrigacoes:['Dividas','Emprestimo Estudantil','Outros Emprestimos','Cartao de Credito','Taxas e Impostos','Outros'],
+    obrigacoes:['Dividas','Emprestimo Estudantil','Outros Emprestimos','Cartao de Credito','Taxas e Impostos','Investimento','Capital de Giro','Outros'],
     vida:      ['Supermercado','Suprimentos Pessoais','Roupas','Produtos de Limpeza','Jantar/Comer Fora','Salao/Barbearia','PetShop','Outros'],
     entret:    ['Filmes/Cinema','Musica','Games','Show','Livros','Hobbies','Esportes','Academia','Passeios','Ferias','Viagem','Teatro','Outros'],
     economias: ['Para Reserva','Para Investimentos','Outros']
 };
+
+const DEFAULT_ASSET_CATEGORIES = [
+    {id:'rf',          name:'Renda Fixa',        color:'#ffcc00'},
+    {id:'reserva',     name:'Reserva de Emergencia', color:'#c8960c'},
+    {id:'rv',          name:'Renda Variavel',     color:'#d8d8d8'},
+    {id:'imoveis',     name:'Imoveis/FIIs',       color:'#999999'},
+    {id:'cripto',      name:'Criptoativos',       color:'#555555'},
+    {id:'internacional',name:'Internacional',     color:'#444444'},
+    {id:'outros_ativos',name:'Outros',            color:'#7a5c1e'}
+];
 
 function monthKey(){return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;}
 
@@ -894,7 +950,7 @@ function renderGastosHist(){
     w.style.display='block';l.innerHTML='';
     gastosRemovidos.forEach(function(item){
         var d=document.createElement('div');d.className='renda-item';d.style.opacity='0.7';
-        d.innerHTML='<div class="renda-item-left"><div class="renda-item-cat">'+item.cat+'</div><div class="renda-item-desc">'+item.label+'</div></div><span class="renda-item-val" style="color:var(--danger)">−'+window.formatBRL(item.val)+'</span>';
+        d.innerHTML='<div class="renda-item-left"><div class="renda-item-cat">'+item.cat+'</div><div class="renda-item-desc">'+item.label+'</div></div><span class="renda-item-val val-sensitive" style="color:var(--danger)">−'+window.formatBRL(item.val)+'</span>';
         l.appendChild(d);
     });
 }
@@ -941,7 +997,7 @@ function renderRendaList(){
     list.className='renda-hist-list';list.id='renda-hist-list';
     rendaItems.forEach(function(item){
         var d=document.createElement('div');d.className='renda-item';
-        d.innerHTML='<div class="renda-item-left"><div class="renda-item-cat">'+item.cat+'</div><div class="renda-item-desc">'+(item.desc||'—')+'</div></div><span class="renda-item-val">+'+window.formatBRL(item.val)+'</span><button class="renda-item-del" onclick="removeRenda(\''+item.id+'\')">&times;</button>';
+        d.innerHTML='<div class="renda-item-left"><div class="renda-item-cat">'+item.cat+'</div><div class="renda-item-desc">'+(item.desc||'—')+'</div></div><span class="renda-item-val val-sensitive">+'+window.formatBRL(item.val)+'</span><button class="renda-item-del" onclick="removeRenda(\''+item.id+'\')">&times;</button>';
         list.appendChild(d);
     });
     container.appendChild(list);
@@ -1053,7 +1109,7 @@ function renderAssetList() {
             entriesHtml += `<div class="asset-entry">
                 <span class="asset-entry-desc">${e.desc || 'Aporte'}</span>
                 <div style="display:flex;align-items:center">
-                    <span class="asset-entry-val">${window.formatBRL(e.val)}</span>
+                    <span class="asset-entry-val val-sensitive">${window.formatBRL(e.val)}</span>
                     <button class="asset-entry-del" onclick="deleteAssetEntry('${cat.id}','${e.id}')">&times;</button>
                 </div>
             </div>`;
@@ -1065,10 +1121,15 @@ function renderAssetList() {
                 <div class="asset-cat-info">
                     <button class="btn-del-cat" onclick="event.stopPropagation();deleteAssetCategory('${cat.id}')">&times;</button>
                     <div class="asset-color-dot" style="background:${cat.color}"></div>
-                    <span class="asset-cat-name">${cat.name}</span>
+                    <span class="asset-cat-name" id="asset-name-${cat.id}">${cat.name}</span>
+                    <input class="asset-cat-rename-input" id="asset-rename-${cat.id}" value="${cat.name}"
+                        onclick="event.stopPropagation()"
+                        onblur="saveAssetCatName('${cat.id}',this.value)"
+                        onkeydown="if(event.key==='Enter'){this.blur();}">
+                    <button class="btn-rename-cat" onclick="event.stopPropagation();startRenameAssetCat('${cat.id}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button>
                 </div>
                 <div style="display:flex;align-items:center">
-                    <span class="asset-cat-total">${window.formatBRL(catTotal)}</span>
+                    <span class="asset-cat-total val-sensitive">${window.formatBRL(catTotal)}</span>
                     <span class="asset-cat-arrow">&#9660;</span>
                 </div>
             </div>
@@ -1143,6 +1204,30 @@ window._deleteAssetCategory = function(catId) {
     assetsData.categories = assetsData.categories.filter(c => c.id !== catId);
     renderAssetList();
     window._updateAssets(true);
+};
+
+window._startRenameAssetCat = function(catId) {
+    var input = document.getElementById('asset-rename-' + catId);
+    var nameEl = document.getElementById('asset-name-' + catId);
+    if(!input) return;
+    nameEl.style.display = 'none';
+    input.style.display = 'block';
+    input.focus();
+    input.select();
+};
+
+window._saveAssetCatName = function(catId, newName) {
+    newName = (newName||'').trim();
+    var input = document.getElementById('asset-rename-' + catId);
+    var nameEl = document.getElementById('asset-name-' + catId);
+    if(!newName) { if(input) input.style.display='none'; if(nameEl) nameEl.style.display=''; return; }
+    var cat = assetsData.categories.find(c => c.id === catId);
+    if(cat && newName !== cat.name) {
+        cat.name = newName;
+        window._updateAssets(true);
+    }
+    if(nameEl) { nameEl.textContent = newName; nameEl.style.display = ''; }
+    if(input) input.style.display = 'none';
 };
 
 function animateValue(obj, start, end, duration) {
@@ -1232,7 +1317,7 @@ window._renderHistorico=function(){
         var rHtml='';
         if(h.renda&&h.renda.length){
             rHtml='<div class="hist-section-title">Rendas</div>';
-            h.renda.forEach(function(r){rHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-cat">'+r.cat+'</div><div class="hist-item-desc">'+(r.desc||'—')+'</div></div><span class="hist-item-pos">+'+window.formatBRL(r.val)+'</span></div>';});
+            h.renda.forEach(function(r){rHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-cat">'+r.cat+'</div><div class="hist-item-desc">'+(r.desc||'—')+'</div></div><span class="hist-item-pos val-sensitive">+'+window.formatBRL(r.val)+'</span></div>';});
         }
         // Gastos
         var gHtml='';
@@ -1241,12 +1326,12 @@ window._renderHistorico=function(){
             var rows=(h.gastos&&h.gastos[k]||[]).filter(function(r){return r.val>0;});
             if(!rows.length)return;
             gHtml+='<div class="hist-section-title">'+CATEGORIAS[i]+'</div>';
-            rows.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+r.label+'</div></div><span class="hist-item-neg">−'+window.formatBRL(r.val)+'</span></div>';});
+            rows.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+r.label+'</div></div><span class="hist-item-neg val-sensitive">−'+window.formatBRL(r.val)+'</span></div>';});
         });
         var ecoR=(h.gastos&&h.gastos['economias']||[]).filter(function(r){return r.val>0;});
         if(ecoR.length){
             gHtml+='<div class="hist-section-title">Economias</div>';
-            ecoR.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+r.label+'</div></div><span style="color:var(--accent);font-weight:500;font-size:0.82rem">'+window.formatBRL(r.val)+'</span></div>';});
+            ecoR.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+r.label+'</div></div><span class="val-sensitive" style="color:var(--accent);font-weight:500;font-size:0.82rem">'+window.formatBRL(r.val)+'</span></div>';});
         }
         var card=document.createElement('div');card.className='historico-card';
         card.innerHTML=`
@@ -1256,7 +1341,7 @@ window._renderHistorico=function(){
               <span class="hist-mes-ano">${h.year}</span>
             </div>
             <div class="hist-mes-right">
-              <span class="hist-mes-saldo" style="color:${sc}">${window.formatBRL(h.saldo)}</span>
+              <span class="hist-mes-saldo val-sensitive" style="color:${sc}">${window.formatBRL(h.saldo)}</span>
               <span class="hist-mes-arrow">&#9660;</span>
             </div>
           </div>
@@ -1530,12 +1615,8 @@ function loadMonthData(){
 function switchAuthPanel(panelId) {
     var panels = ['auth-main','auth-login','auth-register'];
     var idx = panels.indexOf(panelId);
-    panels.forEach(function(id) { document.getElementById(id).style.display = 'flex'; });
     var track = document.getElementById('authPanelsTrack');
-    track.style.transform = 'translateX(-' + (idx * 100) + '%)';
-    setTimeout(function() {
-        panels.forEach(function(id, i) { if(i !== idx) document.getElementById(id).style.display = 'none'; });
-    }, 380);
+    track.style.transform = 'translateX(-' + (idx * (100/3)) + '%)';
 }
 
 window._showLoginScreen = function() { switchAuthPanel('auth-login'); };
@@ -1557,14 +1638,80 @@ window._handleLogin = function() {
     if(!email || !pass) return alert("Preencha e-mail e senha.");
     
     var btn = document.getElementById('btnLoginAction');
-    var originalText = btn.textContent;
-    btn.textContent = "Entrando..."; btn.disabled = true;
+    var originalHTML = btn.innerHTML;
+    btn.innerHTML = "Entrando..."; btn.disabled = true;
 
     signInWithEmailAndPassword(auth, email, pass)
         .catch((error) => {
             alert(getFriendlyError(error));
-            btn.textContent = originalText; btn.disabled = false;
+            btn.innerHTML = originalHTML; btn.disabled = false;
         });
+};
+
+/* Toggle entre email e celular */
+/* Toggle entre email e celular */
+window._switchLoginMethod = function(method) {
+    document.getElementById('login-email-section').style.display = method==='email' ? 'block' : 'none';
+    document.getElementById('login-phone-section').style.display = method==='phone' ? 'block' : 'none';
+    document.getElementById('toggleEmail').classList.toggle('active', method==='email');
+    document.getElementById('togglePhone').classList.toggle('active', method==='phone');
+};
+
+/* Máscara phone no login */
+window.maskPhoneLogin = function(el) {
+    // Pega só dígitos
+    var v = el.value.replace(/\D/g,'');
+    
+    // Remove prefixo 55 se o usuário começou a digitar DDI
+    if(v.startsWith('55') && v.length > 11) v = v.slice(2);
+    
+    // Limita a 11 dígitos (DDD + 9 dígitos)
+    v = v.slice(0, 11);
+    
+    // Formata: (11) 99999-9999
+    if(v.length <= 2) {
+        el.value = v.length ? '(' + v : '';
+    } else if(v.length <= 7) {
+        el.value = '(' + v.slice(0,2) + ') ' + v.slice(2);
+    } else {
+        el.value = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+    }
+};
+
+/* Login por celular: busca email cadastrado no Firestore pelo telefone, então faz login normal */
+window._handleLoginPhone = async function() {
+    var phone = document.getElementById('loginPhone').value.trim();
+    var pass = document.getElementById('loginPhonePass').value;
+    if(!phone || !pass) return alert("Preencha o número e a senha.");
+
+    // Extrai apenas dígitos e monta +55...
+    var digits = phone.replace(/\D/g,'');
+    if(!digits.startsWith('55')) digits = '55' + digits;
+    var cleanPhone = '+' + digits;
+    if(digits.length < 12) return alert("Número inválido. Use o formato (11) 99999-9999");
+
+    var btn = document.getElementById('btnLoginPhone');
+    var origHTML = btn.innerHTML;
+    btn.innerHTML = "Buscando conta..."; btn.disabled = true;
+
+    try {
+        var phoneDoc = await getDoc(doc(db, 'telefones', cleanPhone));
+        if(!phoneDoc.exists()) {
+            alert("Nenhuma conta encontrada com esse número. Verifique se o número foi cadastrado.");
+            btn.innerHTML = origHTML; btn.disabled = false;
+            return;
+        }
+        var email = phoneDoc.data().email;
+        btn.innerHTML = "Entrando...";
+        signInWithEmailAndPassword(auth, email, pass)
+            .catch(function(error) {
+                alert(getFriendlyError(error));
+                btn.innerHTML = origHTML; btn.disabled = false;
+            });
+    } catch(e) {
+        alert("Erro ao buscar conta: " + e.message);
+        btn.innerHTML = origHTML; btn.disabled = false;
+    }
 };
 
 window._handleRegister = function() {
@@ -1585,8 +1732,18 @@ window._handleRegister = function() {
         .then(async (userCredential) => {
             var user = userCredential.user;
             var userData = { nome: name, sobrenome: surname, email: email, nascimento: dob, telefone: phone, createdAt: new Date().toISOString() };
-            // Tenta salvar. Se falhar (ex: regras), o login ainda ocorre, mas sem perfil.
-            try { await setDoc(doc(db, 'clientes', user.uid, 'perfil', 'dados'), userData); } catch(e) { console.error("Erro Firestore:", e); }
+            try {
+                await setDoc(doc(db, 'clientes', user.uid, 'perfil', 'dados'), userData);
+                // Salva índice telefone→email para permitir login por celular
+                if(phone) {
+                    var digits = phone.replace(/\D/g,'');
+                    if(!digits.startsWith('55')) digits = '55' + digits;
+                    var cleanPhone = '+' + digits;
+                    if(digits.length >= 12) {
+                        await setDoc(doc(db, 'telefones', cleanPhone), { email: email, uid: user.uid });
+                    }
+                }
+            } catch(e) { console.error("Erro Firestore:", e); }
         })
         .catch((error) => {
             alert(getFriendlyError(error));
@@ -1676,7 +1833,7 @@ window._saveAllData=function(){
     var cv={};
     ['txJuros','txInf','tempo'].forEach(function(id){var el=document.getElementById(id);if(el)cv[id]=el.value;});
     var payload={historico:historico,ativos:assetsData,calc:cv,currentYear:currentYear,currentMonth:currentMonth,updatedAt:new Date().toISOString()};
-    localStorage.setItem('clearview_bkp',JSON.stringify(payload));
+    localStorage.setItem('clearview_bkp_' + CLIENT_ID, JSON.stringify(payload));
     clearTimeout(saveTimer);
     window.setStatus('saving');
     saveTimer=setTimeout(async function(){
@@ -1690,8 +1847,9 @@ window._saveAllData=function(){
 async function loadData(){
     window.setStatus('saving');
     var data=null;
+    var lsKey = 'clearview_bkp_' + CLIENT_ID; // chave por usuário, evita vazar dados entre contas
     try{var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));if(snap.exists())data=snap.data();}catch(e){console.error(e);}
-    if(!data){var l=localStorage.getItem('clearview_bkp');if(l)try{data=JSON.parse(l);}catch(e){}}
+    if(!data){var l=localStorage.getItem(lsKey);if(l)try{data=JSON.parse(l);}catch(e){}}
     if(data){
         historico=data.historico||{};
         if(data.currentYear!=null)currentYear=data.currentYear;
@@ -1699,18 +1857,18 @@ async function loadData(){
         
         // MIGRATION LOGIC FOR ASSETS
         var av = data.ativos || {};
-        if(av.categories) {
+        if(av.categories && av.categories.length > 0) {
             assetsData = av;
         } else {
-            // Migrar formato antigo
+            // Migrar formato antigo ou inicializar padrão
             assetsData = { categories: [], meta: av.metaVal || 0 };
             var oldMap = [
                 {k:'rf', n:'Renda Fixa', c:'#ffcc00'},
-                {k:'reserva', n:'Reserva Emerg.', c:'#c8960c'},
+                {k:'reserva', n:'Reserva de Emergencia', c:'#c8960c'},
                 {k:'rv', n:'Renda Variavel', c:'#d8d8d8'},
                 {k:'imoveis', n:'Imoveis/FIIs', c:'#999999'},
                 {k:'cripto', n:'Criptoativos', c:'#555555'},
-                {k:'internacional', n:'Internacional', c:'#333333'},
+                {k:'internacional', n:'Internacional', c:'#444444'},
                 {k:'outros_ativos', n:'Outros', c:'#7a5c1e'}
             ];
             oldMap.forEach(m => {
@@ -1719,9 +1877,14 @@ async function loadData(){
                 assetsData.categories.push({ id: m.k, name: m.n, color: m.c, entries: entries });
             });
         }
-        renderAssetList();
-        window.fillInput('metaVal', assetsData.meta);
-        
+    } else {
+        // Novo usuário — inicializa categorias padrão
+        assetsData = { categories: DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries:[]})), meta: 0 };
+    }
+    renderAssetList();
+    window.fillInput('metaVal', assetsData.meta);
+    
+    if(data) {
         var cv=data.calc||{};
         if(cv.txJuros){var e=document.getElementById('txJuros');if(e)e.value=cv.txJuros;}
         if(cv.txInf){var e=document.getElementById('txInf');if(e)e.value=cv.txInf;}
