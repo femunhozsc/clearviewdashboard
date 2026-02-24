@@ -24,23 +24,25 @@
         </button>
     </div>
 
-    <!-- Phone Input View (Hidden) -->
-    <div id="auth-phone" style="display:none; width:100%; flex-direction:column; align-items:center;">
-        <div class="auth-input-group">
-            <input type="tel" id="phoneNumber" class="auth-input" placeholder="+55 11 99999-9999">
-        </div>
-        <div id="recaptcha-container"></div>
-        <button class="btn-auth btn-auth-primary" id="btn-verify-phone" onclick="sendCode()">Enviar Código SMS</button>
+    <!-- Login View (Email/Pass) -->
+    <div id="auth-login" class="auth-view" style="display:none;">
+        <div class="auth-input-group"><input type="email" id="loginEmail" class="auth-input" placeholder="E-mail"></div>
+        <div class="auth-input-group"><input type="password" id="loginPass" class="auth-input" placeholder="Senha"></div>
+        <button class="btn-auth btn-auth-primary" onclick="handleLogin()">Entrar</button>
         <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
     </div>
 
-    <!-- Code Verification View (Hidden) -->
-    <div id="auth-code" style="display:none; width:100%; flex-direction:column; align-items:center;">
-        <div class="auth-input-group">
-            <input type="text" id="smsCode" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6">
-        </div>
-        <button class="btn-auth btn-auth-primary" onclick="verifyCode()">Verificar</button>
-        <button class="btn-auth" onclick="showPhoneAuth()">Voltar</button>
+    <!-- Register View (Full Form) -->
+    <div id="auth-register" class="auth-view" style="display:none;">
+        <div class="auth-input-group"><input type="text" id="regName" class="auth-input" placeholder="Primeiro Nome"></div>
+        <div class="auth-input-group"><input type="text" id="regSurname" class="auth-input" placeholder="Sobrenome"></div>
+        <div class="auth-input-group"><input type="email" id="regEmail" class="auth-input" placeholder="E-mail"></div>
+        <div class="auth-input-group"><input type="text" id="regDob" class="auth-input" placeholder="Nascimento (DD/MM/AAAA)" oninput="maskDate(this)"></div>
+        <div class="auth-input-group"><input type="tel" id="regPhone" class="auth-input" placeholder="+55 (DDD) 9xxxx-xxxx" oninput="maskPhone(this)"></div>
+        <div class="auth-input-group"><input type="password" id="regPass" class="auth-input" placeholder="Senha"></div>
+        
+        <button class="btn-auth btn-auth-primary" onclick="handleRegister()">Criar Conta</button>
+        <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
     </div>
 </div>
 
@@ -493,12 +495,29 @@ window.toggleTaxInput = function(){if(window._toggleTaxInput)window._toggleTaxIn
 window.toggleYear = function(y){if(window._toggleYear)window._toggleYear(y);};
 
 /* AUTH UI FUNCTIONS */
-window.showPhoneAuth = function(mode){if(window._showPhoneAuth)window._showPhoneAuth(mode);};
+window.showLoginScreen = function(){if(window._showLoginScreen)window._showLoginScreen();};
+window.showRegisterScreen = function(){if(window._showRegisterScreen)window._showRegisterScreen();};
 window.showMainAuth = function(){if(window._showMainAuth)window._showMainAuth();};
-window.sendCode = function(){if(window._sendCode)window._sendCode();};
-window.verifyCode = function(){if(window._verifyCode)window._verifyCode();};
+window.handleLogin = function(){if(window._handleLogin)window._handleLogin();};
+window.handleRegister = function(){if(window._handleRegister)window._handleRegister();};
 window.authGoogle = function(){if(window._authGoogle)window._authGoogle();};
 window.logoutApp = function(){if(window._logoutApp)window._logoutApp();};
+window.maskDate = function(el){
+    var v=el.value.replace(/\D/g,'').slice(0,8);
+    if(v.length>=5)v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);
+    else if(v.length>=3)v=v.slice(0,2)+'/'+v.slice(2);
+    el.value=v;
+};
+window.maskPhone = function(el){
+    var v = el.value.replace(/\D/g,'');
+    if(v.startsWith('55')) v = v.substring(2); // Remove 55 se digitado
+    v = v.substring(0, 11); // Limita tamanho
+    var r = '+55';
+    if(v.length > 0) r += ' (' + v.substring(0, 2);
+    if(v.length > 2) r += ') ' + v.substring(2, 7);
+    if(v.length > 7) r += ' ' + v.substring(7, 11);
+    el.value = r;
+};
 
 /* ============================================================
    LÓGICA DO APP (FIREBASE + DADOS)
@@ -1123,57 +1142,80 @@ function loadMonthData(){
 }
 
 /* AUTHENTICATION LOGIC */
-window._showPhoneAuth = function(mode) {
+window._showLoginScreen = function() {
     document.getElementById('auth-main').style.display = 'none';
-    document.getElementById('auth-phone').style.display = 'flex';
-    // Se for cadastro, poderíamos mudar o texto, mas o fluxo de telefone é igual
-    if(!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            'size': 'normal',
-            'callback': (response) => { /* reCAPTCHA solved */ }
-        });
-        window.recaptchaVerifier.render();
-    }
+    document.getElementById('auth-login').style.display = 'flex';
+};
+
+window._showRegisterScreen = function() {
+    document.getElementById('auth-main').style.display = 'none';
+    document.getElementById('auth-register').style.display = 'flex';
 };
 
 window._showMainAuth = function() {
-    document.getElementById('auth-phone').style.display = 'none';
+    document.getElementById('auth-login').style.display = 'none';
+    document.getElementById('auth-register').style.display = 'none';
     document.getElementById('auth-main').style.display = 'flex';
 };
 
-window._sendCode = function() {
-    var phoneNumber = document.getElementById('phoneNumber').value;
-    if(!phoneNumber) return alert("Digite um número válido.");
-    
-    signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
-        .then((confirmationResult) => {
-            window.confirmationResult = confirmationResult;
-            document.getElementById('auth-phone').style.display = 'none';
-            document.getElementById('auth-code').style.display = 'flex';
-        }).catch((error) => {
+window._handleLogin = function() {
+    var email = document.getElementById('loginEmail').value;
+    var pass = document.getElementById('loginPass').value;
+    if(!email || !pass) return alert("Preencha e-mail e senha.");
+
+    signInWithEmailAndPassword(auth, email, pass)
+        .catch((error) => {
             console.error(error);
-            alert("Erro ao enviar SMS. Verifique o número e o formato (+55...).");
-            window.recaptchaVerifier.render().then(function(widgetId) {
-                grecaptcha.reset(widgetId);
-            });
+            alert("Erro no login: " + error.message);
         });
 };
 
-window._verifyCode = function() {
-    var code = document.getElementById('smsCode').value;
-    if(!code) return;
-    window.confirmationResult.confirm(code).then((result) => {
-        // User signed in successfully.
-    }).catch((error) => {
-        alert("Código inválido.");
-    });
+window._handleRegister = function() {
+    var name = document.getElementById('regName').value.trim();
+    var surname = document.getElementById('regSurname').value.trim();
+    var email = document.getElementById('regEmail').value.trim();
+    var dob = document.getElementById('regDob').value.trim();
+    var phone = document.getElementById('regPhone').value.trim();
+    var pass = document.getElementById('regPass').value;
+
+    if(!name || !surname || !email || !pass) return alert("Preencha todos os campos obrigatórios.");
+
+    createUserWithEmailAndPassword(auth, email, pass)
+        .then(async (userCredential) => {
+            var user = userCredential.user;
+            var userData = { nome: name, sobrenome: surname, email: email, nascimento: dob, telefone: phone, createdAt: new Date().toISOString() };
+            try { await setDoc(doc(db, 'clientes', user.uid, 'perfil', 'dados'), userData); } catch(e) { console.error("Erro ao salvar perfil:", e); }
+        })
+        .catch((error) => {
+            console.error(error);
+            alert("Erro no cadastro: " + error.message);
+        });
 };
 
 window._authGoogle = function() {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).catch((error) => {
+    signInWithPopup(auth, provider)
+        .then(async (result) => {
+            // Verifica se perfil existe, se não, cria básico
+            var user = result.user;
+            var docRef = doc(db, 'clientes', user.uid, 'perfil', 'dados');
+            try {
+                var docSnap = await getDoc(docRef);
+                if(!docSnap.exists()) {
+                    var names = (user.displayName || "").split(" ");
+                    var userData = {
+                        nome: names[0] || "Usuario",
+                        sobrenome: names.slice(1).join(" ") || "",
+                        email: user.email,
+                        createdAt: new Date().toISOString()
+                    };
+                    await setDoc(docRef, userData);
+                }
+            } catch(e) { console.error(e); }
+        })
+        .catch((error) => {
         console.error(error);
-        alert("Erro no login com Google. Tente novamente.");
+        alert("Erro no login com Google: " + error.message + "\nVerifique se o domínio do Vercel está autorizado no Firebase Console.");
     });
 };
 
