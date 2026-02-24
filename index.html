@@ -196,10 +196,10 @@
 
             <div class="card">
                 <div class="card-title">
-                    <span>Posicao Atual</span>
+                    <span>Carteira</span>
                     <div class="card-header-actions">
                         <button class="btn-icon-action" onclick="toggleAssetEditMode()" id="btnEditAssets"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn-icon-action" onclick="openAssetModal()" style="color:var(--accent);border-color:rgba(255,204,0,0.3)"><i class="fa-solid fa-plus"></i></button>
+                        <button class="btn-icon-action" onclick="openAssetModal()"><i class="fa-solid fa-plus"></i></button>
                     </div>
                 </div>
                 
@@ -208,16 +208,15 @@
                 </div>
                 <button class="btn-new-cat" onclick="openNewCatModal()">+ Nova Categoria</button>
 
-                <div class="meta-highlight">
-                    <div>
-                        <div class="meta-label">Meta Patrimonial</div>
-                        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:4px" id="percText">0% Concluido</div>
-                    </div>
-                    <div>
-                        <input type="tel" class="meta-input-styled" id="metaVal" placeholder="R$ 0,00" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()">
-                    </div>
+                <div style="margin-top:24px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:flex-end">
+                    <span style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:500">Meta Patrimonial</span>
+                    <span id="percText" style="font-size:0.65rem;color:var(--accent)">0%</span>
                 </div>
-                <div class="progress-track" style="margin-top:-10px;margin-bottom:0;height:3px;background:rgba(255,255,255,0.05)"><div class="progress-fill" id="progBar"></div></div>
+                <div class="input-group" style="margin-bottom:0;border:1px solid var(--card-border)">
+                    <span class="input-label">Definir Valor</span>
+                    <input type="tel" class="money-input" id="metaVal" placeholder="R$ 0,00" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()" style="font-size:1rem">
+                </div>
+                <div class="progress-track" style="margin-top:10px;height:3px"><div class="progress-fill" id="progBar"></div></div>
             </div>
         </div>
 
