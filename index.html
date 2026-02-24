@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SF Pro equivalente: DM Sans -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,26 +24,53 @@
         <button class="btn-auth" onclick="showLoginScreen()">Login</button>
         <button class="btn-auth btn-auth-primary" onclick="showRegisterScreen()">Cadastrar-se</button>
         <button class="btn-auth btn-auth-google" onclick="authGoogle()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Entrar com Google
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" style="margin-right:4px"> Entrar com Google
         </button>
     </div>
 
     <!-- Login View (Email/Pass) -->
     <div id="auth-login" class="auth-view" style="display:none;">
-        <div class="auth-input-group"><input type="email" id="loginEmail" class="auth-input" placeholder="E-mail"></div>
-        <div class="auth-input-group"><input type="password" id="loginPass" class="auth-input" placeholder="Senha"></div>
+        <div class="auth-input-group">
+            <div class="auth-input-wrapper">
+                <span class="auth-icon-left"><i class="fa-regular fa-envelope"></i></span>
+                <input type="email" id="loginEmail" class="auth-input" placeholder="E-mail">
+            </div>
+        </div>
+        <div class="auth-input-group">
+            <div class="auth-input-wrapper">
+                <span class="auth-icon-left"><i class="fa-solid fa-lock"></i></span>
+                <input type="password" id="loginPass" class="auth-input" placeholder="Senha">
+                <button class="toggle-pass" onclick="togglePass('loginPass', this)"><i class="fa-regular fa-eye"></i></button>
+            </div>
+        </div>
         <button class="btn-auth btn-auth-primary" id="btnLoginAction" onclick="handleLogin()">Entrar</button>
         <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
     </div>
 
     <!-- Register View (Full Form) -->
     <div id="auth-register" class="auth-view" style="display:none;">
-        <div class="auth-input-group"><input type="text" id="regName" class="auth-input" placeholder="Primeiro Nome"></div>
-        <div class="auth-input-group"><input type="text" id="regSurname" class="auth-input" placeholder="Sobrenome"></div>
-        <div class="auth-input-group"><input type="email" id="regEmail" class="auth-input" placeholder="E-mail"></div>
-        <div class="auth-input-group"><input type="text" id="regDob" class="auth-input" placeholder="Nascimento (DD/MM/AAAA)" oninput="maskDate(this)"></div>
-        <div class="auth-input-group"><input type="tel" id="regPhone" class="auth-input" placeholder="+55 (DD) 90000 0000" oninput="maskPhone(this)"></div>
-        <div class="auth-input-group"><input type="password" id="regPass" class="auth-input" placeholder="Senha"></div>
+        <div class="auth-input-group">
+            <div class="auth-input-wrapper">
+                <span class="auth-icon-left"><i class="fa-regular fa-user"></i></span>
+                <input type="text" id="regName" class="auth-input capitalize" placeholder="Primeiro Nome">
+            </div>
+        </div>
+        <div class="auth-input-group">
+            <div class="auth-input-wrapper">
+                <span class="auth-icon-left"><i class="fa-regular fa-user"></i></span>
+                <input type="text" id="regSurname" class="auth-input capitalize" placeholder="Sobrenome">
+            </div>
+        </div>
+        <div class="auth-input-group"><div class="auth-input-wrapper"><span class="auth-icon-left"><i class="fa-regular fa-envelope"></i></span><input type="email" id="regEmail" class="auth-input" placeholder="E-mail"></div></div>
+        <div class="auth-input-group"><div class="auth-input-wrapper"><span class="auth-icon-left"><i class="fa-regular fa-calendar"></i></span><input type="text" id="regDob" class="auth-input" placeholder="Nascimento (DD/MM/AAAA)" oninput="maskDate(this)"></div></div>
+        <div class="auth-input-group"><div class="auth-input-wrapper"><span class="auth-icon-left"><i class="fa-solid fa-phone"></i></span><input type="tel" id="regPhone" class="auth-input" placeholder="+55 (DD) 90000 0000" oninput="maskPhone(this)"></div></div>
+        <div class="auth-input-group">
+            <div class="auth-input-wrapper">
+                <span class="auth-icon-left"><i class="fa-solid fa-lock"></i></span>
+                <input type="password" id="regPass" class="auth-input" placeholder="Senha">
+                <button class="toggle-pass" onclick="togglePass('regPass', this)"><i class="fa-regular fa-eye"></i></button>
+            </div>
+        </div>
         
         <button class="btn-auth btn-auth-primary" id="btnRegAction" onclick="handleRegister()">Criar Conta</button>
         <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
@@ -67,6 +95,7 @@
     <nav class="navbar">
         <img src="logo.png" alt="Clearview" class="logo-img" onclick="resetToHome()" style="cursor:pointer">
         <div class="navbar-right">
+            <button class="privacy-toggle" onclick="togglePrivacyMode()" id="privacyBtn"><i class="fa-regular fa-eye"></i></button>
             <span id="sync-icon" class="sync-icon"></span>
             <button class="hamburger" onclick="openNav()">&#9776;</button>
         </div>
@@ -118,7 +147,7 @@
                 <div class="renda-total-box">
                     <div>
                         <div class="renda-total-label">Renda Mensal</div>
-                        <div class="renda-total-val" id="rendaTotal">R$ 0,00</div>
+                        <div class="renda-total-val val-sensitive" id="rendaTotal">R$ 0,00</div>
                     </div>
                     <div class="renda-entries-count" id="rendaCount">0 lançamentos</div>
                 </div>
@@ -135,13 +164,13 @@
                 <div class="renda-total-box" style="border-color:var(--card-border); background:rgba(255,255,255,0.02);">
                     <div>
                         <div class="renda-total-label">Total Gasto</div>
-                        <div class="renda-total-val" id="gastosTotalDisplay" style="color:var(--text-main)">R$ 0,00</div>
+                        <div class="renda-total-val val-sensitive" id="gastosTotalDisplay" style="color:var(--text-main)">R$ 0,00</div>
                     </div>
                 </div>
                 <div class="saldo-box positivo" id="saldoBox">
                     <div>
                         <div class="saldo-label">Sobra de Caixa</div>
-                        <div class="saldo-val" id="valInvest">R$ 0,00</div>
+                        <div class="saldo-val val-sensitive" id="valInvest">R$ 0,00</div>
                     </div>
                 </div>
                 <button class="btn-renda-hist" id="btn-gastos-toggle" onclick="toggleGastosDetails()" style="margin-top:14px;justify-content:center;font-weight:500;font-size:0.85rem;padding:14px;">Ver Categorias <span class="renda-hist-arrow" style="margin-left:8px">&#9660;</span></button>
@@ -162,7 +191,7 @@
                 <div class="chart-donut-container" id="chartWrap">
                     <canvas id="assetsChart"></canvas>
                 </div>
-                <div class="total-center" style="margin-top:10px;margin-bottom:0"><h3 id="displayTotal">R$ 0,00</h3><span>Total Acumulado</span></div>
+                <div class="total-center" style="margin-top:10px;margin-bottom:0"><h3 id="displayTotal" class="val-sensitive">R$ 0,00</h3><span>Total Acumulado</span></div>
             </div>
 
             <div class="card">
@@ -523,6 +552,27 @@ window.maskPhone = function(el){
     el.value = r;
 };
 
+/* PRIVACY MODE */
+window.togglePrivacyMode = function() {
+    var body = document.body;
+    var btn = document.getElementById('privacyBtn');
+    var isActive = body.classList.toggle('privacy-active');
+    btn.innerHTML = isActive ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+    localStorage.setItem('cv_privacy', isActive ? 'true' : 'false');
+};
+
+/* AUTH UI HELPERS */
+window.togglePass = function(id, btn) {
+    var input = document.getElementById(id);
+    if(input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
+    } else {
+        input.type = 'password';
+        btn.innerHTML = '<i class="fa-regular fa-eye"></i>';
+    }
+};
+
 /* ============================================================
    LÓGICA DO APP (FIREBASE + DADOS)
 ============================================================ */
@@ -772,7 +822,16 @@ window._updateAssets=function(){
     document.getElementById('percText').textContent=pct.toFixed(1)+'%';
     clearTimeout(assetsTimer);
     assetsTimer=setTimeout(function(){
-        if(donutChart){donutChart.data.datasets[0].data=vals;donutChart.update();}
+        if(donutChart){
+            if(total === 0) {
+                donutChart.data.datasets[0].data = [1,1,1,1,1,1,1];
+                donutChart.data.datasets[0].backgroundColor = ['#222','#222','#222','#222','#222','#222','#222'];
+            } else {
+                donutChart.data.datasets[0].data = vals;
+                donutChart.data.datasets[0].backgroundColor = ['#ffcc00','#c8960c','#d8d8d8','#999','#555','#333','#7a5c1e'];
+            }
+            donutChart.update();
+        }
     },300);
     window._saveAllData();
 };
@@ -880,9 +939,9 @@ window._renderHistorico=function(){
           </div>
           <div class="historico-body" id="hist-body-${key}">
             <div class="hist-resumo">
-              <div class="hist-resumo-item"><div class="hist-resumo-label">Renda</div><div class="hist-resumo-val" style="color:var(--success)">${window.formatBRL(h.totalRenda)}</div></div>
-              <div class="hist-resumo-item"><div class="hist-resumo-label">Gastos</div><div class="hist-resumo-val" style="color:var(--danger)">${window.formatBRL(h.totalDesp)}</div></div>
-              <div class="hist-resumo-item"><div class="hist-resumo-label">Saldo</div><div class="hist-resumo-val" style="color:${sc}">${window.formatBRL(h.saldo)}</div></div>
+              <div class="hist-resumo-item"><div class="hist-resumo-label">Renda</div><div class="hist-resumo-val val-sensitive" style="color:var(--success)">${window.formatBRL(h.totalRenda)}</div></div>
+              <div class="hist-resumo-item"><div class="hist-resumo-label">Gastos</div><div class="hist-resumo-val val-sensitive" style="color:var(--danger)">${window.formatBRL(h.totalDesp)}</div></div>
+              <div class="hist-resumo-item"><div class="hist-resumo-label">Saldo</div><div class="hist-resumo-val val-sensitive" style="color:${sc}">${window.formatBRL(h.saldo)}</div></div>
             </div>
             <div class="hist-extra">
               <div class="hist-extra-item"><div class="hist-extra-label">Taxa de Poupanca</div><div class="hist-extra-val" style="color:${h.saldo>=0?'var(--success)':'var(--danger)'}">${tp}</div></div>
@@ -1187,8 +1246,8 @@ window._handleLogin = function() {
 };
 
 window._handleRegister = function() {
-    var name = document.getElementById('regName').value.trim();
-    var surname = document.getElementById('regSurname').value.trim();
+    var name = document.getElementById('regName').value.trim().replace(/\b\w/g, l => l.toUpperCase());
+    var surname = document.getElementById('regSurname').value.trim().replace(/\b\w/g, l => l.toUpperCase());
     var email = document.getElementById('regEmail').value.trim();
     var dob = document.getElementById('regDob').value.trim();
     var phone = document.getElementById('regPhone').value.trim();
@@ -1235,7 +1294,7 @@ window._authGoogle = function() {
             } catch(e) { console.error(e); }
         })
         .catch((error) => {
-        alert("Erro no Google: " + error.message + "\nVerifique 'Authorized Domains' no Firebase.");
+        alert("Erro no login com Google.\n\nSe você é o desenvolvedor, verifique se o domínio 'clearviewdashboard.vercel.app' está adicionado em 'Authorized Domains' no Firebase Console > Authentication > Settings.\n\nErro técnico: " + error.message);
     });
 };
 
@@ -1269,8 +1328,12 @@ async function startApp(user) {
     
     document.getElementById('splashName').textContent = formatName(nameToDisplay);
 
-    // Define saudação (Novo usuário vs Recorrente)
-    var isNewUser = user.metadata.creationTime === user.metadata.lastSignInTime;
+    // Define saudação (Novo usuário vs Recorrente) - Lógica melhorada
+    // Se a conta foi criada há menos de 1 minuto, consideramos novo usuário.
+    // Caso contrário, é um retorno.
+    var creationTime = new Date(user.metadata.creationTime).getTime();
+    var now = new Date().getTime();
+    var isNewUser = (now - creationTime) < 60000; // 60 segundos de tolerância
     var greeting = isNewUser ? "SEJA BEM-VINDO," : "BEM-VINDO DE VOLTA";
     document.getElementById('splashGreeting').textContent = greeting;
 
@@ -1403,6 +1466,13 @@ async function runSplashSequence() {
 
 /* INIT */
 window.addEventListener('load', function(){
+    // Carregar preferência de privacidade
+    var privacy = localStorage.getItem('cv_privacy');
+    if(privacy === 'true') {
+        document.body.classList.add('privacy-active');
+        document.getElementById('privacyBtn').innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
+    }
+
     onAuthStateChanged(auth, (user) => {
         if (user) {
             startApp(user);
