@@ -27,10 +27,8 @@
 
     <!-- Logo + Brand -->
     <div class="auth-header">
-        <div class="auth-logo-wrap">
-            <img src="logo.png" alt="Clearview" class="auth-logo-img">
-        </div>
-        <div class="auth-brand-tag">CLEARVIEW CAPITAL</div>
+        <img src="logo.png" alt="Clearview" class="auth-logo-img">
+        <div class="auth-brand-tag">Clearview Dashboard</div>
     </div>
 
     <!-- Sliding Panels Container -->
@@ -60,7 +58,7 @@
             </div>
 
             <!-- PANEL 1: Login -->
-            <div class="auth-panel" id="auth-login" style="display:none">
+            <div class="auth-panel" id="auth-login">
                 <div class="auth-panel-inner">
                     <button class="auth-back-btn" onclick="showMainAuth()">
                         <i class="fa-solid fa-arrow-left"></i>
@@ -95,7 +93,7 @@
             </div>
 
             <!-- PANEL 2: Register -->
-            <div class="auth-panel" id="auth-register" style="display:none">
+            <div class="auth-panel" id="auth-register">
                 <div class="auth-panel-inner">
                     <button class="auth-back-btn" onclick="showMainAuth()">
                         <i class="fa-solid fa-arrow-left"></i>
@@ -164,8 +162,7 @@
         </div>
     </div>
 
-    <!-- Bottom Indicator -->
-    <div class="auth-footer-brand">Clearview Capital Dashboard · v2</div>
+    <!-- (no footer) -->
 </div>
 
 <!-- ============================= SPLASH SCREEN ============================= -->
@@ -1530,12 +1527,8 @@ function loadMonthData(){
 function switchAuthPanel(panelId) {
     var panels = ['auth-main','auth-login','auth-register'];
     var idx = panels.indexOf(panelId);
-    panels.forEach(function(id) { document.getElementById(id).style.display = 'flex'; });
     var track = document.getElementById('authPanelsTrack');
-    track.style.transform = 'translateX(-' + (idx * 100) + '%)';
-    setTimeout(function() {
-        panels.forEach(function(id, i) { if(i !== idx) document.getElementById(id).style.display = 'none'; });
-    }, 380);
+    track.style.transform = 'translateX(-' + (idx * (100/3)) + '%)';
 }
 
 window._showLoginScreen = function() { switchAuthPanel('auth-login'); };
