@@ -38,7 +38,7 @@
             <!-- PANEL 0: Main -->
             <div class="auth-panel" id="auth-main">
                 <div class="auth-panel-inner">
-                    <h1 class="auth-title">Bem-vindo</h1>
+                    <h1 class="auth-title">Bem-vindo(a)</h1>
                     <p class="auth-subtitle">Sua plataforma de organização financeira completa.</p>
 
                     <div class="auth-divider-line"></div>
@@ -53,7 +53,7 @@
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="17" alt="G"> Continuar com Google
                     </button>
 
-                    <p class="auth-legal">Ao continuar, você aceita os <span class="auth-link">Termos de Uso</span></p>
+                    <p class="auth-legal">Ao continuar, você aceita os <span class="auth-link" onclick="openTermos()">Termos de Uso</span></p>
                 </div>
             </div>
 
@@ -545,6 +545,81 @@
     </div>
 </div>
 
+<!-- MODAL TERMOS DE USO -->
+<div id="termosModal" class="termos-overlay" onclick="if(event.target===this)closeTermos()">
+    <div class="termos-content">
+        <div class="termos-header">
+            <span class="termos-logo-tag">CLEARVIEW CAPITAL</span>
+            <button class="termos-close-btn" onclick="closeTermos()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="termos-body">
+            <h1 class="termos-title">Termos de Uso e Política de Privacidade</h1>
+            <p class="termos-date">Última atualização: Janeiro de 2026</p>
+
+            <div class="termos-section">
+                <h2>1. Sobre o Clearview</h2>
+                <p>O Clearview Capital Dashboard é uma plataforma de organização financeira pessoal que permite ao usuário registrar e visualizar seus dados de renda, gastos e patrimônio. Não somos uma instituição financeira e não realizamos qualquer tipo de movimentação de valores.</p>
+            </div>
+
+            <div class="termos-section">
+                <h2>2. Dados que Coletamos</h2>
+                <p>Para oferecer nossos serviços, coletamos e armazenamos as seguintes informações:</p>
+                <ul>
+                    <li><strong>Dados de Cadastro:</strong> nome, sobrenome, endereço de e-mail, número de telefone e data de nascimento, fornecidos voluntariamente no momento do registro.</li>
+                    <li><strong>Dados Financeiros:</strong> registros de renda, categorias de gastos, valores de patrimônio e metas financeiras inseridos pelo próprio usuário.</li>
+                    <li><strong>Dados de Acesso:</strong> informações técnicas de autenticação (gerenciadas pelo Firebase Authentication), incluindo data de criação e último acesso à conta.</li>
+                    <li><strong>Dados de Uso:</strong> preferências de interface (modo de privacidade, configurações da calculadora), armazenados localmente no dispositivo.</li>
+                </ul>
+            </div>
+
+            <div class="termos-section">
+                <h2>3. Como Usamos seus Dados</h2>
+                <p>Seus dados são utilizados exclusivamente para:</p>
+                <ul>
+                    <li>Identificar e autenticar sua conta com segurança;</li>
+                    <li>Sincronizar seus dados financeiros entre diferentes dispositivos;</li>
+                    <li>Permitir o login por número de telefone, vinculando-o ao seu e-mail cadastrado;</li>
+                    <li>Melhorar a experiência e funcionalidades da plataforma.</li>
+                </ul>
+                <p><strong>Não vendemos, alugamos ou compartilhamos seus dados com terceiros para fins comerciais.</strong></p>
+            </div>
+
+            <div class="termos-section">
+                <h2>4. Armazenamento e Segurança</h2>
+                <p>Todos os dados são armazenados de forma segura no Firebase (Google Cloud), com criptografia em trânsito (HTTPS/TLS) e em repouso. O acesso aos dados é protegido por autenticação obrigatória — somente o titular da conta pode visualizar ou modificar suas informações.</p>
+                <p>O índice de telefone para e-mail é armazenado em uma coleção separada e isolada, utilizada exclusivamente para viabilizar o login por celular.</p>
+            </div>
+
+            <div class="termos-section">
+                <h2>5. Seus Direitos</h2>
+                <p>Você tem o direito de, a qualquer momento:</p>
+                <ul>
+                    <li>Acessar todos os seus dados financeiros diretamente no dashboard;</li>
+                    <li>Exportar seus dados em formato CSV através da opção no rodapé do app;</li>
+                    <li>Solicitar a exclusão completa da sua conta e todos os dados associados entrando em contato conosco.</li>
+                </ul>
+            </div>
+
+            <div class="termos-section">
+                <h2>6. Retenção de Dados</h2>
+                <p>Seus dados são mantidos enquanto sua conta estiver ativa. Em caso de inatividade prolongada (mais de 24 meses) ou solicitação de exclusão, os dados serão removidos permanentemente de nossos servidores.</p>
+            </div>
+
+            <div class="termos-section">
+                <h2>7. Contato</h2>
+                <p>Para dúvidas, solicitações de exclusão de dados ou qualquer questão relacionada à sua privacidade, entre em contato pelo WhatsApp <strong>(44) 99129-3357</strong> ou pelo e-mail de suporte disponível no menu lateral do app.</p>
+            </div>
+
+            <div class="termos-section termos-section-last">
+                <p>Ao criar uma conta ou utilizar o Clearview, você confirma que leu e concorda com estes Termos de Uso e Política de Privacidade.</p>
+            </div>
+        </div>
+        <div class="termos-footer">
+            <button class="btn-auth-v2 btn-auth-gold" onclick="closeTermos()" style="margin:0;max-width:280px">Entendi e Aceito</button>
+        </div>
+    </div>
+</div>
+
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -617,16 +692,6 @@ window.switchTab = function(tab,btn,dir){
     if(tab==='ativos'){
         var w=document.getElementById('chartWrap');
         if(w){w.classList.remove('chart-anim');void w.offsetWidth;w.classList.add('chart-anim');}
-    } else {
-        // Sai do modo edição ao trocar de aba
-        var list=document.getElementById('assets-list');
-        if(list && list.classList.contains('edit-mode')){
-            list.classList.remove('edit-mode');
-            var editBtn=document.getElementById('btnEditAssets');
-            if(editBtn) editBtn.classList.remove('active');
-            var newCatBtn=document.querySelector('.btn-new-cat');
-            if(newCatBtn) newCatBtn.style.display='none';
-        }
     }
     // Update tab indicator underline position
     var tIdx=curTabIdx;
@@ -725,6 +790,16 @@ window.toggleAssetEditMode = function(){if(window._toggleAssetEditMode)window._t
 window.openNewCatModal = function(){document.getElementById('newCatModal').style.display='flex';document.getElementById('newCatName').value='';setTimeout(function(){document.getElementById('newCatName').focus();},120);};
 window.closeNewCatModal = function(){document.getElementById('newCatModal').style.display='none';};
 window.addNewCategory = function(){if(window._addNewCategory)window._addNewCategory();};
+
+/* TERMOS DE USO */
+window.openTermos = function(){
+    var m = document.getElementById('termosModal');
+    if(m){ m.style.display='flex'; document.body.style.overflow='hidden'; }
+};
+window.closeTermos = function(){
+    var m = document.getElementById('termosModal');
+    if(m){ m.style.display='none'; document.body.style.overflow=''; }
+};
 window.toggleAssetCat = function(id){if(window._toggleAssetCat)window._toggleAssetCat(id);};
 window.deleteAssetEntry = function(catId, entryId){if(window._deleteAssetEntry)window._deleteAssetEntry(catId, entryId);};
 window.deleteAssetCategory = function(catId){if(window._deleteAssetCategory)window._deleteAssetCategory(catId);};
@@ -1159,10 +1234,6 @@ window._toggleAssetEditMode = function() {
     var btn = document.getElementById('btnEditAssets');
     list.classList.toggle('edit-mode');
     btn.classList.toggle('active');
-    var newCatBtn = document.querySelector('.btn-new-cat');
-    if(newCatBtn) {
-        newCatBtn.style.display = list.classList.contains('edit-mode') ? 'block' : 'none';
-    }
 };
 
 window._updateAssetSelect = function() {
@@ -1693,6 +1764,12 @@ window.maskPhoneLogin = function(el) {
 };
 
 /* Login por celular: busca email cadastrado no Firestore pelo telefone, então faz login normal */
+/* IMPORTANTE — Regras Firestore necessárias para a coleção 'telefones':
+   match /telefones/{phone} {
+     allow read: if true;            // leitura pública para login sem autenticação
+     allow write: if request.auth != null;  // escrita só por usuários autenticados
+   }
+*/
 window._handleLoginPhone = async function() {
     var phone = document.getElementById('loginPhone').value.trim();
     var pass = document.getElementById('loginPhonePass').value;
@@ -1711,8 +1788,26 @@ window._handleLoginPhone = async function() {
     try {
         var phoneDoc = await getDoc(doc(db, 'telefones', cleanPhone));
         if(!phoneDoc.exists()) {
-            alert("Nenhuma conta encontrada com esse número. Verifique se o número foi cadastrado.");
-            btn.innerHTML = origHTML; btn.disabled = false;
+            // Tenta também sem o 9 (para números antigos de 8 dígitos)
+            var digitsAlt = digits;
+            if(digits.length === 13) {
+                // Remove o 9 após o DDD: +55 11 9 XXXX-XXXX → +55 11 XXXX-XXXX
+                digitsAlt = digits.slice(0,4) + digits.slice(5);
+            }
+            var altPhone = '+' + digitsAlt;
+            var altDoc = await getDoc(doc(db, 'telefones', altPhone));
+            if(!altDoc.exists()) {
+                alert("Nenhuma conta encontrada com esse número.\n\nVerifique se:\n• O número foi informado no cadastro\n• Você está usando o mesmo DDD e formato\n\nSe o problema persistir, tente entrar com e-mail.");
+                btn.innerHTML = origHTML; btn.disabled = false;
+                return;
+            }
+            var email = altDoc.data().email;
+            btn.innerHTML = "Entrando...";
+            signInWithEmailAndPassword(auth, email, pass)
+                .catch(function(error) {
+                    alert(getFriendlyError(error));
+                    btn.innerHTML = origHTML; btn.disabled = false;
+                });
             return;
         }
         var email = phoneDoc.data().email;
@@ -1723,7 +1818,12 @@ window._handleLoginPhone = async function() {
                 btn.innerHTML = origHTML; btn.disabled = false;
             });
     } catch(e) {
-        alert("Erro ao buscar conta: " + e.message);
+        console.error(e);
+        if(e.code === 'permission-denied') {
+            alert("Acesso negado ao banco de dados.\n\nAdicione esta regra no Firestore Console > Rules:\n\nmatch /telefones/{phone} {\n  allow read: if true;\n  allow write: if request.auth != null;\n}");
+        } else {
+            alert("Erro ao buscar conta: " + e.message);
+        }
         btn.innerHTML = origHTML; btn.disabled = false;
     }
 };
@@ -1894,10 +1994,6 @@ async function loadData(){
     } else {
         // Novo usuário — inicializa categorias padrão
         assetsData = { categories: DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries:[]})), meta: 0 };
-    }
-    // Garantia extra: se por qualquer motivo ficou vazio, aplica padrão
-    if (!assetsData.categories || assetsData.categories.length === 0) {
-        assetsData = { categories: DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries:[]})), meta: assetsData.meta || 0 };
     }
     renderAssetList();
     window.fillInput('metaVal', assetsData.meta);
