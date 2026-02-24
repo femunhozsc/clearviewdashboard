@@ -685,32 +685,3 @@ body.privacy-active .box-input,
 body.privacy-active .money-input,
 body.privacy-active .renda-total-val,
 body.privacy-active .saldo-val { filter: blur(4px); }
-
-/* Renomear categoria de ativo */
-.asset-cat-rename-input {
-    display: none;
-    background: rgba(255,204,0,0.08);
-    border: 1px solid rgba(255,204,0,0.3);
-    border-radius: 6px;
-    color: var(--text-main);
-    font-size: 0.85rem;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    padding: 3px 8px;
-    width: 130px;
-    outline: none;
-}
-.btn-rename-cat {
-    display: none;
-    color: var(--text-muted);
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-left: 6px;
-    padding: 2px 5px;
-    border-radius: 5px;
-    transition: 0.2s;
-    line-height: 1;
-}
-.btn-rename-cat:active { color: var(--accent); }
-.asset-list.edit-mode .btn-rename-cat { display: inline-flex; align-items: center; }
