@@ -617,6 +617,16 @@ window.switchTab = function(tab,btn,dir){
     if(tab==='ativos'){
         var w=document.getElementById('chartWrap');
         if(w){w.classList.remove('chart-anim');void w.offsetWidth;w.classList.add('chart-anim');}
+    } else {
+        // Sai do modo edição ao trocar de aba
+        var list=document.getElementById('assets-list');
+        if(list && list.classList.contains('edit-mode')){
+            list.classList.remove('edit-mode');
+            var editBtn=document.getElementById('btnEditAssets');
+            if(editBtn) editBtn.classList.remove('active');
+            var newCatBtn=document.querySelector('.btn-new-cat');
+            if(newCatBtn) newCatBtn.style.display='none';
+        }
     }
     // Update tab indicator underline position
     var tIdx=curTabIdx;
@@ -1149,6 +1159,10 @@ window._toggleAssetEditMode = function() {
     var btn = document.getElementById('btnEditAssets');
     list.classList.toggle('edit-mode');
     btn.classList.toggle('active');
+    var newCatBtn = document.querySelector('.btn-new-cat');
+    if(newCatBtn) {
+        newCatBtn.style.display = list.classList.contains('edit-mode') ? 'block' : 'none';
+    }
 };
 
 window._updateAssetSelect = function() {
@@ -1880,6 +1894,10 @@ async function loadData(){
     } else {
         // Novo usuário — inicializa categorias padrão
         assetsData = { categories: DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries:[]})), meta: 0 };
+    }
+    // Garantia extra: se por qualquer motivo ficou vazio, aplica padrão
+    if (!assetsData.categories || assetsData.categories.length === 0) {
+        assetsData = { categories: DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries:[]})), meta: assetsData.meta || 0 };
     }
     renderAssetList();
     window.fillInput('metaVal', assetsData.meta);
