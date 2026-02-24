@@ -15,66 +15,157 @@
 <body>
 
 <!-- ============================= AUTH SCREEN ============================= -->
-<div id="auth-screen" style="display:none"> <!-- Oculto por padrão para evitar flash -->
-    <div class="auth-logo"><img src="logo.png" alt="Clearview"></div>
-    
-    <!-- Initial View -->
-    <div id="auth-main" class="auth-view">
-        <div class="auth-greeting">Olá, seja bem-vindo ao Clearview Dashboard, sua plataforma de organização financeira completa.</div>
-        <button class="btn-auth" onclick="showLoginScreen()">Login</button>
-        <button class="btn-auth btn-auth-primary" onclick="showRegisterScreen()">Cadastrar-se</button>
-        <button class="btn-auth btn-auth-google" onclick="authGoogle()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" style="margin-right:4px"> Entrar com Google
-        </button>
+<div id="auth-screen" style="display:none">
+
+    <!-- Animated Background -->
+    <div class="auth-bg">
+        <div class="auth-orb auth-orb-1"></div>
+        <div class="auth-orb auth-orb-2"></div>
+        <div class="auth-orb auth-orb-3"></div>
+        <div class="auth-grid-lines"></div>
     </div>
 
-    <!-- Login View (Email/Pass) -->
-    <div id="auth-login" class="auth-view" style="display:none;">
-        <div class="auth-input-group">
-            <div class="auth-input-wrapper">
-                <span class="auth-icon-left"><i class="fa-regular fa-envelope"></i></span>
-                <input type="email" id="loginEmail" class="auth-input" placeholder="E-mail">
-            </div>
+    <!-- Logo + Brand -->
+    <div class="auth-header">
+        <div class="auth-logo-wrap">
+            <img src="logo.png" alt="Clearview" class="auth-logo-img">
         </div>
-        <div class="auth-input-group">
-            <div class="auth-input-wrapper">
-                <span class="auth-icon-left"><i class="fa-solid fa-lock"></i></span>
-                <input type="password" id="loginPass" class="auth-input" placeholder="Senha">
-                <button class="toggle-pass" onclick="togglePass('loginPass', this)"><i class="fa-regular fa-eye"></i></button>
-            </div>
-        </div>
-        <button class="btn-auth btn-auth-primary" id="btnLoginAction" onclick="handleLogin()">Entrar</button>
-        <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
+        <div class="auth-brand-tag">CLEARVIEW CAPITAL</div>
     </div>
 
-    <!-- Register View (Full Form) -->
-    <div id="auth-register" class="auth-view" style="display:none;">
-        <div class="auth-input-group">
-            <div class="auth-input-wrapper">
-                <span class="auth-icon-left"><i class="fa-regular fa-user"></i></span>
-                <input type="text" id="regName" class="auth-input capitalize" placeholder="Primeiro Nome">
+    <!-- Sliding Panels Container -->
+    <div class="auth-panels-outer">
+        <div class="auth-panels-track" id="authPanelsTrack">
+
+            <!-- PANEL 0: Main -->
+            <div class="auth-panel" id="auth-main">
+                <div class="auth-panel-inner">
+                    <h1 class="auth-title">Bem-vindo</h1>
+                    <p class="auth-subtitle">Sua plataforma de organização financeira completa.</p>
+
+                    <div class="auth-divider-line"></div>
+
+                    <button class="btn-auth-v2 btn-auth-outline" onclick="showLoginScreen()">
+                        <i class="fa-regular fa-envelope"></i> Entrar com E-mail
+                    </button>
+                    <button class="btn-auth-v2 btn-auth-gold" onclick="showRegisterScreen()">
+                        <i class="fa-regular fa-user-plus"></i> Criar Conta
+                    </button>
+                    <button class="btn-auth-v2 btn-auth-google-v2" onclick="authGoogle()">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="17" alt="G"> Continuar com Google
+                    </button>
+
+                    <p class="auth-legal">Ao continuar, você aceita os <span class="auth-link">Termos de Uso</span></p>
+                </div>
             </div>
-        </div>
-        <div class="auth-input-group">
-            <div class="auth-input-wrapper">
-                <span class="auth-icon-left"><i class="fa-regular fa-user"></i></span>
-                <input type="text" id="regSurname" class="auth-input capitalize" placeholder="Sobrenome">
+
+            <!-- PANEL 1: Login -->
+            <div class="auth-panel" id="auth-login" style="display:none">
+                <div class="auth-panel-inner">
+                    <button class="auth-back-btn" onclick="showMainAuth()">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <h1 class="auth-title">Entrar</h1>
+                    <p class="auth-subtitle">Acesse sua conta Clearview</p>
+
+                    <div class="auth-field-group">
+                        <div class="auth-field">
+                            <label class="auth-field-label">E-mail</label>
+                            <div class="auth-field-wrap">
+                                <i class="fa-regular fa-envelope auth-field-icon"></i>
+                                <input type="email" id="loginEmail" class="auth-field-input" placeholder="seu@email.com" autocomplete="email">
+                            </div>
+                        </div>
+                        <div class="auth-field">
+                            <label class="auth-field-label">Senha</label>
+                            <div class="auth-field-wrap">
+                                <i class="fa-solid fa-lock auth-field-icon"></i>
+                                <input type="password" id="loginPass" class="auth-field-input" placeholder="••••••••" autocomplete="current-password">
+                                <button class="auth-field-eye" onclick="togglePass('loginPass', this)"><i class="fa-regular fa-eye"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-auth-v2 btn-auth-gold" id="btnLoginAction" onclick="handleLogin()">
+                        Entrar <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;margin-left:4px"></i>
+                    </button>
+
+                    <p class="auth-switch-text">Não tem conta? <span class="auth-link" onclick="showRegisterScreen()">Cadastre-se</span></p>
+                </div>
             </div>
-        </div>
-        <div class="auth-input-group"><div class="auth-input-wrapper"><span class="auth-icon-left"><i class="fa-regular fa-envelope"></i></span><input type="email" id="regEmail" class="auth-input" placeholder="E-mail"></div></div>
-        <div class="auth-input-group"><div class="auth-input-wrapper"><span class="auth-icon-left"><i class="fa-regular fa-calendar"></i></span><input type="text" id="regDob" class="auth-input" placeholder="Nascimento (DD/MM/AAAA)" oninput="maskDate(this)"></div></div>
-        <div class="auth-input-group"><div class="auth-input-wrapper"><span class="auth-icon-left"><i class="fa-solid fa-phone"></i></span><input type="tel" id="regPhone" class="auth-input" placeholder="+55 (DD) 90000 0000" oninput="maskPhone(this)"></div></div>
-        <div class="auth-input-group">
-            <div class="auth-input-wrapper">
-                <span class="auth-icon-left"><i class="fa-solid fa-lock"></i></span>
-                <input type="password" id="regPass" class="auth-input" placeholder="Senha">
-                <button class="toggle-pass" onclick="togglePass('regPass', this)"><i class="fa-regular fa-eye"></i></button>
+
+            <!-- PANEL 2: Register -->
+            <div class="auth-panel" id="auth-register" style="display:none">
+                <div class="auth-panel-inner">
+                    <button class="auth-back-btn" onclick="showMainAuth()">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <h1 class="auth-title">Criar Conta</h1>
+                    <p class="auth-subtitle">Junte-se ao Clearview</p>
+
+                    <div class="auth-field-group auth-field-group-scroll">
+                        <div class="auth-field-row">
+                            <div class="auth-field">
+                                <label class="auth-field-label">Nome</label>
+                                <div class="auth-field-wrap">
+                                    <i class="fa-regular fa-user auth-field-icon"></i>
+                                    <input type="text" id="regName" class="auth-field-input capitalize" placeholder="João">
+                                </div>
+                            </div>
+                            <div class="auth-field">
+                                <label class="auth-field-label">Sobrenome</label>
+                                <div class="auth-field-wrap">
+                                    <i class="fa-regular fa-user auth-field-icon"></i>
+                                    <input type="text" id="regSurname" class="auth-field-input capitalize" placeholder="Silva">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="auth-field">
+                            <label class="auth-field-label">E-mail</label>
+                            <div class="auth-field-wrap">
+                                <i class="fa-regular fa-envelope auth-field-icon"></i>
+                                <input type="email" id="regEmail" class="auth-field-input" placeholder="seu@email.com">
+                            </div>
+                        </div>
+                        <div class="auth-field-row">
+                            <div class="auth-field">
+                                <label class="auth-field-label">Nascimento</label>
+                                <div class="auth-field-wrap">
+                                    <i class="fa-regular fa-calendar auth-field-icon"></i>
+                                    <input type="text" id="regDob" class="auth-field-input" placeholder="DD/MM/AAAA" oninput="maskDate(this)">
+                                </div>
+                            </div>
+                            <div class="auth-field">
+                                <label class="auth-field-label">Telefone</label>
+                                <div class="auth-field-wrap">
+                                    <i class="fa-solid fa-phone auth-field-icon"></i>
+                                    <input type="tel" id="regPhone" class="auth-field-input" placeholder="(DD) 9 0000-0000" oninput="maskPhone(this)">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="auth-field">
+                            <label class="auth-field-label">Senha</label>
+                            <div class="auth-field-wrap">
+                                <i class="fa-solid fa-lock auth-field-icon"></i>
+                                <input type="password" id="regPass" class="auth-field-input" placeholder="Mínimo 6 caracteres">
+                                <button class="auth-field-eye" onclick="togglePass('regPass', this)"><i class="fa-regular fa-eye"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-auth-v2 btn-auth-gold" id="btnRegAction" onclick="handleRegister()">
+                        Criar Conta <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;margin-left:4px"></i>
+                    </button>
+
+                    <p class="auth-switch-text">Já tem conta? <span class="auth-link" onclick="showLoginScreen()">Entrar</span></p>
+                </div>
             </div>
+
         </div>
-        
-        <button class="btn-auth btn-auth-primary" id="btnRegAction" onclick="handleRegister()">Criar Conta</button>
-        <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
     </div>
+
+    <!-- Bottom Indicator -->
+    <div class="auth-footer-brand">Clearview Capital Dashboard · v2</div>
 </div>
 
 <!-- ============================= SPLASH SCREEN ============================= -->
@@ -105,7 +196,7 @@
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <div class="menu-title">Atendimento</div>
         <a href="https://wa.me/44991293357" target="_blank">WhatsApp</a>
-        <a href="mailto:contato@clearviewcapital.com.br">E-mail</a>
+        <a href="/cdn-cgi/l/email-protection#52313d3c2633263d12313e373320243b37253133223b26333e7c313d3f7c3020">E-mail</a>
         <a href="javascript:void(0)" onclick="logoutApp()" style="color:var(--danger)">Sair da Conta</a>
         
         <div class="dropdown-btn" onclick="toggleDropdown()">Calculadoras</div>
@@ -412,7 +503,7 @@
     </div>
 </div>
 
-<script type="module">
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -464,34 +555,89 @@ window.resetToHome = function(){
 /* TABS + SWIPE */
 var TAB_ORDER=['fluxo','ativos','historico','projecao'];
 var curTabIdx=0;
-window.switchTab = function(tab,btn){
-    document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+window.switchTab = function(tab,btn,dir){
+    var prevTab=TAB_ORDER[curTabIdx];
+    document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active','tab-in-left','tab-in-right','tab-out-left','tab-out-right');});
     document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
-    document.getElementById('tab-'+tab).classList.add('active');
+    var newEl=document.getElementById('tab-'+tab);
     curTabIdx=TAB_ORDER.indexOf(tab);
-    if(btn) btn.classList.add('active');
+    if(btn){
+        // sync btn if only tab name passed (swipe)
+        var allBtns=document.querySelectorAll('.tab-btn');
+        allBtns.forEach(function(b){b.classList.remove('active');});
+        (btn.classList?btn:allBtns[curTabIdx]).classList.add('active');
+    }
+    if(dir){
+        newEl.classList.add(dir==='left'?'tab-in-left':'tab-in-right');
+    }
+    newEl.classList.add('active');
     if(tab==='historico') window.renderHistorico();
     if(tab==='ativos'){
         var w=document.getElementById('chartWrap');
         if(w){w.classList.remove('chart-anim');void w.offsetWidth;w.classList.add('chart-anim');}
     }
+    // Update tab indicator underline position
+    var tIdx=curTabIdx;
+    var tabsEl=document.getElementById('tabs-root');
+    if(tabsEl){
+        var ind=tabsEl.querySelector('.tab-indicator');
+        if(ind){var btns=tabsEl.querySelectorAll('.tab-btn');if(btns[tIdx]){ind.style.left=(btns[tIdx].offsetLeft)+'px';ind.style.width=(btns[tIdx].offsetWidth)+'px';}}
+    }
 };
 
-/* Swipe Logic */
+/* Swipe Logic — full content area */
 (function(){
-    var sx=0,sy=0;
-    var el=document.getElementById('tabs-root')||document.body;
-    if(el){
-        el.addEventListener('touchstart',function(e){sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY;},{passive:true});
-        el.addEventListener('touchend',function(e){
-            var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
-            if(Math.abs(dx)<50||Math.abs(dy)>Math.abs(dx)*0.7) return;
-            var next=dx<0?Math.min(curTabIdx+1,TAB_ORDER.length-1):Math.max(curTabIdx-1,0);
-            if(next===curTabIdx) return;
-            var b=document.querySelectorAll('.tab-btn')[next];
-            window.switchTab(TAB_ORDER[next],b);
-        },{passive:true});
+    var sx=0,sy=0,stime=0,swipeActive=false;
+    var swipeHint=null;
+    
+    function createSwipeHint(){
+        if(swipeHint) return;
+        swipeHint=document.createElement('div');
+        swipeHint.id='swipe-hint';
+        document.body.appendChild(swipeHint);
     }
+    
+    function showSwipeHint(dir){
+        createSwipeHint();
+        var labels=TAB_ORDER.map(function(t){return ({fluxo:'Fluxo',ativos:'Ativos',historico:'Histórico',projecao:'Projeção'})[t]||t;});
+        var nextIdx=dir==='left'?Math.min(curTabIdx+1,TAB_ORDER.length-1):Math.max(curTabIdx-1,0);
+        if(nextIdx===curTabIdx){swipeHint.style.opacity='0';return;}
+        swipeHint.innerHTML=(dir==='left'?'&#8592; ':'')+'<span>'+labels[nextIdx]+'</span>'+(dir==='right'?' &#8594;':'');
+        swipeHint.style.opacity='1';
+    }
+    
+    document.addEventListener('touchstart',function(e){
+        if(e.target.closest('#auth-screen,#mySidenav,.modal-overlay')) return;
+        sx=e.changedTouches[0].clientX;
+        sy=e.changedTouches[0].clientY;
+        stime=Date.now();
+        swipeActive=true;
+    },{passive:true});
+    
+    document.addEventListener('touchmove',function(e){
+        if(!swipeActive) return;
+        var dx=e.changedTouches[0].clientX-sx;
+        var dy=e.changedTouches[0].clientY-sy;
+        if(Math.abs(dy)>Math.abs(dx)*1.2){swipeActive=false;return;}
+        if(Math.abs(dx)>20) showSwipeHint(dx<0?'left':'right');
+    },{passive:true});
+    
+    document.addEventListener('touchend',function(e){
+        if(!swipeActive){swipeActive=false;return;}
+        swipeActive=false;
+        if(swipeHint) swipeHint.style.opacity='0';
+        var dx=e.changedTouches[0].clientX-sx;
+        var dy=e.changedTouches[0].clientY-sy;
+        var dt=Date.now()-stime;
+        var isFlick=Math.abs(dx)>30&&dt<350;
+        if(!isFlick&&Math.abs(dx)<60) return;
+        if(Math.abs(dy)>Math.abs(dx)*0.75) return;
+        var next=dx<0?Math.min(curTabIdx+1,TAB_ORDER.length-1):Math.max(curTabIdx-1,0);
+        if(next===curTabIdx) return;
+        var direction=dx<0?'left':'right';
+        var b=document.querySelectorAll('.tab-btn')[next];
+        window.switchTab(TAB_ORDER[next],b,direction);
+    },{passive:true});
 })();
 
 /* SYNC ICON */
@@ -1381,21 +1527,20 @@ function loadMonthData(){
 }
 
 /* AUTHENTICATION LOGIC */
-window._showLoginScreen = function() {
-    document.getElementById('auth-main').style.display = 'none';
-    document.getElementById('auth-login').style.display = 'flex';
-};
+function switchAuthPanel(panelId) {
+    var panels = ['auth-main','auth-login','auth-register'];
+    var idx = panels.indexOf(panelId);
+    panels.forEach(function(id) { document.getElementById(id).style.display = 'flex'; });
+    var track = document.getElementById('authPanelsTrack');
+    track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+    setTimeout(function() {
+        panels.forEach(function(id, i) { if(i !== idx) document.getElementById(id).style.display = 'none'; });
+    }, 380);
+}
 
-window._showRegisterScreen = function() {
-    document.getElementById('auth-main').style.display = 'none';
-    document.getElementById('auth-register').style.display = 'flex';
-};
-
-window._showMainAuth = function() {
-    document.getElementById('auth-login').style.display = 'none';
-    document.getElementById('auth-register').style.display = 'none';
-    document.getElementById('auth-main').style.display = 'flex';
-};
+window._showLoginScreen = function() { switchAuthPanel('auth-login'); };
+window._showRegisterScreen = function() { switchAuthPanel('auth-register'); };
+window._showMainAuth = function() { switchAuthPanel('auth-main'); };
 
 function getFriendlyError(error) {
     console.error(error);
