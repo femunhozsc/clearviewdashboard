@@ -12,7 +12,7 @@
 <body>
 
 <!-- ============================= AUTH SCREEN ============================= -->
-<div id="auth-screen">
+<div id="auth-screen" style="display:none"> <!-- Oculto por padrão para evitar flash -->
     <div class="auth-logo"><img src="logo.png" alt="Clearview"></div>
     
     <!-- Initial View -->
@@ -48,12 +48,12 @@
 </div>
 
 <!-- ============================= SPLASH SCREEN ============================= -->
-<div id="splash" style="display:none">
+<div id="splash"> <!-- Visível por padrão -->
     <div class="splash-logo">
         <img src="logo.png" alt="Clearview Logo">
     </div>
     <div class="splash-greeting">
-        <div class="splash-ola">BEM-VINDO DE VOLTA</div>
+        <div class="splash-ola" id="splashGreeting">BEM-VINDO DE VOLTA</div>
         <div class="splash-nome" id="splashName">Usuario</div>
         <div class="splash-divider"></div>
     </div>
@@ -1267,6 +1267,11 @@ async function startApp(user) {
     
     document.getElementById('splashName').textContent = formatName(nameToDisplay);
 
+    // Define saudação (Novo usuário vs Recorrente)
+    var isNewUser = user.metadata.creationTime === user.metadata.lastSignInTime;
+    var greeting = isNewUser ? "SEJA BEM-VINDO," : "BEM-VINDO DE VOLTA";
+    document.getElementById('splashGreeting').textContent = greeting;
+
     // Esconde Auth, Mostra Splash e Inicia
     document.getElementById('auth-screen').classList.add('hidden');
     var splash = document.getElementById('splash');
@@ -1390,6 +1395,7 @@ async function runSplashSequence() {
     setTimeout(function(){
         splash.style.display='none';
         document.getElementById('app').classList.add('visible');
+        window.scrollTo(0, 0); // Garante que o app comece no topo
     },850);
 }
 
@@ -1401,6 +1407,7 @@ window.addEventListener('load', function(){
         } else {
             // Mantém na tela de Auth (que já é visível por padrão no HTML)
             document.getElementById('splash').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'flex';
         }
     });
 });
