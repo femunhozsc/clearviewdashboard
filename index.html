@@ -555,61 +555,47 @@
         <div class="termos-body">
             <h1 class="termos-title">Termos de Uso e Política de Privacidade</h1>
             <p class="termos-date">Última atualização: Janeiro de 2026</p>
-
             <div class="termos-section">
                 <h2>1. Sobre o Clearview</h2>
                 <p>O Clearview Capital Dashboard é uma plataforma de organização financeira pessoal que permite ao usuário registrar e visualizar seus dados de renda, gastos e patrimônio. Não somos uma instituição financeira e não realizamos qualquer tipo de movimentação de valores.</p>
             </div>
-
             <div class="termos-section">
                 <h2>2. Dados que Coletamos</h2>
                 <p>Para oferecer nossos serviços, coletamos e armazenamos as seguintes informações:</p>
                 <ul>
-                    <li><strong>Dados de Cadastro:</strong> nome, sobrenome, endereço de e-mail, número de telefone e data de nascimento, fornecidos voluntariamente no momento do registro.</li>
-                    <li><strong>Dados Financeiros:</strong> registros de renda, categorias de gastos, valores de patrimônio e metas financeiras inseridos pelo próprio usuário.</li>
-                    <li><strong>Dados de Acesso:</strong> informações técnicas de autenticação (gerenciadas pelo Firebase Authentication), incluindo data de criação e último acesso à conta.</li>
-                    <li><strong>Dados de Uso:</strong> preferências de interface (modo de privacidade, configurações da calculadora), armazenados localmente no dispositivo.</li>
+                    <li><strong>Dados de Cadastro:</strong> nome, sobrenome, e-mail, número de telefone e data de nascimento, fornecidos voluntariamente no cadastro.</li>
+                    <li><strong>Dados Financeiros:</strong> registros de renda, categorias de gastos, valores de patrimônio e metas inseridos pelo próprio usuário.</li>
+                    <li><strong>Dados de Acesso:</strong> informações de autenticação gerenciadas pelo Firebase, incluindo data de criação e último acesso.</li>
+                    <li><strong>Dados de Uso:</strong> preferências de interface armazenadas localmente no dispositivo.</li>
                 </ul>
             </div>
-
             <div class="termos-section">
                 <h2>3. Como Usamos seus Dados</h2>
                 <p>Seus dados são utilizados exclusivamente para:</p>
                 <ul>
                     <li>Identificar e autenticar sua conta com segurança;</li>
-                    <li>Sincronizar seus dados financeiros entre diferentes dispositivos;</li>
-                    <li>Permitir o login por número de telefone, vinculando-o ao seu e-mail cadastrado;</li>
-                    <li>Melhorar a experiência e funcionalidades da plataforma.</li>
+                    <li>Sincronizar seus dados entre dispositivos;</li>
+                    <li>Permitir o login por número de telefone vinculado ao e-mail cadastrado;</li>
+                    <li>Melhorar as funcionalidades da plataforma.</li>
                 </ul>
                 <p><strong>Não vendemos, alugamos ou compartilhamos seus dados com terceiros para fins comerciais.</strong></p>
             </div>
-
             <div class="termos-section">
                 <h2>4. Armazenamento e Segurança</h2>
-                <p>Todos os dados são armazenados de forma segura no Firebase (Google Cloud), com criptografia em trânsito (HTTPS/TLS) e em repouso. O acesso aos dados é protegido por autenticação obrigatória — somente o titular da conta pode visualizar ou modificar suas informações.</p>
-                <p>O índice de telefone para e-mail é armazenado em uma coleção separada e isolada, utilizada exclusivamente para viabilizar o login por celular.</p>
+                <p>Todos os dados são armazenados com segurança no Firebase (Google Cloud), com criptografia em trânsito (HTTPS/TLS) e em repouso. Apenas o titular da conta pode visualizar ou modificar seus dados.</p>
             </div>
-
             <div class="termos-section">
                 <h2>5. Seus Direitos</h2>
-                <p>Você tem o direito de, a qualquer momento:</p>
                 <ul>
-                    <li>Acessar todos os seus dados financeiros diretamente no dashboard;</li>
-                    <li>Exportar seus dados em formato CSV através da opção no rodapé do app;</li>
-                    <li>Solicitar a exclusão completa da sua conta e todos os dados associados entrando em contato conosco.</li>
+                    <li>Acessar todos os seus dados diretamente no dashboard;</li>
+                    <li>Exportar seus dados em CSV pelo rodapé do app;</li>
+                    <li>Solicitar exclusão completa da conta e dados pelo nosso contato.</li>
                 </ul>
             </div>
-
             <div class="termos-section">
-                <h2>6. Retenção de Dados</h2>
-                <p>Seus dados são mantidos enquanto sua conta estiver ativa. Em caso de inatividade prolongada (mais de 24 meses) ou solicitação de exclusão, os dados serão removidos permanentemente de nossos servidores.</p>
+                <h2>6. Contato</h2>
+                <p>Dúvidas ou solicitações de exclusão: WhatsApp <strong>(44) 99129-3357</strong> ou pelo e-mail no menu lateral do app.</p>
             </div>
-
-            <div class="termos-section">
-                <h2>7. Contato</h2>
-                <p>Para dúvidas, solicitações de exclusão de dados ou qualquer questão relacionada à sua privacidade, entre em contato pelo WhatsApp <strong>(44) 99129-3357</strong> ou pelo e-mail de suporte disponível no menu lateral do app.</p>
-            </div>
-
             <div class="termos-section termos-section-last">
                 <p>Ao criar uma conta ou utilizar o Clearview, você confirma que leu e concorda com estes Termos de Uso e Política de Privacidade.</p>
             </div>
@@ -793,12 +779,12 @@ window.addNewCategory = function(){if(window._addNewCategory)window._addNewCateg
 
 /* TERMOS DE USO */
 window.openTermos = function(){
-    var m = document.getElementById('termosModal');
-    if(m){ m.style.display='flex'; document.body.style.overflow='hidden'; }
+    var m=document.getElementById('termosModal');
+    if(m){m.style.display='flex';document.body.style.overflow='hidden';}
 };
 window.closeTermos = function(){
-    var m = document.getElementById('termosModal');
-    if(m){ m.style.display='none'; document.body.style.overflow=''; }
+    var m=document.getElementById('termosModal');
+    if(m){m.style.display='none';document.body.style.overflow='';}
 };
 window.toggleAssetCat = function(id){if(window._toggleAssetCat)window._toggleAssetCat(id);};
 window.deleteAssetEntry = function(catId, entryId){if(window._deleteAssetEntry)window._deleteAssetEntry(catId, entryId);};
@@ -1764,18 +1750,11 @@ window.maskPhoneLogin = function(el) {
 };
 
 /* Login por celular: busca email cadastrado no Firestore pelo telefone, então faz login normal */
-/* IMPORTANTE — Regras Firestore necessárias para a coleção 'telefones':
-   match /telefones/{phone} {
-     allow read: if true;            // leitura pública para login sem autenticação
-     allow write: if request.auth != null;  // escrita só por usuários autenticados
-   }
-*/
 window._handleLoginPhone = async function() {
     var phone = document.getElementById('loginPhone').value.trim();
     var pass = document.getElementById('loginPhonePass').value;
     if(!phone || !pass) return alert("Preencha o número e a senha.");
 
-    // Extrai apenas dígitos e monta +55...
     var digits = phone.replace(/\D/g,'');
     if(!digits.startsWith('55')) digits = '55' + digits;
     var cleanPhone = '+' + digits;
@@ -1785,42 +1764,32 @@ window._handleLoginPhone = async function() {
     var origHTML = btn.innerHTML;
     btn.innerHTML = "Buscando conta..."; btn.disabled = true;
 
-    try {
-        var phoneDoc = await getDoc(doc(db, 'telefones', cleanPhone));
-        if(!phoneDoc.exists()) {
-            // Tenta também sem o 9 (para números antigos de 8 dígitos)
-            var digitsAlt = digits;
-            if(digits.length === 13) {
-                // Remove o 9 após o DDD: +55 11 9 XXXX-XXXX → +55 11 XXXX-XXXX
-                digitsAlt = digits.slice(0,4) + digits.slice(5);
-            }
-            var altPhone = '+' + digitsAlt;
-            var altDoc = await getDoc(doc(db, 'telefones', altPhone));
-            if(!altDoc.exists()) {
-                alert("Nenhuma conta encontrada com esse número.\n\nVerifique se:\n• O número foi informado no cadastro\n• Você está usando o mesmo DDD e formato\n\nSe o problema persistir, tente entrar com e-mail.");
-                btn.innerHTML = origHTML; btn.disabled = false;
-                return;
-            }
-            var email = altDoc.data().email;
-            btn.innerHTML = "Entrando...";
-            signInWithEmailAndPassword(auth, email, pass)
-                .catch(function(error) {
-                    alert(getFriendlyError(error));
-                    btn.innerHTML = origHTML; btn.disabled = false;
-                });
-            return;
-        }
-        var email = phoneDoc.data().email;
+    async function tryLogin(email) {
         btn.innerHTML = "Entrando...";
         signInWithEmailAndPassword(auth, email, pass)
             .catch(function(error) {
                 alert(getFriendlyError(error));
                 btn.innerHTML = origHTML; btn.disabled = false;
             });
+    }
+
+    try {
+        var phoneDoc = await getDoc(doc(db, 'telefones', cleanPhone));
+        if(phoneDoc.exists()) { await tryLogin(phoneDoc.data().email); return; }
+
+        // Tenta variação sem o 9 (números de 8 dígitos antigos)
+        if(digits.length === 13) {
+            var altDigits = digits.slice(0,4) + digits.slice(5);
+            var altDoc = await getDoc(doc(db, 'telefones', '+' + altDigits));
+            if(altDoc.exists()) { await tryLogin(altDoc.data().email); return; }
+        }
+
+        alert("Nenhuma conta encontrada com esse número.\n\nVerifique se o número foi informado no cadastro ou tente entrar com e-mail.");
+        btn.innerHTML = origHTML; btn.disabled = false;
     } catch(e) {
         console.error(e);
         if(e.code === 'permission-denied') {
-            alert("Acesso negado ao banco de dados.\n\nAdicione esta regra no Firestore Console > Rules:\n\nmatch /telefones/{phone} {\n  allow read: if true;\n  allow write: if request.auth != null;\n}");
+            alert("Permissão negada no banco de dados.\n\nAdicione a regra abaixo no Firebase Console → Firestore → Rules:\n\nmatch /telefones/{phone} {\n  allow read: if true;\n  allow write: if request.auth != null;\n}");
         } else {
             alert("Erro ao buscar conta: " + e.message);
         }
