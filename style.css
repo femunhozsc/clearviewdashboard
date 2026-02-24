@@ -17,7 +17,7 @@
 body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 
 /* ============================================================
-   SPLASH
+   SPLASH — sequência CSS pura via classes adicionadas por JS
 ============================================================ */
 #splash {
     position:fixed; inset:0; z-index:9999;
@@ -26,6 +26,7 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
     justify-content:center; align-items:center;
     padding-bottom:15vh;
 }
+/* Logo: entra no centro */
 .splash-logo {
     opacity:0; transform:scale(0.88);
     animation: sLogoIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.35s forwards;
@@ -33,19 +34,24 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
     margin-bottom:0;
 }
 .splash-logo img { height:40px; }
+/* Fase 2: logo sobe */
 #splash.phase2 .splash-logo { margin-bottom:26px; }
+
+/* Greeting: oculto, expande na fase 2 */
 .splash-greeting {
     text-align:center;
     max-height:0; overflow:hidden;
     transition: max-height 0.85s cubic-bezier(0.4,0,0.2,1);
 }
 #splash.phase2 .splash-greeting { max-height:180px; }
+
 .splash-ola {
     font-size:0.7rem; font-weight:400; color:#bbbbbb;
     letter-spacing:4px; text-transform:uppercase;
     opacity:0; transition: opacity 0.7s ease 0.25s;
 }
 #splash.phase2 .splash-ola { opacity:1; }
+
 .splash-nome {
     font-size:1.85rem; font-weight:500; color:#ffffff;
     margin-top:9px; letter-spacing:0.3px;
@@ -53,6 +59,8 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
     transition: opacity 0.75s ease 0.45s, transform 0.75s ease 0.45s;
 }
 #splash.phase2 .splash-nome { opacity:1; transform:translateY(0); }
+
+/* Linha dourada — nasce junto com o nome */
 .splash-divider {
     width:0; height:1px;
     background:linear-gradient(90deg, transparent, var(--accent), transparent);
@@ -60,6 +68,8 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
     transition: width 0.9s ease 0.45s;
 }
 #splash.phase2 .splash-divider { width:130px; }
+
+/* Tagline em baixo absoluto */
 .splash-tagline {
     position:absolute; bottom:42px; left:0; right:0; text-align:center;
     font-size:0.58rem; color:#555555;
@@ -67,7 +77,9 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
     opacity:0; transition: opacity 0.7s ease;
 }
 #splash.phase3 .splash-tagline { opacity:1; }
+
 #splash.exit { animation: sExit 0.85s cubic-bezier(0.7,0,0.84,0) forwards; }
+
 @keyframes sLogoIn { to { opacity:1; transform:scale(1); } }
 @keyframes sExit {
     0%   { opacity:1; transform:scale(1); }
@@ -89,24 +101,12 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
     border-bottom:1px solid var(--card-border); z-index:100;
 }
 .logo-img { height:36px; display:block; }
-.navbar-right { display:flex; align-items:center; gap:8px; }
+.navbar-right { display:flex; align-items:center; gap:10px; }
 .sync-icon { display:flex; align-items:center; width:16px; height:16px; }
 .sync-icon svg { display:block; }
 .spin { animation:spin 1.1s linear infinite; transform-origin:center; }
 @keyframes spin { to { transform:rotate(360deg); } }
 .hamburger { font-size:1.4rem; background:none; border:none; color:var(--text-muted); cursor:pointer; padding:2px 4px; }
-
-/* Botão ocultar valores */
-.btn-hide-vals {
-    background:none; border:none; color:var(--text-muted);
-    cursor:pointer; padding:4px; display:flex; align-items:center;
-    justify-content:center; transition:color 0.2s; border-radius:6px;
-}
-.btn-hide-vals:active { color:var(--accent); }
-.btn-hide-vals.hidden-active { color:var(--accent); }
-
-/* Valor oculto */
-.val-hidden { letter-spacing:3px; opacity:0.4; }
 
 /* SIDENAV */
 .sidenav { height:100%; width:0; position:fixed; z-index:200; top:0; right:0; background:#0d0d0d; overflow-x:hidden; transition:0.3s; padding-top:64px; border-left:1px solid var(--card-border); }
@@ -115,6 +115,7 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 .sidenav .closebtn { position:absolute; top:6px; right:20px; font-size:28px; color:var(--text-muted); }
 .menu-title { padding:0 28px; font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:2.5px; font-weight:500; }
 .overlay-bg { position:fixed; display:none; inset:0; background:rgba(0,0,0,0.75); z-index:150; }
+/* Menu Dropdown */
 .dropdown-btn { padding:14px 28px; text-decoration:none; font-size:0.88rem; color:#bbb; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:0.2s; }
 .dropdown-container { display:none; background:rgba(255,255,255,0.02); }
 .dropdown-container a { padding-left:44px; font-size:0.8rem; }
@@ -151,6 +152,7 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 .renda-total-val { font-size:1.75rem; font-weight:600; color:var(--accent); letter-spacing:-0.5px; }
 .renda-entries-count { font-size:0.65rem; color:var(--text-muted); }
 
+/* Botão adicionar renda — SEM pontilhado */
 .btn-add-renda {
     width:100%; background:var(--accent-dim);
     border:1px solid var(--accent-border);
@@ -161,6 +163,7 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 }
 .btn-add-renda:active { background:rgba(255,204,0,0.14); }
 
+/* Botão histórico de lançamentos colapsável */
 .btn-renda-hist {
     width:100%; background:rgba(255,255,255,0.02);
     border:1px solid var(--card-border);
@@ -196,7 +199,7 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 .progress-track { background:rgba(255,255,255,0.05); height:4px; border-radius:2px; overflow:hidden; }
 .progress-fill { height:100%; background:linear-gradient(90deg,#7a5c1e,var(--accent)); width:0%; transition:width 1.2s ease; }
 
-/* SALDO */
+/* SALDO — mesma tipografia de renda-total-val */
 .saldo-box { border-radius:12px; padding:16px 18px; margin-top:8px; display:flex; justify-content:space-between; align-items:center; }
 .saldo-box.positivo { background:rgba(77,207,148,0.05); border:1px solid rgba(77,207,148,0.14); }
 .saldo-box.negativo { background:rgba(255,85,85,0.05); border:1px solid rgba(255,85,85,0.14); }
@@ -217,6 +220,7 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 .cat-content.show { display:block; animation:slideDown 0.22s ease; }
 @keyframes slideDown { from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);} }
 
+/* EXPENSE ROWS */
 .expense-row { display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; margin-bottom:9px; border-bottom:1px solid rgba(255,255,255,0.04); padding-bottom:7px; }
 .expense-row:last-child { border-bottom:none; }
 .lbl-input { background:transparent; border:none; color:var(--text-sec); font-size:0.76rem; width:100%; border-bottom:1px solid transparent; transition:0.2s; font-family:'DM Sans',sans-serif; font-weight:400; }
@@ -227,17 +231,21 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 .btn-del-row:active { color:var(--danger); }
 .btn-add-row { background:none; border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.7rem; padding:7px 14px; border-radius:8px; cursor:pointer; transition:0.2s; margin-top:4px; width:100%; font-family:'DM Sans',sans-serif; }
 .btn-add-row:active { border-color:rgba(255,204,0,0.25); color:var(--accent); }
+
+/* QUICK ADD */
 .btn-quick-add-inline { background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent-border); padding:5px 12px; border-radius:8px; font-size:0.68rem; font-weight:500; cursor:pointer; transition:0.2s; font-family:'DM Sans',sans-serif; }
 .btn-quick-add-inline:active { background:rgba(255,204,0,0.14); }
 
+/* Gastos removidos */
 #gastos-hist-wrapper { display:none; margin-top:12px; }
 .gastos-hist-title { font-size:0.58rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase; font-weight:500; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--card-border); }
 
-/* ATIVOS */
+/* ATIVOS — gráfico com animação ao entrar */
 .chart-donut-container { position:relative; height:198px; margin:6px 0; }
 @keyframes chartIn { from{opacity:0;transform:scale(0.88);}to{opacity:1;transform:scale(1);} }
 .chart-anim { animation:chartIn 0.65s cubic-bezier(0.16,1,0.3,1) both; }
-.total-center { text-align:center; margin-top:10px; margin-bottom:0; }
+.total-center { text-align:center; margin-top:-2px; margin-bottom:16px; }
+/* Mesma família tipográfica dos totais */
 .total-center h3 { font-size:1.75rem; font-weight:600; color:var(--text-main); letter-spacing:-0.5px; }
 .total-center span { color:var(--text-muted); font-size:0.58rem; letter-spacing:2px; text-transform:uppercase; font-weight:500; }
 
@@ -307,7 +315,7 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 
 footer { text-align:center; font-size:0.56rem; color:var(--text-muted); margin-top:36px; opacity:0.45; letter-spacing:1.5px; padding-bottom:20px; }
 
-/* HISTÓRICO ANUAL */
+/* NOVOS ESTILOS: HISTORICO POR ANO */
 .hist-year-group { margin-bottom:12px; }
 .hist-year-header { font-size:1.1rem; font-weight:600; color:var(--text-main); padding:10px 4px; cursor:pointer; display:flex; align-items:center; gap:10px; }
 .hist-year-header .arrow { font-size:0.6rem; color:var(--text-muted); transition:transform 0.3s; }
@@ -315,236 +323,56 @@ footer { text-align:center; font-size:0.56rem; color:var(--text-muted); margin-t
 .hist-year-content { display:block; animation:slideDown 0.3s ease; }
 .hist-year-content.hidden { display:none; }
 
-/* CALCULADORAS MODO FULLSCREEN */
-body.calc-mode .month-header,
-body.calc-mode .tabs,
+/* NOVOS ESTILOS: CALCULADORAS */
+/* Oculta elementos quando em modo calculadora fullscreen */
+body.calc-mode .month-header, 
+body.calc-mode .tabs, 
 body.calc-mode footer { display:none !important; }
 body.calc-mode .content { padding-top:80px; }
+
 .calc-fullscreen-header { display:none; margin-bottom:20px; }
 body.calc-mode .calc-fullscreen-header { display:block; }
 .calc-back-btn { background:none; border:none; color:var(--accent); font-size:0.9rem; cursor:pointer; display:flex; align-items:center; gap:6px; margin-bottom:10px; font-weight:500; }
 
 /* ============================================================
-   AUTH SCREEN — REDESENHADO
+   AUTH SCREEN
 ============================================================ */
 #auth-screen {
     position: fixed; inset: 0; z-index: 10000;
     background: var(--bg);
     display: flex; flex-direction: column;
-    align-items: center; justify-content: flex-end;
-    overflow: hidden;
+    align-items: center; justify-content: center;
+    padding: 30px;
+    transition: opacity 0.5s ease;
 }
 #auth-screen.hidden { opacity: 0; pointer-events: none; display: none; }
-
-/* Fundo com gradiente sutil */
-.auth-bg {
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,204,0,0.08) 0%, transparent 60%);
-    pointer-events: none;
+.auth-logo { margin-bottom: 40px; transform: scale(1.2); margin-top: -40px; animation: fadeInUp 0.8s ease; }
+.auth-logo img { height: 45px; }
+.auth-greeting {
+    text-align: center; color: var(--text-sec); font-size: 0.85rem;
+    max-width: 300px; margin-bottom: 40px; line-height: 1.5; margin-top: -20px;
+    animation: fadeInUp 0.8s ease 0.1s backwards;
 }
+.auth-view { width: 100%; display: flex; flex-direction: column; align-items: center; animation: fadeInUp 0.5s ease; }
 
-/* Logo grande centralizada no topo */
-.auth-logo-area {
-    position: absolute; top: 0; left: 0; right: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    height: 42%;
-    animation: authLogoIn 1s cubic-bezier(0.16,1,0.3,1) forwards;
-}
-.auth-logo-area img { height: 38px; margin-bottom: 18px; }
-.auth-tagline {
-    font-size: 0.68rem; color: var(--text-muted);
-    letter-spacing: 3px; text-transform: uppercase;
-    animation: authFadeIn 0.8s ease 0.4s backwards;
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes authLogoIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes authFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-/* Painel de auth — bottom sheet */
-.auth-panel {
-    width: 100%; max-width: 480px;
-    background: #0e0e0e;
-    border-top: 1px solid var(--card-border);
-    border-radius: 28px 28px 0 0;
-    padding: 32px 28px 48px;
-    position: relative;
-    animation: authPanelIn 0.65s cubic-bezier(0.16,1,0.3,1) 0.2s both;
-    max-height: 72vh; overflow-y: auto;
-}
-@keyframes authPanelIn {
-    from { transform: translateY(60px); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-}
-
-/* Handle visual */
-.auth-handle {
-    width: 36px; height: 4px; border-radius: 2px;
-    background: rgba(255,255,255,0.12);
-    margin: 0 auto 26px;
-}
-
-/* Título de cada view */
-.auth-view-title {
-    font-size: 1.4rem; font-weight: 600; color: var(--text-main);
-    margin-bottom: 6px;
-}
-.auth-view-subtitle {
-    font-size: 0.82rem; color: var(--text-muted);
-    margin-bottom: 26px; font-weight: 400;
-}
-
-/* Views internas — animação ao trocar */
-.auth-view {
-    width: 100%;
-    animation: viewSlideIn 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-@keyframes viewSlideIn {
-    from { opacity: 0; transform: translateX(18px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-
-/* Campo de input com ícone */
-.auth-field {
-    position: relative;
-    margin-bottom: 12px;
-}
-.auth-field-icon {
-    position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-    color: var(--text-muted); display: flex; align-items: center;
-    pointer-events: none;
-}
-.auth-input {
-    width: 100%; padding: 16px 16px 16px 46px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.04);
+.btn-auth {
+    width: 100%; max-width: 280px;
+    padding: 16px; border-radius: 14px;
+    font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; margin-bottom: 14px;
     border: 1px solid var(--card-border);
-    color: var(--text-main); font-size: 0.95rem;
-    outline: none; font-family: 'DM Sans', sans-serif;
-    transition: border-color 0.2s, background 0.2s;
-    -webkit-text-size-adjust: 100%;
+    background: rgba(255,255,255,0.03); color: var(--text-main);
+    transition: 0.2s; font-family: 'DM Sans', sans-serif;
 }
-.auth-input:focus {
-    border-color: var(--accent);
-    background: rgba(255,255,255,0.06);
-}
+.btn-auth:active { transform: scale(0.98); }
+.btn-auth-primary { background: var(--accent); color: #000; border: none; box-shadow: 0 4px 15px rgba(255,204,0,0.15); }
+.btn-auth-google { background: #fff; color: #333; border: none; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px; }
+.auth-input-group { width: 100%; max-width: 280px; margin-bottom: 16px; }
+.auth-input { width: 100%; padding: 16px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); color: var(--text-main); font-size: 0.95rem; outline: none; text-align: left; font-family: 'DM Sans', sans-serif; transition: 0.3s; }
+.auth-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.06); }
 .auth-input::placeholder { color: var(--text-muted); opacity: 0.7; }
-/* Campo sem ícone esquerdo */
-.auth-input.no-icon { padding-left: 16px; }
-/* Ícone de olho (toggle senha) */
-.auth-eye-btn {
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-    background: none; border: none; color: var(--text-muted);
-    cursor: pointer; padding: 4px; display: flex; align-items: center;
-    transition: color 0.2s;
-}
-.auth-eye-btn:active { color: var(--accent); }
-
-/* Botões */
-.btn-auth-primary {
-    width: 100%; padding: 16px;
-    background: var(--accent); color: #000;
-    border: none; border-radius: 14px;
-    font-size: 0.95rem; font-weight: 600;
-    cursor: pointer; font-family: 'DM Sans', sans-serif;
-    transition: opacity 0.2s, transform 0.15s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin-bottom: 12px; letter-spacing: 0.3px;
-}
-.btn-auth-primary:active { transform: scale(0.98); opacity: 0.9; }
-.btn-auth-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-.btn-auth-secondary {
-    width: 100%; padding: 15px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--card-border);
-    color: var(--text-main); border-radius: 14px;
-    font-size: 0.92rem; font-weight: 500;
-    cursor: pointer; font-family: 'DM Sans', sans-serif;
-    transition: background 0.2s, transform 0.15s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin-bottom: 12px;
-}
-.btn-auth-secondary:active { transform: scale(0.98); background: rgba(255,255,255,0.07); }
-
-.btn-auth-google {
-    width: 100%; padding: 15px;
-    background: #fff;
-    border: none; border-radius: 14px;
-    color: #1a1a1a; font-size: 0.92rem; font-weight: 600;
-    cursor: pointer; font-family: 'DM Sans', sans-serif;
-    transition: opacity 0.2s, transform 0.15s;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-}
-.btn-auth-google:active { transform: scale(0.98); opacity: 0.9; }
-
-/* Divisor */
-.auth-divider {
-    display: flex; align-items: center; gap: 12px;
-    margin: 4px 0 16px; color: var(--text-muted); font-size: 0.75rem;
-}
-.auth-divider::before, .auth-divider::after {
-    content: ''; flex: 1; height: 1px; background: var(--card-border);
-}
-
-/* Link/botão voltar */
-.btn-auth-back {
-    display: flex; align-items: center; gap: 6px;
-    background: none; border: none; color: var(--text-muted);
-    font-size: 0.85rem; cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    margin-bottom: 22px; padding: 0;
-    transition: color 0.2s;
-}
-.btn-auth-back:active { color: var(--accent); }
-
-/* Link texto simples */
-.auth-link {
-    text-align: center; color: var(--text-muted); font-size: 0.82rem;
-    margin-top: 4px; cursor: pointer; background: none; border: none;
-    font-family: 'DM Sans', sans-serif; width: 100%; padding: 8px;
-    transition: color 0.2s;
-}
-.auth-link:active { color: var(--accent); }
-
-/* Spinner de loading dentro do botão */
-.auth-spinner {
-    width: 16px; height: 16px;
-    border: 2px solid rgba(0,0,0,0.3);
-    border-top-color: #000;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-}
-
-/* Toast de erro */
-.auth-error {
-    background: rgba(255,85,85,0.1);
-    border: 1px solid rgba(255,85,85,0.25);
-    border-radius: 10px; padding: 11px 14px;
-    font-size: 0.82rem; color: #ff8080;
-    margin-bottom: 14px; display: none;
-    animation: authFadeIn 0.2s ease;
-}
-.auth-error.show { display: block; }
-
-/* Nota do Google sobre domínio */
-.auth-note {
-    font-size: 0.72rem; color: var(--text-muted);
-    text-align: center; margin-top: 8px; line-height: 1.5;
-}
-
-/* Linha de separação de campo */
-.auth-name-row {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-    margin-bottom: 0;
-}
-.auth-name-row .auth-field { margin-bottom: 0; }
-.auth-name-row { margin-bottom: 12px; }
