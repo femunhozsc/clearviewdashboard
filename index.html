@@ -14,23 +14,37 @@
 <!-- ============================= AUTH SCREEN ============================= -->
 <div id="auth-screen">
     <div class="auth-logo"><img src="logo.png" alt="Clearview"></div>
+    <div class="auth-greeting">Olá, seja bem-vindo ao Clearview Dashboard, sua plataforma de organização financeira completa.</div>
     
     <!-- Initial View -->
     <div id="auth-main" style="width:100%; display:flex; flex-direction:column; align-items:center;">
-        <button class="btn-auth" onclick="showPhoneAuth('login')">Login</button>
-        <button class="btn-auth btn-auth-primary" onclick="showPhoneAuth('register')">Cadastrar-se</button>
+        <button class="btn-auth" onclick="showLoginScreen()">Login</button>
+        <button class="btn-auth btn-auth-primary" onclick="showRegisterScreen()">Cadastrar-se</button>
         <button class="btn-auth btn-auth-google" onclick="authGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Entrar com Google
         </button>
     </div>
 
-    <!-- Phone Input View (Hidden) -->
-    <div id="auth-phone" style="display:none; width:100%; flex-direction:column; align-items:center;">
+    <!-- Login View (Phone only) -->
+    <div id="auth-login" style="display:none; width:100%; flex-direction:column; align-items:center;">
         <div class="auth-input-group">
-            <input type="tel" id="phoneNumber" class="auth-input" placeholder="+55 11 99999-9999">
+            <input type="tel" id="loginPhone" class="auth-input" placeholder="Celular (DDD + Número)">
         </div>
-        <div id="recaptcha-container"></div>
-        <button class="btn-auth btn-auth-primary" id="btn-verify-phone" onclick="sendCode()">Enviar Código SMS</button>
+        <div id="recaptcha-container-login"></div>
+        <button class="btn-auth btn-auth-primary" onclick="sendCode('login')">Enviar Código SMS</button>
+        <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
+    </div>
+
+    <!-- Register View (Full Form) -->
+    <div id="auth-register" style="display:none; width:100%; flex-direction:column; align-items:center;">
+        <div class="auth-input-group"><input type="text" id="regName" class="auth-input" placeholder="Primeiro Nome"></div>
+        <div class="auth-input-group"><input type="text" id="regSurname" class="auth-input" placeholder="Sobrenome"></div>
+        <div class="auth-input-group"><input type="email" id="regEmail" class="auth-input" placeholder="E-mail"></div>
+        <div class="auth-input-group"><input type="text" id="regDob" class="auth-input" placeholder="Nascimento (DD/MM/AAAA)" oninput="maskDate(this)"></div>
+        <div class="auth-input-group"><input type="tel" id="regPhone" class="auth-input" placeholder="Celular (DDD + Número)"></div>
+        
+        <div id="recaptcha-container-reg"></div>
+        <button class="btn-auth btn-auth-primary" onclick="sendCode('register')">Cadastrar e Verificar</button>
         <button class="btn-auth" onclick="showMainAuth()">Voltar</button>
     </div>
 
@@ -40,7 +54,7 @@
             <input type="text" id="smsCode" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6">
         </div>
         <button class="btn-auth btn-auth-primary" onclick="verifyCode()">Verificar</button>
-        <button class="btn-auth" onclick="showPhoneAuth()">Voltar</button>
+        <button class="btn-auth" onclick="showMainAuth()">Cancelar</button>
     </div>
 </div>
 
@@ -493,12 +507,19 @@ window.toggleTaxInput = function(){if(window._toggleTaxInput)window._toggleTaxIn
 window.toggleYear = function(y){if(window._toggleYear)window._toggleYear(y);};
 
 /* AUTH UI FUNCTIONS */
-window.showPhoneAuth = function(mode){if(window._showPhoneAuth)window._showPhoneAuth(mode);};
+window.showLoginScreen = function(){if(window._showLoginScreen)window._showLoginScreen();};
+window.showRegisterScreen = function(){if(window._showRegisterScreen)window._showRegisterScreen();};
 window.showMainAuth = function(){if(window._showMainAuth)window._showMainAuth();};
-window.sendCode = function(){if(window._sendCode)window._sendCode();};
+window.sendCode = function(mode){if(window._sendCode)window._sendCode(mode);};
 window.verifyCode = function(){if(window._verifyCode)window._verifyCode();};
 window.authGoogle = function(){if(window._authGoogle)window._authGoogle();};
 window.logoutApp = function(){if(window._logoutApp)window._logoutApp();};
+window.maskDate = function(el){
+    var v=el.value.replace(/\D/g,'').slice(0,8);
+    if(v.length>=5)v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);
+    else if(v.length>=3)v=v.slice(0,2)+'/'+v.slice(2);
+    el.value=v;
+};
 
 /* ============================================================
    LÓGICA DO APP (FIREBASE + DADOS)
@@ -1123,36 +1144,85 @@ function loadMonthData(){
 }
 
 /* AUTHENTICATION LOGIC */
-window._showPhoneAuth = function(mode) {
+let tempRegisterData = null; // Armazena dados do cadastro temporariamente
+
+window._showLoginScreen = function() {
     document.getElementById('auth-main').style.display = 'none';
-    document.getElementById('auth-phone').style.display = 'flex';
-    // Se for cadastro, poderíamos mudar o texto, mas o fluxo de telefone é igual
+    document.getElementById('auth-login').style.display = 'flex';
+    initRecaptcha('recaptcha-container-login');
+};
+
+window._showRegisterScreen = function() {
+    document.getElementById('auth-main').style.display = 'none';
+    document.getElementById('auth-register').style.display = 'flex';
+    initRecaptcha('recaptcha-container-reg');
+};
+
+function initRecaptcha(containerId) {
     if(!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
             'size': 'normal',
+            'theme': 'dark', // MODO ESCURO
             'callback': (response) => { /* reCAPTCHA solved */ }
         });
         window.recaptchaVerifier.render();
+    } else {
+        // Se já existe, apenas limpa e re-renderiza se necessário (simplificado aqui)
+        // O Firebase reutiliza a instância, mas o container pode mudar. 
+        // Para simplificar, recriamos se o container mudar ou apenas limpamos.
+        try { window.recaptchaVerifier.clear(); } catch(e){}
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+            'size': 'normal', 'theme': 'dark', 'callback': (r)=>{}
+        });
+        window.recaptchaVerifier.render();
     }
-};
+}
 
 window._showMainAuth = function() {
-    document.getElementById('auth-phone').style.display = 'none';
+    document.getElementById('auth-login').style.display = 'none';
+    document.getElementById('auth-register').style.display = 'none';
+    document.getElementById('auth-code').style.display = 'none';
     document.getElementById('auth-main').style.display = 'flex';
 };
 
-window._sendCode = function() {
-    var phoneNumber = document.getElementById('phoneNumber').value;
-    if(!phoneNumber) return alert("Digite um número válido.");
+window._sendCode = function(mode) {
+    var phoneInput = (mode === 'login') ? document.getElementById('loginPhone').value : document.getElementById('regPhone').value;
     
-    signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
+    // Validação e Formatação do Telefone
+    var cleanPhone = phoneInput.replace(/[^\d]/g, '');
+    if(cleanPhone.length < 10) return alert("Digite um número de celular válido com DDD.");
+    
+    // Adiciona +55 se não tiver (assumindo Brasil se o usuário não digitou +)
+    var finalPhone = phoneInput.includes('+') ? phoneInput : '+55' + cleanPhone;
+
+    if(mode === 'register') {
+        var name = document.getElementById('regName').value.trim();
+        var surname = document.getElementById('regSurname').value.trim();
+        var email = document.getElementById('regEmail').value.trim();
+        var dob = document.getElementById('regDob').value.trim();
+        
+        if(!name || !surname || !email || !dob) return alert("Por favor, preencha todos os campos do cadastro.");
+        
+        tempRegisterData = {
+            nome: name,
+            sobrenome: surname,
+            email: email,
+            nascimento: dob,
+            telefone: finalPhone
+        };
+    } else {
+        tempRegisterData = null;
+    }
+    
+    signInWithPhoneNumber(auth, finalPhone, window.recaptchaVerifier)
         .then((confirmationResult) => {
             window.confirmationResult = confirmationResult;
-            document.getElementById('auth-phone').style.display = 'none';
+            document.getElementById('auth-login').style.display = 'none';
+            document.getElementById('auth-register').style.display = 'none';
             document.getElementById('auth-code').style.display = 'flex';
         }).catch((error) => {
             console.error(error);
-            alert("Erro ao enviar SMS. Verifique o número e o formato (+55...).");
+            alert("Erro ao enviar SMS: " + error.message + "\nVerifique se o número está correto.");
             window.recaptchaVerifier.render().then(function(widgetId) {
                 grecaptcha.reset(widgetId);
             });
@@ -1162,9 +1232,21 @@ window._sendCode = function() {
 window._verifyCode = function() {
     var code = document.getElementById('smsCode').value;
     if(!code) return;
-    window.confirmationResult.confirm(code).then((result) => {
-        // User signed in successfully.
+    window.confirmationResult.confirm(code).then(async (result) => {
+        var user = result.user;
+        // Se for cadastro, salva os dados no Firestore
+        if(tempRegisterData) {
+            try {
+                await setDoc(doc(db, 'clientes', user.uid, 'perfil', 'dados'), tempRegisterData);
+                // Atualiza o nome de exibição no Auth também
+                // (Opcional, mas bom para consistência)
+            } catch(e) {
+                console.error("Erro ao salvar perfil:", e);
+            }
+        }
+        // O onAuthStateChanged vai pegar o login e iniciar o app
     }).catch((error) => {
+        console.error(error);
         alert("Código inválido.");
     });
 };
@@ -1173,7 +1255,7 @@ window._authGoogle = function() {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).catch((error) => {
         console.error(error);
-        alert("Erro no login com Google. Tente novamente.");
+        alert("Erro no login com Google: " + error.message + "\nVerifique se o domínio do Vercel está autorizado no Firebase Console.");
     });
 };
 
@@ -1188,12 +1270,24 @@ function formatName(name) {
     return name.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
-function startApp(user) {
+async function startApp(user) {
     CLIENT_ID = user.uid; // Define ID único do usuário
     
-    // Atualiza nome no Splash
-    var displayName = user.displayName || user.phoneNumber || "Usuário";
-    document.getElementById('splashName').textContent = formatName(displayName);
+    // Tenta buscar nome do perfil no Firestore
+    var nameToDisplay = "Usuário";
+    try {
+        var docSnap = await getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
+        if(docSnap.exists()) {
+            var data = docSnap.data();
+            nameToDisplay = data.nome + ' ' + data.sobrenome;
+        } else if(user.displayName) {
+            nameToDisplay = user.displayName;
+        }
+    } catch(e) {
+        console.log("Erro ao buscar nome:", e);
+    }
+    
+    document.getElementById('splashName').textContent = formatName(nameToDisplay);
 
     // Esconde Auth, Mostra Splash e Inicia
     document.getElementById('auth-screen').classList.add('hidden');
