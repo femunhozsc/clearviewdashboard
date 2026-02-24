@@ -195,20 +195,29 @@
             </div>
 
             <div class="card">
-                <div class="card-title">Posicao Atual</div>
-                <div class="input-group"><span class="input-label" style="color:var(--c-rf)">Renda Fixa</span><input type="tel" class="money-input" id="rf" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()"></div>
-                <div class="input-group"><span class="input-label" style="color:var(--c-reserva)">Reserva Emerg.</span><input type="tel" class="money-input" id="reserva" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()"></div>
-                <div class="input-group"><span class="input-label" style="color:var(--c-rv)">Renda Variavel</span><input type="tel" class="money-input" id="rv" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()"></div>
-                <div class="input-group"><span class="input-label" style="color:var(--c-imov)">Imoveis/FIIs</span><input type="tel" class="money-input" id="imoveis" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()"></div>
-                <div class="input-group"><span class="input-label" style="color:var(--c-cripto)">Criptoativos</span><input type="tel" class="money-input" id="cripto" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()"></div>
-                <div class="input-group"><span class="input-label" style="color:var(--c-inter)">Internacional</span><input type="tel" class="money-input" id="internacional" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()"></div>
-                <div class="input-group"><span class="input-label" style="color:var(--c-outros)">Outros</span><input type="tel" class="money-input" id="outros_ativos" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()"></div>
-                
-                <div class="meta-wrapper">
-                    <div class="meta-info"><span>Meta Patrimonial</span><input type="tel" class="meta-input-inline" id="metaVal" placeholder="Definir Meta" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()"></div>
-                    <div class="progress-track"><div class="progress-fill" id="progBar"></div></div>
-                    <div style="text-align:right;font-size:0.6rem;color:var(--text-muted);margin-top:4px" id="percText">0%</div>
+                <div class="card-title">
+                    <span>Posicao Atual</span>
+                    <div class="card-header-actions">
+                        <button class="btn-icon-action" onclick="toggleAssetEditMode()" id="btnEditAssets"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-icon-action" onclick="openAssetModal()" style="color:var(--accent);border-color:rgba(255,204,0,0.3)"><i class="fa-solid fa-plus"></i></button>
+                    </div>
                 </div>
+                
+                <div id="assets-list" class="asset-list">
+                    <!-- Lista gerada via JS -->
+                </div>
+                <button class="btn-new-cat" onclick="openNewCatModal()">+ Nova Categoria</button>
+
+                <div class="meta-highlight">
+                    <div>
+                        <div class="meta-label">Meta Patrimonial</div>
+                        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:4px" id="percText">0% Concluido</div>
+                    </div>
+                    <div>
+                        <input type="tel" class="meta-input-styled" id="metaVal" placeholder="R$ 0,00" oninput="maskInput(this)" onkeyup="updateAssets()" onchange="updateAssets()">
+                    </div>
+                </div>
+                <div class="progress-track" style="margin-top:-10px;margin-bottom:0;height:3px;background:rgba(255,255,255,0.05)"><div class="progress-fill" id="progBar"></div></div>
             </div>
         </div>
 
@@ -380,6 +389,30 @@
     </div>
 </div>
 
+<!-- MODAL ADICIONAR ATIVO -->
+<div id="assetModal" class="modal-overlay" onclick="if(event.target===this)closeAssetModal()">
+    <div class="modal-content">
+        <div class="modal-title">Adicionar Aporte</div>
+        <input type="tel" class="modal-input-lg" id="assetVal" placeholder="R$ 0,00" oninput="maskInput(this)">
+        <select id="assetCatSel" class="modal-select">
+            <option value="" disabled selected>Selecionar Ativo</option>
+        </select>
+        <input type="text" class="modal-input-desc" id="assetDesc" placeholder="Descricao (ex: CDB Banco X)">
+        <button class="btn-confirm-add" onclick="addAssetEntry()">Adicionar</button>
+        <button class="btn-close-modal" onclick="closeAssetModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL NOVA CATEGORIA -->
+<div id="newCatModal" class="modal-overlay" onclick="if(event.target===this)closeNewCatModal()">
+    <div class="modal-content">
+        <div class="modal-title">Nova Categoria de Ativo</div>
+        <input type="text" class="modal-input-desc" id="newCatName" placeholder="Nome da Categoria">
+        <button class="btn-confirm-add" onclick="addNewCategory()">Criar</button>
+        <button class="btn-close-modal" onclick="closeNewCatModal()">Cancelar</button>
+    </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -479,7 +512,26 @@ window.setStatus = function(type){
 
 /* PROXIES (Mantidos para compatibilidade com HTML existente) */
 window.triggerSave = function(){if(window._saveAllData)window._saveAllData();};
-window.updateAssets = function(){if(window._updateAssets)window._updateAssets();};
+window.updateAssets = function(){if(window._updateAssets)window._updateAssets(true);};
+
+/* ASSET PROXIES */
+window.openAssetModal = function(){
+    document.getElementById('assetModal').style.display='flex';
+    document.getElementById('assetVal').value='';
+    document.getElementById('assetDesc').value='';
+    if(window._updateAssetSelect)window._updateAssetSelect();
+    setTimeout(function(){document.getElementById('assetVal').focus();},120);
+};
+window.closeAssetModal = function(){document.getElementById('assetModal').style.display='none';};
+window.addAssetEntry = function(){if(window._addAssetEntry)window._addAssetEntry();};
+window.toggleAssetEditMode = function(){if(window._toggleAssetEditMode)window._toggleAssetEditMode();};
+window.openNewCatModal = function(){document.getElementById('newCatModal').style.display='flex';document.getElementById('newCatName').value='';setTimeout(function(){document.getElementById('newCatName').focus();},120);};
+window.closeNewCatModal = function(){document.getElementById('newCatModal').style.display='none';};
+window.addNewCategory = function(){if(window._addNewCategory)window._addNewCategory();};
+window.toggleAssetCat = function(id){if(window._toggleAssetCat)window._toggleAssetCat(id);};
+window.deleteAssetEntry = function(catId, entryId){if(window._deleteAssetEntry)window._deleteAssetEntry(catId, entryId);};
+window.deleteAssetCategory = function(catId){if(window._deleteAssetCategory)window._deleteAssetCategory(catId);};
+
 window.openRendaModal = function(){
     document.getElementById('rendaModal').style.display='flex';
     document.getElementById('rendaValor').value='';
@@ -594,6 +646,7 @@ auth.languageCode = 'pt';
 let currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth();
 let donutChart=null, lineChart=null, ccChart=null;
 let rendaItems=[], gastosData={}, rowCounters={}, historico={}, gastosRemovidos=[];
+let assetsData = { categories: [], meta: 0 }; // Nova estrutura de ativos
 
 const MESES=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const CATEGORIAS=['Moradia','Transporte','Saude','Obrigacoes','Vida Diaria','Entretenimento','Economias'];
@@ -789,9 +842,163 @@ window._toggleGastosDetails = function() {
     }
 };
 
-/* ATIVOS */
+/* ATIVOS (MODULAR) */
 var assetsTimer;
 var lastTotal = 0;
+const ASSET_COLORS = ['#ffcc00','#c8960c','#d8d8d8','#999999','#555555','#333333','#7a5c1e','#4dcf94','#ff5555','#3b82f6','#8b5cf6','#ec4899'];
+
+window._updateAssets = function(save){
+    var meta = window.parseMoney(document.getElementById('metaVal').value);
+    assetsData.meta = meta;
+    
+    var total = 0;
+    var chartLabels = [];
+    var chartData = [];
+    var chartColors = [];
+
+    assetsData.categories.forEach(cat => {
+        var catTotal = (cat.entries||[]).reduce((s,e) => s + e.val, 0);
+        total += catTotal;
+        if(catTotal > 0 || assetsData.categories.length < 8) {
+            chartLabels.push(cat.name);
+            chartData.push(catTotal);
+            chartColors.push(cat.color);
+        }
+    });
+
+    // Animação do número
+    animateValue(document.getElementById('displayTotal'), lastTotal, total, 800);
+    lastTotal = total;
+
+    var pct = meta > 0 ? Math.min((total/meta)*100, 100) : 0;
+    document.getElementById('progBar').style.width = pct+'%';
+    document.getElementById('percText').textContent = pct.toFixed(1)+'% Concluido';
+
+    clearTimeout(assetsTimer);
+    assetsTimer = setTimeout(function(){
+        if(donutChart){
+            if(total === 0) {
+                donutChart.data.datasets[0].data = [1];
+                donutChart.data.datasets[0].backgroundColor = ['#222'];
+                donutChart.data.labels = ['Vazio'];
+            } else {
+                donutChart.data.labels = chartLabels;
+                donutChart.data.datasets[0].data = chartData;
+                donutChart.data.datasets[0].backgroundColor = chartColors;
+            }
+            donutChart.update();
+        }
+    }, 300);
+
+    if(save) window._saveAllData();
+};
+
+function renderAssetList() {
+    var c = document.getElementById('assets-list');
+    c.innerHTML = '';
+    assetsData.categories.forEach(cat => {
+        var catTotal = (cat.entries||[]).reduce((s,e) => s + e.val, 0);
+        
+        var item = document.createElement('div');
+        item.className = 'asset-cat-item';
+        item.id = 'asset-cat-'+cat.id;
+        
+        var entriesHtml = '';
+        (cat.entries||[]).forEach(e => {
+            entriesHtml += `<div class="asset-entry">
+                <span class="asset-entry-desc">${e.desc || 'Aporte'}</span>
+                <div style="display:flex;align-items:center">
+                    <span class="asset-entry-val">${window.formatBRL(e.val)}</span>
+                    <button class="asset-entry-del" onclick="deleteAssetEntry('${cat.id}','${e.id}')">&times;</button>
+                </div>
+            </div>`;
+        });
+        if(!entriesHtml) entriesHtml = '<div style="padding:8px 0;color:var(--text-muted);font-size:0.7rem;text-align:center">Nenhum aporte</div>';
+
+        item.innerHTML = `
+            <div class="asset-cat-header" onclick="toggleAssetCat('${cat.id}')">
+                <div class="asset-cat-info">
+                    <button class="btn-del-cat" onclick="event.stopPropagation();deleteAssetCategory('${cat.id}')">&times;</button>
+                    <div class="asset-color-dot" style="background:${cat.color}"></div>
+                    <span class="asset-cat-name">${cat.name}</span>
+                </div>
+                <div style="display:flex;align-items:center">
+                    <span class="asset-cat-total">${window.formatBRL(catTotal)}</span>
+                    <span class="asset-cat-arrow">&#9660;</span>
+                </div>
+            </div>
+            <div class="asset-cat-body">${entriesHtml}</div>
+        `;
+        c.appendChild(item);
+    });
+}
+
+window._toggleAssetCat = function(id) {
+    var el = document.getElementById('asset-cat-'+id);
+    el.classList.toggle('open');
+};
+
+window._toggleAssetEditMode = function() {
+    var list = document.getElementById('assets-list');
+    var btn = document.getElementById('btnEditAssets');
+    list.classList.toggle('edit-mode');
+    btn.classList.toggle('active');
+};
+
+window._updateAssetSelect = function() {
+    var s = document.getElementById('assetCatSel');
+    s.innerHTML = '<option value="" disabled selected>Selecionar Ativo</option>';
+    assetsData.categories.forEach(c => {
+        var o = document.createElement('option');
+        o.value = c.id;
+        o.textContent = c.name;
+        s.appendChild(o);
+    });
+};
+
+window._addAssetEntry = function() {
+    var val = window.parseMoney(document.getElementById('assetVal').value);
+    var catId = document.getElementById('assetCatSel').value;
+    var desc = document.getElementById('assetDesc').value.trim();
+    if(!val || !catId) return alert('Preencha valor e categoria.');
+    
+    var cat = assetsData.categories.find(c => c.id === catId);
+    if(cat) {
+        if(!cat.entries) cat.entries = [];
+        cat.entries.push({ id: Date.now().toString(), val: val, desc: desc, date: new Date().toISOString() });
+        renderAssetList();
+        window._updateAssets(true);
+        window.closeAssetModal();
+    }
+};
+
+window._deleteAssetEntry = function(catId, entryId) {
+    var cat = assetsData.categories.find(c => c.id === catId);
+    if(cat) {
+        cat.entries = cat.entries.filter(e => e.id !== entryId);
+        renderAssetList();
+        window._updateAssets(true);
+    }
+};
+
+window._addNewCategory = function() {
+    var name = document.getElementById('newCatName').value.trim();
+    if(!name) return;
+    var id = 'cat_' + Date.now();
+    // Pick color based on index
+    var color = ASSET_COLORS[assetsData.categories.length % ASSET_COLORS.length];
+    assetsData.categories.push({ id: id, name: name, color: color, entries: [] });
+    renderAssetList();
+    window._updateAssets(true);
+    window.closeNewCatModal();
+};
+
+window._deleteAssetCategory = function(catId) {
+    if(!confirm('Tem certeza? Isso apagara todo o historico desta categoria.')) return;
+    assetsData.categories = assetsData.categories.filter(c => c.id !== catId);
+    renderAssetList();
+    window._updateAssets(true);
+};
 
 function animateValue(obj, start, end, duration) {
     let startTimestamp = null;
@@ -806,35 +1013,6 @@ function animateValue(obj, start, end, duration) {
     };
     window.requestAnimationFrame(step);
 }
-
-window._updateAssets=function(){
-    var ids=['rf','reserva','rv','imoveis','cripto','internacional','outros_ativos'];
-    var vals=ids.map(function(id){return window.parseMoney(document.getElementById(id).value);});
-    var total=vals.reduce(function(a,b){return a+b;},0);
-    var meta=window.parseMoney(document.getElementById('metaVal').value);
-    
-    // Animação do número
-    animateValue(document.getElementById('displayTotal'), lastTotal, total, 800);
-    lastTotal = total;
-
-    var pct=meta>0?Math.min((total/meta)*100,100):0;
-    document.getElementById('progBar').style.width=pct+'%';
-    document.getElementById('percText').textContent=pct.toFixed(1)+'%';
-    clearTimeout(assetsTimer);
-    assetsTimer=setTimeout(function(){
-        if(donutChart){
-            if(total === 0) {
-                donutChart.data.datasets[0].data = [1,1,1,1,1,1,1];
-                donutChart.data.datasets[0].backgroundColor = ['#222','#222','#222','#222','#222','#222','#222'];
-            } else {
-                donutChart.data.datasets[0].data = vals;
-                donutChart.data.datasets[0].backgroundColor = ['#ffcc00','#c8960c','#d8d8d8','#999','#555','#333','#7a5c1e'];
-            }
-            donutChart.update();
-        }
-    },300);
-    window._saveAllData();
-};
 
 /* HISTÓRICO */
 function saveSnap(){
@@ -1350,11 +1528,10 @@ async function startApp(user) {
 var saveTimer;
 window._saveAllData=function(){
     saveSnap();
-    var av={};
-    ['rf','reserva','rv','imoveis','cripto','internacional','outros_ativos','metaVal'].forEach(function(id){var el=document.getElementById(id);if(el)av[id]=window.parseMoney(el.value);});
+    // assetsData já está atualizado em memória
     var cv={};
     ['txJuros','txInf','tempo'].forEach(function(id){var el=document.getElementById(id);if(el)cv[id]=el.value;});
-    var payload={historico:historico,ativos:av,calc:cv,currentYear:currentYear,currentMonth:currentMonth,updatedAt:new Date().toISOString()};
+    var payload={historico:historico,ativos:assetsData,calc:cv,currentYear:currentYear,currentMonth:currentMonth,updatedAt:new Date().toISOString()};
     localStorage.setItem('clearview_bkp',JSON.stringify(payload));
     clearTimeout(saveTimer);
     window.setStatus('saving');
@@ -1375,8 +1552,32 @@ async function loadData(){
         historico=data.historico||{};
         if(data.currentYear!=null)currentYear=data.currentYear;
         if(data.currentMonth!=null)currentMonth=data.currentMonth;
-        var av=data.ativos||{};
-        ['rf','reserva','rv','imoveis','cripto','internacional','outros_ativos','metaVal'].forEach(function(id){window.fillInput(id,av[id]||0);});
+        
+        // MIGRATION LOGIC FOR ASSETS
+        var av = data.ativos || {};
+        if(av.categories) {
+            assetsData = av;
+        } else {
+            // Migrar formato antigo
+            assetsData = { categories: [], meta: av.metaVal || 0 };
+            var oldMap = [
+                {k:'rf', n:'Renda Fixa', c:'#ffcc00'},
+                {k:'reserva', n:'Reserva Emerg.', c:'#c8960c'},
+                {k:'rv', n:'Renda Variavel', c:'#d8d8d8'},
+                {k:'imoveis', n:'Imoveis/FIIs', c:'#999999'},
+                {k:'cripto', n:'Criptoativos', c:'#555555'},
+                {k:'internacional', n:'Internacional', c:'#333333'},
+                {k:'outros_ativos', n:'Outros', c:'#7a5c1e'}
+            ];
+            oldMap.forEach(m => {
+                var val = av[m.k] || 0;
+                var entries = val > 0 ? [{id:'init', val:val, desc:'Saldo Inicial'}] : [];
+                assetsData.categories.push({ id: m.k, name: m.n, color: m.c, entries: entries });
+            });
+        }
+        renderAssetList();
+        window.fillInput('metaVal', assetsData.meta);
+        
         var cv=data.calc||{};
         if(cv.txJuros){var e=document.getElementById('txJuros');if(e)e.value=cv.txJuros;}
         if(cv.txInf){var e=document.getElementById('txInf');if(e)e.value=cv.txInf;}
@@ -1391,8 +1592,8 @@ function initCharts(){
     donutChart=new Chart(ctx,{
         type:'doughnut',
         data:{
-            labels:['Renda Fixa','Reserva','Renda Var.','Imoveis','Cripto','Internacional','Outros'],
-            datasets:[{data:[0,0,0,0,0,0,0],backgroundColor:['#ffcc00','#c8960c','#d8d8d8','#999','#555','#333','#7a5c1e'],borderWidth:0,hoverOffset:4}]
+            labels:[],
+            datasets:[{data:[],backgroundColor:[],borderWidth:0,hoverOffset:4}]
         },
         options:{
             responsive:true,maintainAspectRatio:false,
