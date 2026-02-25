@@ -923,7 +923,18 @@ window.triggerInstall = async function() {
         }
     } else {
         // Fallback para iOS ou se o prompt não estiver disponível
-        alert("Para instalar no iOS:\n1. Clique nos 3 pontos (...) no canto inferior direito\n2. Clique em Compartilhar\n3. Mais (...)\n4. Adicionar à Tela de Início");
+        var ua = navigator.userAgent;
+        var isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+
+        if (isIOS) {
+            if (/CriOS/i.test(ua)) {
+                alert("Para instalar no Chrome (iOS):\n1. Toque no botão Compartilhar (ícone quadrado com seta)\n2. Role para baixo e selecione 'Adicionar à Tela de Início'");
+            } else {
+                alert("Para instalar no Safari (iOS):\n1. Toque no botão Compartilhar (ícone quadrado com seta na barra inferior)\n2. Role para baixo e selecione 'Adicionar à Tela de Início'");
+            }
+        } else {
+            alert("Para instalar:\nAbra o menu do navegador e selecione 'Adicionar à Tela de Início' ou 'Instalar Aplicativo'.");
+        }
         window.skipInstall();
     }
 };
