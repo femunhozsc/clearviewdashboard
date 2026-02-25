@@ -84,14 +84,14 @@
                                 <label class="auth-field-label">E-mail</label>
                                 <div class="auth-field-wrap">
                                     <i class="fa-regular fa-envelope auth-field-icon"></i>
-                                    <input type="email" id="loginEmail" class="auth-field-input" placeholder="seu@email.com" autocomplete="email">
+                                    <input type="email" id="loginEmail" class="auth-field-input" placeholder="seu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')handleLogin()">
                                 </div>
                             </div>
                             <div class="auth-field">
                                 <label class="auth-field-label">Senha</label>
                                 <div class="auth-field-wrap">
                                     <i class="fa-solid fa-lock auth-field-icon"></i>
-                                    <input type="password" id="loginPass" class="auth-field-input" placeholder="••••••••" autocomplete="current-password">
+                                    <input type="password" id="loginPass" class="auth-field-input" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')handleLogin()">
                                     <button class="auth-field-eye" onclick="togglePass('loginPass', this)"><i class="fa-regular fa-eye"></i></button>
                                 </div>
                             </div>
@@ -108,14 +108,14 @@
                                 <label class="auth-field-label">Número do Celular</label>
                                 <div class="auth-field-wrap">
                                     <i class="fa-solid fa-mobile-screen auth-field-icon"></i>
-                                    <input type="tel" id="loginPhone" class="auth-field-input" placeholder="+55 (11) 99999-9999" oninput="maskPhoneLogin(this)">
+                                    <input type="tel" id="loginPhone" class="auth-field-input" placeholder="+55 (11) 99999-9999" oninput="maskPhoneLogin(this)" onkeydown="if(event.key==='Enter')handleLoginPhone()">
                                 </div>
                             </div>
                             <div class="auth-field">
                                 <label class="auth-field-label">Senha</label>
                                 <div class="auth-field-wrap">
                                     <i class="fa-solid fa-lock auth-field-icon"></i>
-                                    <input type="password" id="loginPhonePass" class="auth-field-input" placeholder="••••••••">
+                                    <input type="password" id="loginPhonePass" class="auth-field-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLoginPhone()">
                                     <button class="auth-field-eye" onclick="togglePass('loginPhonePass', this)"><i class="fa-regular fa-eye"></i></button>
                                 </div>
                             </div>
@@ -145,14 +145,14 @@
                                 <label class="auth-field-label">Nome</label>
                                 <div class="auth-field-wrap">
                                     <i class="fa-regular fa-user auth-field-icon"></i>
-                                    <input type="text" id="regName" class="auth-field-input capitalize" placeholder="João">
+                                    <input type="text" id="regName" class="auth-field-input capitalize" placeholder="João" onkeydown="if(event.key==='Enter')handleRegister()">
                                 </div>
                             </div>
                             <div class="auth-field">
                                 <label class="auth-field-label">Sobrenome</label>
                                 <div class="auth-field-wrap">
                                     <i class="fa-regular fa-user auth-field-icon"></i>
-                                    <input type="text" id="regSurname" class="auth-field-input capitalize" placeholder="Silva">
+                                    <input type="text" id="regSurname" class="auth-field-input capitalize" placeholder="Silva" onkeydown="if(event.key==='Enter')handleRegister()">
                                 </div>
                             </div>
                         </div>
@@ -160,7 +160,7 @@
                             <label class="auth-field-label">E-mail</label>
                             <div class="auth-field-wrap">
                                 <i class="fa-regular fa-envelope auth-field-icon"></i>
-                                <input type="email" id="regEmail" class="auth-field-input" placeholder="seu@email.com">
+                                <input type="email" id="regEmail" class="auth-field-input" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')handleRegister()">
                             </div>
                         </div>
                         <div class="auth-field-row">
@@ -168,14 +168,14 @@
                                 <label class="auth-field-label">Nascimento</label>
                                 <div class="auth-field-wrap">
                                     <i class="fa-regular fa-calendar auth-field-icon"></i>
-                                    <input type="text" id="regDob" class="auth-field-input" placeholder="DD/MM/AAAA" oninput="maskDate(this)">
+                                    <input type="text" id="regDob" class="auth-field-input" placeholder="DD/MM/AAAA" oninput="maskDate(this)" onkeydown="if(event.key==='Enter')handleRegister()">
                                 </div>
                             </div>
                             <div class="auth-field">
                                 <label class="auth-field-label">Telefone</label>
                                 <div class="auth-field-wrap">
                                     <i class="fa-solid fa-phone auth-field-icon"></i>
-                                    <input type="tel" id="regPhone" class="auth-field-input" placeholder="(DD) 9 0000-0000" oninput="maskPhone(this)">
+                                    <input type="tel" id="regPhone" class="auth-field-input" placeholder="(DD) 9 0000-0000" oninput="maskPhone(this)" onkeydown="if(event.key==='Enter')handleRegister()">
                                 </div>
                             </div>
                         </div>
@@ -183,7 +183,7 @@
                             <label class="auth-field-label">Senha</label>
                             <div class="auth-field-wrap">
                                 <i class="fa-solid fa-lock auth-field-icon"></i>
-                                <input type="password" id="regPass" class="auth-field-input" placeholder="Mínimo 6 caracteres">
+                                <input type="password" id="regPass" class="auth-field-input" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')handleRegister()">
                                 <button class="auth-field-eye" onclick="togglePass('regPass', this)"><i class="fa-regular fa-eye"></i></button>
                             </div>
                         </div>

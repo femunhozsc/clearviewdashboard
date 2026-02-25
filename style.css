@@ -561,7 +561,7 @@ body.calc-mode .calc-fullscreen-header { display:block; }
     font-family: 'DM Sans', sans-serif;
     -webkit-text-fill-color: var(--text-main);
 }
-.auth-field-input::placeholder { color: rgba(255,255,255,0.25); font-weight: 300; }
+.auth-field-input::placeholder { color: #555; font-weight: 400; }
 .auth-field-input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0 100px #0d0d0d inset;
     -webkit-text-fill-color: #efefef;
