@@ -32,18 +32,26 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
     transform: translateY(0);
     transition: transform 1s cubic-bezier(0.4,0,0.2,1);
 }
-#splash.phase2 .splash-inner { transform: translateY(-14vh); }
+#splash.phase2 .splash-inner { transform: translateY(0); }
 
 /* Logo — animação mais cinematográfica */
 .splash-logo {
     opacity:0;
     transform: scale(0.82) translateY(16px);
-    animation: sLogoIn 1.15s cubic-bezier(0.16,1,0.3,1) 0.3s forwards;
-    transition: margin-bottom 0.9s cubic-bezier(0.4,0,0.2,1);
+    animation: sLogoIn 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s forwards;
+    transition: opacity 0.8s ease, transform 0.8s ease, max-height 0.8s ease, margin 0.8s ease;
     margin-bottom:0;
+    max-height: 80px; /* Altura suficiente para a logo */
+    overflow: hidden;
 }
 .splash-logo img { height:40px; }
-#splash.phase2 .splash-logo { margin-bottom:26px; }
+#splash.phase2 .splash-logo {
+    animation: none; /* Garante que a transição assuma o controle */
+    opacity: 0;
+    transform: translateY(-60px) scale(0.8);
+    max-height: 0;
+    margin: 0;
+}
 
 /* Greeting: oculto, expande na fase 2 */
 .splash-greeting {
@@ -90,8 +98,8 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 
 @keyframes sLogoIn {
     0%   { opacity:0; transform:scale(0.82) translateY(16px); filter:brightness(0.4); }
-    55%  { opacity:1; transform:scale(1.05) translateY(-3px); filter:brightness(1.35); }
-    100% { opacity:1; transform:scale(1) translateY(0); filter:brightness(1); }
+    60%  { opacity:1; transform:scale(1.05) translateY(-15px); filter:brightness(1.35); }
+    100% { opacity:1; transform:scale(1) translateY(-10px); filter:brightness(1); }
 }
 @keyframes sExit {
     0%   { opacity:1; transform:scale(1); }
@@ -101,7 +109,7 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 /* ============================================================
    APP
 ============================================================ */
-#app { opacity:0; transition:opacity 0.5s ease 0.1s; }
+#app { opacity:0; transition:opacity 1.2s ease 0.1s; }
 #app.visible { opacity:1; }
 
 /* NAVBAR */

@@ -675,6 +675,30 @@ window.setModalState = function(open) {
     else document.body.classList.remove('modal-open');
 };
 
+/* SOM DE BOAS VINDAS (Web Audio API) */
+window.playWelcomeSound = function() {
+    try {
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        var ctx = new AudioContext();
+        
+        // Cria um acorde suave (Cma7)
+        [523.25, 659.25, 783.99, 987.77].forEach(function(freq, i) {
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.03, ctx.currentTime + 0.1 + (i*0.05));
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 1.5);
+        });
+    } catch(e) {}
+};
+
 /* PWA INSTALL LOGIC */
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -2790,12 +2814,17 @@ async function runSplashSequence() {
     // Force reflow
     void splash.offsetWidth;
 
-    var minWait=new Promise(function(r){setTimeout(r,2200);}); // Tempo reduzido para agilidade
+    var minWait=new Promise(function(r){setTimeout(r,2400);}); 
     var loadP=loadData();
-    // Fase 2: logo sobe + greeting aparece (delay reduzido de 1500ms para 600ms)
-    setTimeout(function(){splash.classList.add('phase2');},600);
+    
+    // Fase 2: logo sobe/some + greeting aparece
+    setTimeout(function(){
+        splash.classList.add('phase2');
+        window.playWelcomeSound(); // Toca o som
+    }, 800);
+    
     // Fase 3: tagline aparece
-    setTimeout(function(){splash.classList.add('phase3');},1600);
+    setTimeout(function(){splash.classList.add('phase3');}, 1700);
 
     await Promise.all([minWait,loadP]);
     
