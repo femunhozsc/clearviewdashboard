@@ -514,15 +514,11 @@
             <option value="" disabled selected>Categoria</option>
             <option value="Salario">Salário</option>
             <option value="Serviço">Serviço</option>
-            <option value="Investimentos">Investimentos</option>
             <option value="Aluguel">Aluguel</option>
             <option value="Dividendos">Dividendos</option>
             <option value="Comissao">Comissão</option>
             <option value="Bonus">Bônus</option>
             <option value="Venda">Venda</option>
-            <option value="Reembolso">Reembolso</option>
-            <option value="Premio">Prêmio</option>
-            <option value="Pensao">Pensão/Aposentadoria</option>
             <option value="Outros">Outros</option>
         </select>
         <input type="text" class="modal-input-desc" id="rendaDesc" placeholder="Descricao (opcional)">
@@ -589,6 +585,20 @@
         <input type="text" class="modal-input-desc" id="newCatName" placeholder="Nome da Categoria">
         <button class="btn-confirm-add" onclick="addNewCategory()">Criar</button>
         <button class="btn-close-modal" onclick="closeNewCatModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL INSTALAR APP -->
+<div id="installModal" class="modal-overlay" style="z-index:11000">
+    <div class="modal-content">
+        <div class="install-icon-box">
+            <img src="app-icon.png" alt="Icon" class="install-icon-img" onerror="this.src='favicon.png'">
+        </div>
+        <div class="modal-title" style="text-align:center;margin-bottom:8px">Instalar Aplicativo</div>
+        <p class="install-desc">Adicione o Clearview à sua tela inicial para um acesso mais rápido e melhor experiência.</p>
+        
+        <button class="btn-install-primary" onclick="triggerInstall()">Instalar Agora</button>
+        <button class="btn-install-sec" onclick="skipInstall()">Agora Não</button>
     </div>
 </div>
 
@@ -660,6 +670,13 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPasswor
    FUNÇÕES DE INTERFACE (UI)
    Exportadas para window para funcionarem com onclick no HTML
 ============================================================ */
+
+/* PWA INSTALL LOGIC */
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+});
 
 window.maskInput = function(el) {
     var v = el.value.replace(/\D/g,'');
@@ -895,6 +912,31 @@ window.deleteGastoCategory = function(key){if(window._deleteGastoCategory)window
 window.startRenameRendaCat = function(key){if(window._startRenameRendaCat)window._startRenameRendaCat(key);};
 window.startRenameGastoCat = function(key){if(window._startRenameGastoCat)window._startRenameGastoCat(key);};
 
+/* INSTALL FUNCTIONS */
+window.triggerInstall = async function() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if(outcome === 'accepted') {
+            window.skipInstall(); // Prossegue para o app
+        }
+    } else {
+        // Fallback para iOS ou se o prompt não estiver disponível
+        alert("Para instalar no iOS/Safari:\n1. Toque no botão Compartilhar (quadrado com seta)\n2. Selecione 'Adicionar à Tela de Início'");
+        window.skipInstall();
+    }
+};
+
+window.skipInstall = function() {
+    document.getElementById('installModal').style.display = 'none';
+    // Inicia a sequência de splash que foi pausada
+    var splash = document.getElementById('splash');
+    splash.style.display = 'flex';
+    // Pequeno delay para garantir transição suave
+    setTimeout(function(){ runSplashSequence(); }, 100);
+};
+
 /* AUTH UI FUNCTIONS */
 window.showLoginScreen = function(){if(window._showLoginScreen)window._showLoginScreen();};
 window.showRegisterScreen = function(){if(window._showRegisterScreen)window._showRegisterScreen();};
@@ -979,7 +1021,7 @@ const CAT_DEFAULTS={
     entret:    ['Filmes/Cinema','Musica','Games','Show','Livros','Hobbies','Esportes','Academia','Passeios','Ferias','Viagem','Teatro','Outros'],
     economias: ['Para Reserva','Para Investimentos','Outros']
 };
-const INCOME_DEFAULTS=['Salario','Serviço','Investimentos','Aluguel','Dividendos','Comissao','Bonus','Venda','Reembolso','Premio','Pensao','Outros'];
+const INCOME_DEFAULTS=['Salario','Serviço','Aluguel','Dividendos','Comissao','Bonus','Venda','Outros'];
 
 const DEFAULT_ASSET_CATEGORIES = [
     {id:'rf',          name:'Renda Fixa',        color:'#ffcc00'},
@@ -2484,12 +2526,24 @@ async function startApp(user) {
     var greeting = isNewUser ? "SEJA BEM-VINDO," : "BEM-VINDO DE VOLTA";
     document.getElementById('splashGreeting').textContent = greeting;
 
-    // Esconde Auth, Mostra Splash e Inicia
+    // Esconde Auth
     document.getElementById('auth-screen').classList.add('hidden');
+
+    // VERIFICAÇÃO DE INSTALAÇÃO (PWA)
+    // Se não estiver em modo standalone (instalado) e não for iOS (que não suporta detecção fácil via JS puro as vezes), mostra modal
+    // navigator.standalone é para iOS legacy. matchMedia é padrão moderno.
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    
+    if (!isStandalone) {
+        // Mostra modal de instalação e PAUSA o fluxo. 
+        // O fluxo continua apenas quando chamar skipInstall()
+        document.getElementById('installModal').style.display = 'flex';
+        return; 
+    }
+
+    // Inicia sequência de carregamento original
     var splash = document.getElementById('splash');
     splash.style.display = 'flex';
-    
-    // Inicia sequência de carregamento original
     runSplashSequence();
 }
 
