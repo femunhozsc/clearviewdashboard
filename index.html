@@ -671,6 +671,12 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPasswor
    Exportadas para window para funcionarem com onclick no HTML
 ============================================================ */
 
+/* HELPER PARA ANIMAÇÃO DE MODAL */
+window.setModalState = function(open) {
+    if(open) document.body.classList.add('modal-open');
+    else document.body.classList.remove('modal-open');
+};
+
 /* PWA INSTALL LOGIC */
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -836,15 +842,16 @@ window.openAssetModal = function(){
     document.getElementById('assetDesc').value='';
     if(window._updateAssetSelect)window._updateAssetSelect();
     setTimeout(function(){document.getElementById('assetVal').focus();},120);
+    window.setModalState(true);
 };
-window.closeAssetModal = function(){document.getElementById('assetModal').style.display='none';};
+window.closeAssetModal = function(){document.getElementById('assetModal').style.display='none';window.setModalState(false);};
 window.addAssetEntry = function(){if(window._addAssetEntry)window._addAssetEntry();};
 window.toggleAssetEditMode = function(){if(window._toggleAssetEditMode)window._toggleAssetEditMode();};
-window.openNewCatModal = function(){document.getElementById('newCatModal').style.display='flex';document.getElementById('newCatName').value='';setTimeout(function(){document.getElementById('newCatName').focus();},120);};
-window.closeNewCatModal = function(){document.getElementById('newCatModal').style.display='none';};
+window.openNewCatModal = function(){document.getElementById('newCatModal').style.display='flex';document.getElementById('newCatName').value='';setTimeout(function(){document.getElementById('newCatName').focus();},120);window.setModalState(true);};
+window.closeNewCatModal = function(){document.getElementById('newCatModal').style.display='none';window.setModalState(false);};
 window.addNewCategory = function(){if(window._addNewCategory)window._addNewCategory();};
-window.openTermos = function(){var m=document.getElementById('termosModal');if(m){m.style.display='flex';document.body.style.overflow='hidden';}};
-window.closeTermos = function(){var m=document.getElementById('termosModal');if(m){m.style.display='none';document.body.style.overflow='';}}
+window.openTermos = function(){var m=document.getElementById('termosModal');if(m){m.style.display='flex';window.setModalState(true);}};
+window.closeTermos = function(){var m=document.getElementById('termosModal');if(m){m.style.display='none';window.setModalState(false);}}
 window.toggleAssetCat = function(id){if(window._toggleAssetCat)window._toggleAssetCat(id);};
 window.deleteAssetEntry = function(catId, entryId){if(window._deleteAssetEntry)window._deleteAssetEntry(catId, entryId);};
 window.deleteAssetCategory = function(catId){if(window._deleteAssetCategory)window._deleteAssetCategory(catId);};
@@ -857,11 +864,13 @@ window.openRendaModal = function(){
     document.getElementById('rendaCat').value='';
     document.getElementById('rendaDesc').value='';
     setTimeout(function(){document.getElementById('rendaValor').focus();},120);
+    window.setModalState(true);
 };
 window.closeRendaModal = function(){
     var mc=document.querySelector('#rendaModal .modal-content');
     mc.style.animation='slideDownModal 0.3s forwards';
     setTimeout(function(){document.getElementById('rendaModal').style.display='none';mc.style.animation='';},300);
+    window.setModalState(false);
 };
 window.addRenda = function(){if(window._addRenda)window._addRenda();};
 window.openAddModal = function(){
@@ -873,11 +882,13 @@ window.openAddModal = function(){
     document.getElementById('quickSub').disabled=true;
     document.getElementById('quickPay').value='';
     setTimeout(function(){document.getElementById('quickValue').focus();},120);
+    window.setModalState(true);
 };
 window.closeAddModal = function(){
     var mc=document.querySelector('#addModal .modal-content');
     mc.style.animation='slideDownModal 0.3s forwards';
     setTimeout(function(){document.getElementById('addModal').style.display='none';mc.style.animation='';},300);
+    window.setModalState(false);
 };
 window.updateSubcats = function(){if(window._updateSubcats)window._updateSubcats();};
 window.processAddExpense = function(){if(window._processAddExpense)window._processAddExpense();};
@@ -885,12 +896,12 @@ window.removeRenda = function(id){if(window._removeRenda)window._removeRenda(id)
 window.removeRow = function(key,rowId){if(window._removeRow)window._removeRow(key,rowId);};
 window.addRow = function(key){if(window._addRow)window._addRow(key);};
 window.toggleGastosEditMode = function(){if(window._toggleGastosEditMode)window._toggleGastosEditMode();};
-window.openNewGastoCatModal = function(){document.getElementById('newGastoCatModal').style.display='flex';document.getElementById('newGastoCatName').value='';setTimeout(function(){document.getElementById('newGastoCatName').focus();},120);};
-window.closeNewGastoCatModal = function(){document.getElementById('newGastoCatModal').style.display='none';};
+window.openNewGastoCatModal = function(){document.getElementById('newGastoCatModal').style.display='flex';document.getElementById('newGastoCatName').value='';setTimeout(function(){document.getElementById('newGastoCatName').focus();},120);window.setModalState(true);};
+window.closeNewGastoCatModal = function(){document.getElementById('newGastoCatModal').style.display='none';window.setModalState(false);};
 window.addNewGastoCategory = function(){if(window._addNewGastoCategory)window._addNewGastoCategory();};
 window.toggleRendaEditMode = function(){if(window._toggleRendaEditMode)window._toggleRendaEditMode();};
-window.openNewRendaCatModal = function(){document.getElementById('newRendaCatModal').style.display='flex';document.getElementById('newRendaCatName').value='';setTimeout(function(){document.getElementById('newRendaCatName').focus();},120);};
-window.closeNewRendaCatModal = function(){document.getElementById('newRendaCatModal').style.display='none';};
+window.openNewRendaCatModal = function(){document.getElementById('newRendaCatModal').style.display='flex';document.getElementById('newRendaCatName').value='';setTimeout(function(){document.getElementById('newRendaCatName').focus();},120);window.setModalState(true);};
+window.closeNewRendaCatModal = function(){document.getElementById('newRendaCatModal').style.display='none';window.setModalState(false);};
 window.addNewRendaCategory = function(){if(window._addNewRendaCategory)window._addNewRendaCategory();};
 window.toggleCatEl = function(key){if(window._toggleCatEl)window._toggleCatEl(key);};
 window.changeMonth = function(dir){if(window._changeMonth)window._changeMonth(dir);};
@@ -941,6 +952,7 @@ window.triggerInstall = async function() {
 
 window.skipInstall = function() {
     document.getElementById('installModal').style.display = 'none';
+    window.setModalState(false);
     // Inicia a sequência de splash que foi pausada
     var splash = document.getElementById('splash');
     splash.style.display = 'flex';
@@ -1098,7 +1110,7 @@ function renderGastos(){
     });
     sorted.sort(function(a,b){ return b.total - a.total; });
 
-    sorted.forEach(function(item){
+    sorted.forEach(function(item, index){
         var cat = item.cat;
         var key = cat.id;
         var label = cat.label;
@@ -1112,6 +1124,7 @@ function renderGastos(){
         
         var hdr=document.createElement('div');
         hdr.className='cat-header';hdr.id='cat-hdr-'+key;
+        hdr.style.setProperty('--i', index);
         hdr.dataset.catKey = key; // Para drag
         hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}">${label}</span>${isEco?' (Alocacao)':''}</span><span class="cat-total" id="tot-'+key+'" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         hdr.onclick=function(){window.toggleCatEl(key);};
@@ -1120,7 +1133,11 @@ function renderGastos(){
         var cont=document.createElement('div');
         cont.className='cat-content';cont.id='cat-'+key;
         if(isEco){var n=document.createElement('p');n.style.cssText='font-size:0.6rem;color:var(--text-muted);margin-bottom:8px';n.textContent='Valores nao descontados do saldo.';cont.appendChild(n);}
-        rows.forEach(function(row){cont.appendChild(buildRow(key,row,isEco));});
+        rows.forEach(function(row, rIdx){
+            var el = buildRow(key,row,isEco);
+            el.style.setProperty('--i', rIdx);
+            cont.appendChild(el);
+        });
         var ab=document.createElement('button');ab.className='btn-add-row';ab.textContent='+ Adicionar linha';ab.onclick=function(){window.addRow(key);};
         cont.appendChild(ab);c.appendChild(cont);
     });
@@ -1372,10 +1389,14 @@ window._toggleGastosDetails = function() {
     var b = document.getElementById('btn-gastos-toggle');
     if(c.style.display === 'none') {
         c.style.display = 'block';
+        c.style.animation = 'slideDown 0.25s ease forwards';
         b.classList.add('open');
     } else {
-        c.style.display = 'none';
+        c.style.animation = 'slideUpFadeOut 0.2s ease forwards';
         b.classList.remove('open');
+        setTimeout(function(){
+            if(!b.classList.contains('open')) c.style.display = 'none';
+        }, 200);
     }
 };
 
@@ -1414,7 +1435,7 @@ function renderRenda() {
     });
     sorted.sort(function(a,b){ return b.total - a.total; });
     
-    sorted.forEach(function(item){
+    sorted.forEach(function(item, index){
         var cat = item.cat;
         var key = cat.id;
         var label = cat.label;
@@ -1427,6 +1448,7 @@ function renderRenda() {
         
         var hdr = document.createElement('div');
         hdr.className = 'cat-header';
+        hdr.style.setProperty('--i', index);
         hdr.id = 'cat-hdr-r-'+key;
         hdr.dataset.catKey = key;
 
@@ -1438,8 +1460,9 @@ function renderRenda() {
         var cont = document.createElement('div');
         cont.className = 'cat-content'; cont.id = 'cat-r-'+key;
         
-        items.forEach(function(item){
+        items.forEach(function(item, rIdx){
             var d = document.createElement('div'); d.className = 'renda-item';
+            d.style.setProperty('--i', rIdx);
             d.innerHTML = '<div class="renda-item-left"><div class="renda-item-desc">'+(item.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted);margin-left:4px">'+window.formatDateShort(item.date)+'</span></div></div><span class="renda-item-val val-sensitive">+'+window.formatBRL(item.val)+'</span><button class="renda-item-del" onclick="removeRenda(\''+item.id+'\')">&times;</button>';
             cont.appendChild(d);
         });
@@ -1573,10 +1596,14 @@ window._toggleRendaDetails = function() {
     var b = document.getElementById('btn-renda-toggle');
     if(c.style.display === 'none') {
         c.style.display = 'block';
+        c.style.animation = 'slideDown 0.25s ease forwards';
         b.classList.add('open');
     } else {
-        c.style.display = 'none';
+        c.style.animation = 'slideUpFadeOut 0.2s ease forwards';
         b.classList.remove('open');
+        setTimeout(function(){
+            if(!b.classList.contains('open')) c.style.display = 'none';
+        }, 200);
     }
 };
 
@@ -1672,18 +1699,19 @@ function renderAssetList() {
     });
     sorted.sort(function(a,b){ return b.total - a.total; });
 
-    sorted.forEach(obj => {
+    sorted.forEach((obj, index) => {
         var cat = obj.cat;
         var catTotal = obj.total;
         
         var item = document.createElement('div');
         item.className = 'asset-cat-item';
+        item.style.setProperty('--i', index);
         item.id = 'asset-cat-'+cat.id;
         item.dataset.catId = cat.id; // Para referencia no drag
         
         var entriesHtml = '';
-        (cat.entries||[]).forEach(e => {
-            entriesHtml += `<div class="asset-entry">
+        (cat.entries||[]).forEach((e, idx) => {
+            entriesHtml += `<div class="asset-entry" style="--i:${idx}">
                 <span class="asset-entry-desc">${e.desc || 'Aporte'}</span>
                 <div style="display:flex;align-items:center">
                     <span class="asset-entry-val val-sensitive">${window.formatBRL(e.val)}</span>
@@ -1965,9 +1993,10 @@ window._renderHistorico=function(){
     });
 
     // Renderizar Anos
-    Object.keys(years).sort().reverse().forEach(function(y){
+    Object.keys(years).sort().reverse().forEach(function(y, yIdx){
         var yDiv = document.createElement('div');
         yDiv.className = 'hist-year-group';
+        yDiv.style.setProperty('--i', yIdx);
         // Header do Ano
         yDiv.innerHTML = `<div class="hist-year-header" onclick="toggleYear('${y}')">${y} <span class="arrow">&#9660;</span></div><div class="hist-year-content" id="year-${y}"></div>`;
         container.appendChild(yDiv);
@@ -2549,6 +2578,7 @@ async function startApp(user) {
         // Mostra modal de instalação e PAUSA o fluxo. 
         // O fluxo continua apenas quando chamar skipInstall()
         document.getElementById('installModal').style.display = 'flex';
+        window.setModalState(true);
         return; 
     }
 

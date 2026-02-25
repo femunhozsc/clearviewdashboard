@@ -242,6 +242,9 @@ body.privacy-active .val-sensitive * { filter: none; }
 .cat-content { max-height: 0; overflow: hidden; transition: max-height 0.35s ease-out; padding: 0 4px 0 12px; margin-left: 12px; border-left: 1px solid rgba(255,204,0,0.08); }
 .cat-content.show { max-height: 1000px; /* Large enough value */ transition: max-height 0.4s ease-in; padding: 8px 4px 4px 12px; margin-bottom: 10px; }
 
+@keyframes slideDown { from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);} }
+@keyframes slideUpFadeOut { from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(-10px);} }
+
 /* EXPENSE ROWS */
 .expense-row { display:grid; grid-template-columns:32px 1fr auto auto; gap:6px; align-items:center; margin-bottom:9px; border-bottom:1px solid rgba(255,255,255,0.04); padding-bottom:7px; transition: background 0.2s; border-radius: 6px; }
 .expense-row:last-child { border-bottom:none; }
@@ -723,15 +726,15 @@ body.calc-mode .calc-fullscreen-header { display:block; }
    TAB SWIPE ANIMATIONS
 ============================================================ */
 @keyframes tabInLeft {
-    from { opacity:0; transform:translateX(32px); }
-    to   { opacity:1; transform:translateX(0); }
+    from { opacity:0; transform:translateX(40px) scale(0.96); }
+    to   { opacity:1; transform:translateX(0) scale(1); }
 }
 @keyframes tabInRight {
-    from { opacity:0; transform:translateX(-32px); }
-    to   { opacity:1; transform:translateX(0); }
+    from { opacity:0; transform:translateX(-40px) scale(0.96); }
+    to   { opacity:1; transform:translateX(0) scale(1); }
 }
-.tab-in-left  { animation: tabInLeft  0.28s cubic-bezier(0.4,0,0.2,1) both; }
-.tab-in-right { animation: tabInRight 0.28s cubic-bezier(0.4,0,0.2,1) both; }
+.tab-in-left  { animation: tabInLeft  0.45s cubic-bezier(0.19, 1, 0.22, 1) both; }
+.tab-in-right { animation: tabInRight 0.45s cubic-bezier(0.19, 1, 0.22, 1) both; }
 
 /* Swipe Hint Toast */
 #swipe-hint {
@@ -811,7 +814,7 @@ body.privacy-active .saldo-val { filter: blur(4px); }
 }
 
 /* ============================= TERMOS DE USO ============================= */
-.termos-overlay { display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.85); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); align-items:flex-end; justify-content:center; }
+.termos-overlay { display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.6); align-items:flex-end; justify-content:center; }
 .termos-content { width:100%; max-width:600px; max-height:92vh; background:#161616; border-radius:24px 24px 0 0; border-top:1px solid rgba(255,204,0,0.15); display:flex; flex-direction:column; animation:slideUp 0.38s cubic-bezier(0.16,1,0.3,1) forwards; overflow:hidden; }
 .termos-header { display:flex; justify-content:space-between; align-items:center; padding:20px 22px 14px; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
 .termos-logo-tag { font-size:0.65rem; letter-spacing:2px; color:var(--accent); font-weight:600; opacity:0.8; }
@@ -831,3 +834,30 @@ body.privacy-active .saldo-val { filter: blur(4px); }
 .termos-section ul li { font-size:0.82rem; color:rgba(255,255,255,0.6); line-height:1.6; margin-bottom:5px; }
 .termos-section ul li strong { color:rgba(255,255,255,0.8); }
 .termos-footer { padding:14px 22px 28px; border-top:1px solid rgba(255,255,255,0.06); display:flex; justify-content:center; flex-shrink:0; }
+
+/* ANIMAÇÕES DE LISTA (CASCATA) */
+@keyframes itemEntry {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+.renda-item, .expense-row, .asset-cat-item, .hist-year-group, .cat-header, .asset-entry {
+    animation: itemEntry 0.4s cubic-bezier(0.19, 1, 0.22, 1) backwards;
+    animation-delay: calc(var(--i, 0) * 0.05s);
+}
+
+/* EFEITO DE ESCALA DO APP (MODAL OPEN) */
+#app {
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), border-radius 0.4s ease, filter 0.4s ease;
+    transform-origin: center 15vh;
+}
+body.modal-open { overflow: hidden; }
+body.modal-open #app {
+    transform: scale(0.92) translateY(10px);
+    border-radius: 24px;
+    filter: brightness(0.6);
+    pointer-events: none;
+}
+.modal-overlay {
+    backdrop-filter: none !important; /* Remove blur do overlay para focar no app escurecido */
+    background: rgba(0,0,0,0.4);
+}
