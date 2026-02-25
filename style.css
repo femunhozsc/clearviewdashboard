@@ -491,8 +491,11 @@ body.calc-mode .calc-fullscreen-header { display:block; }
     width: calc(100% / 3);
     display: flex; justify-content: center;
     align-items: flex-start;
-    padding: 0 28px;
+    padding: 0 28px 40px;
     flex-shrink: 0;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 .auth-panel-inner {
     width: 100%; max-width: 340px;
@@ -530,7 +533,7 @@ body.calc-mode .calc-fullscreen-header { display:block; }
 
 /* Field Groups */
 .auth-field-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-.auth-field-group-scroll { max-height: 50vh; overflow-y: auto; padding-right: 2px; }
+.auth-field-group-scroll { padding-right: 2px; }
 .auth-field-row { display: flex; gap: 10px; }
 .auth-field-row .auth-field { flex: 1; }
 .auth-field { display: flex; flex-direction: column; gap: 5px; }
