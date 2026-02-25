@@ -2814,17 +2814,17 @@ async function runSplashSequence() {
     // Force reflow
     void splash.offsetWidth;
 
-    var minWait=new Promise(function(r){setTimeout(r,2600);}); 
+    var minWait=new Promise(function(r){setTimeout(r,2000);}); 
     var loadP=loadData();
     
     // Fase 2: logo sobe/some + greeting aparece
     setTimeout(function(){
         splash.classList.add('phase2');
         window.playWelcomeSound(); // Toca o som
-    }, 1000); // Mais tempo para ver a logo brilhar
+    }, 500); 
     
     // Fase 3: tagline aparece
-    setTimeout(function(){splash.classList.add('phase3');}, 1900);
+    setTimeout(function(){splash.classList.add('phase3');}, 1400);
 
     await Promise.all([minWait,loadP]);
     
