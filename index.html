@@ -2814,17 +2814,17 @@ async function runSplashSequence() {
     // Force reflow
     void splash.offsetWidth;
 
-    var minWait=new Promise(function(r){setTimeout(r,2400);}); 
+    var minWait=new Promise(function(r){setTimeout(r,2600);}); 
     var loadP=loadData();
     
     // Fase 2: logo sobe/some + greeting aparece
     setTimeout(function(){
         splash.classList.add('phase2');
         window.playWelcomeSound(); // Toca o som
-    }, 800);
+    }, 1000); // Mais tempo para ver a logo brilhar
     
     // Fase 3: tagline aparece
-    setTimeout(function(){splash.classList.add('phase3');}, 1700);
+    setTimeout(function(){splash.classList.add('phase3');}, 1900);
 
     await Promise.all([minWait,loadP]);
     
@@ -2833,11 +2833,11 @@ async function runSplashSequence() {
     initCharts(); initIncomeData();
     renderMonthLabel();loadMonthData();window._updateAssets();
 
+    window.scrollTo(0, 0);
+    document.getElementById('app').classList.add('visible');
     splash.classList.add('exit');
     setTimeout(function(){
         splash.style.display='none';
-        document.getElementById('app').classList.add('visible');
-        window.scrollTo(0, 0); // Garante que o app comece no topo
     },850);
 }
 
