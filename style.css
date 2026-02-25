@@ -29,10 +29,10 @@ body { background:var(--bg); color:var(--text-main); overflow-x:hidden; }
 /* Wrapper interno que translada entre fases */
 .splash-inner {
     display:flex; flex-direction:column; align-items:center;
-    transform: translateY(-22vh);
+    transform: translateY(0);
     transition: transform 1s cubic-bezier(0.4,0,0.2,1);
 }
-#splash.phase2 .splash-inner { transform: translateY(-5vh); }
+#splash.phase2 .splash-inner { transform: translateY(-14vh); }
 
 /* Logo — animação mais cinematográfica */
 .splash-logo {

@@ -516,10 +516,8 @@
             <option value="Serviço">Serviço</option>
             <option value="Aluguel">Aluguel</option>
             <option value="Dividendos">Dividendos</option>
-            <option value="Comissão">Comissão</option>
             <option value="Bonus">Bônus</option>
             <option value="Venda">Venda</option>
-            <option value="Outros">Outros</option>
         </select>
         <input type="text" class="modal-input-desc" id="rendaDesc" placeholder="Descricao (opcional)">
         <button class="btn-confirm-add" onclick="addRenda()">Confirmar</button>
@@ -1044,7 +1042,7 @@ const CAT_DEFAULTS={
     entret:    ['Filmes/Cinema','Musica','Games','Show','Livros','Hobbies','Esportes','Academia','Passeios','Ferias','Viagem','Teatro','Outros'],
     economias: ['Para Reserva','Para Investimentos','Outros']
 };
-const INCOME_DEFAULTS=['Salario','Serviço','Aluguel','Dividendos','Comissão','Bonus','Venda','Outros'];
+const INCOME_DEFAULTS=['Salario','Serviço','Aluguel','Dividendos','Bonus','Venda'];
 
 const DEFAULT_ASSET_CATEGORIES = [
     {id:'rf',          name:'Renda Fixa',        color:'#ffcc00'},
@@ -2792,12 +2790,12 @@ async function runSplashSequence() {
     // Force reflow
     void splash.offsetWidth;
 
-    var minWait=new Promise(function(r){setTimeout(r,3500);}); // Tempo um pouco menor pois já teve login
+    var minWait=new Promise(function(r){setTimeout(r,2200);}); // Tempo reduzido para agilidade
     var loadP=loadData();
-    // Fase 2: logo sobe + greeting aparece (delay 1500ms)
-    setTimeout(function(){splash.classList.add('phase2');},1500);
-    // Fase 3: tagline aparece (delay 2900ms)
-    setTimeout(function(){splash.classList.add('phase3');},2900);
+    // Fase 2: logo sobe + greeting aparece (delay reduzido de 1500ms para 600ms)
+    setTimeout(function(){splash.classList.add('phase2');},600);
+    // Fase 3: tagline aparece
+    setTimeout(function(){splash.classList.add('phase3');},1600);
 
     await Promise.all([minWait,loadP]);
     
