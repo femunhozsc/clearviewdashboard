@@ -196,7 +196,7 @@ body.privacy-active .val-sensitive * { filter: none; }
     background: linear-gradient(180deg, rgba(255, 204, 0, 0.08) 0%, rgba(22, 22, 22, 0) 100%), var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: 22px;
-    padding: 22px;
+    padding: 28px;
     margin-bottom: 16px;
     text-align: center;
     transition: background 0.3s, border-color 0.3s;
@@ -215,7 +215,7 @@ body.privacy-active .val-sensitive * { filter: none; }
     margin-bottom: 4px;
 }
 .fluxo-saldo-valor {
-    font-size: 2.5rem; /* This is now Renda Total */
+    font-size: 2.8rem; /* This is now Renda Total */
     font-weight: 600;
     color: #ffffff;
     letter-spacing: -1px;
@@ -256,7 +256,7 @@ body.privacy-active .val-sensitive * { filter: none; }
     margin-bottom: 4px;
 }
 .fluxo-resumo-valor {
-    font-size: 1rem;
+    font-size: 1.15rem;
     font-weight: 500;
     color: var(--text-main);
 }
@@ -270,9 +270,9 @@ body.privacy-active .val-sensitive * { filter: none; }
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: 14px;
-    padding: 16px;
+    padding: 22px;
     color: var(--text-sec);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
@@ -324,10 +324,10 @@ body.privacy-active .val-sensitive * { filter: none; }
     border: 1px solid var(--card-border);
     color: var(--text-sec);
     width: 100%;
-    padding: 11px;
+    padding: 14px;
     border-radius: 10px;
     margin-top: 10px;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
@@ -408,10 +408,10 @@ body.privacy-active .val-sensitive * { filter: none; }
 .saldo-val { font-size:1.75rem; font-weight:600; letter-spacing:-0.5px; }
 
 /* GASTOS */
-.cat-header { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:rgba(255,255,255,0.02); border-radius:10px; margin-bottom:4px; cursor:pointer; border:1px solid var(--card-border); transition:all 0.2s; }
+.cat-header { display:flex; justify-content:space-between; align-items:center; padding:16px 18px; background:rgba(255,255,255,0.02); border-radius:10px; margin-bottom:6px; cursor:pointer; border:1px solid var(--card-border); transition:all 0.2s; }
 .cat-header:active { transform:scale(0.99); }
-.cat-title { font-size:0.82rem; color:var(--text-sec); display:flex; align-items:center; gap:8px; font-weight:400; }
-.cat-total { font-size:0.82rem; color:var(--text-sec); font-weight:600; }
+.cat-title { font-size:0.92rem; color:var(--text-sec); display:flex; align-items:center; gap:8px; font-weight:400; }
+.cat-total { font-size:0.92rem; color:var(--text-sec); font-weight:600; }
 .arrow { font-size:0.5rem; transition:transform 0.3s; color:var(--text-muted); }
 .cat-header-content { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .cat-header.active .arrow { transform:rotate(180deg); }
@@ -425,7 +425,7 @@ body.privacy-active .val-sensitive * { filter: none; }
 @keyframes slideUpFadeOut { from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(-10px);} }
 
 /* EXPENSE ROWS */
-.expense-row { display:grid; grid-template-columns:32px 1fr auto auto; gap:6px; align-items:center; margin-bottom:9px; border-bottom:1px solid rgba(255,255,255,0.04); padding-bottom:7px; transition: background 0.2s; border-radius: 6px; }
+.expense-row { display:grid; grid-template-columns:32px 1fr auto auto; gap:6px; align-items:center; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.04); padding-bottom:10px; transition: background 0.2s; border-radius: 6px; }
 .expense-row:last-child { border-bottom:none; }
 .expense-row.dragging { opacity: 0.5; background: rgba(255,204,0,0.05); }
 
@@ -446,16 +446,16 @@ body.privacy-active .val-sensitive * { filter: none; }
 #gastos-container.edit-mode .btn-cat-action,
 #renda-container.edit-mode .btn-cat-action { display: flex; }
 
-.lbl-input { background:transparent; border:none; color:var(--text-sec); font-size:0.76rem; width:100%; border-bottom:1px solid transparent; transition:0.2s; font-family:'DM Sans',sans-serif; font-weight:400; }
+.lbl-input { background:transparent; border:none; color:var(--text-sec); font-size:0.9rem; width:100%; border-bottom:1px solid transparent; transition:0.2s; font-family:'DM Sans',sans-serif; font-weight:400; }
 .lbl-input:focus { border-bottom:1px solid rgba(255,204,0,0.35); color:var(--text-main); }
-.box-input { background:rgba(255,255,255,0.04); color:var(--accent); border:1px solid var(--card-border); border-radius:6px; font-size:0.78rem; padding:6px 8px; width:105px; text-align:right; font-weight:500; font-family:'DM Sans',sans-serif; }
+.box-input { background:rgba(255,255,255,0.04); color:var(--accent); border:1px solid var(--card-border); border-radius:6px; font-size:0.9rem; padding:10px 12px; width:115px; text-align:right; font-weight:500; font-family:'DM Sans',sans-serif; }
 .box-input:focus { border-color:rgba(255,204,0,0.35); outline:none; }
 
 /* Botão Delete Melhorado para Mobile */
 .btn-del-row { background:rgba(255,255,255,0.03); border:1px solid transparent; color:var(--text-muted); font-size:1rem; cursor:pointer; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:8px; transition:0.2s; margin-left: 2px; }
 .btn-del-row:active { color:var(--danger); background:rgba(255,85,85,0.1); border-color:rgba(255,85,85,0.2); }
 
-.btn-add-row { background:none; border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.7rem; padding:7px 14px; border-radius:8px; cursor:pointer; transition:0.2s; margin-top:4px; width:100%; font-family:'DM Sans',sans-serif; }
+.btn-add-row { background:none; border:1px solid rgba(255,255,255,0.06); color:var(--text-muted); font-size:0.85rem; padding:12px 16px; border-radius:8px; cursor:pointer; transition:0.2s; margin-top:4px; width:100%; font-family:'DM Sans',sans-serif; }
 .btn-add-row:active { border-color:rgba(255,204,0,0.25); color:var(--accent); }
 
 /* QUICK ADD */
