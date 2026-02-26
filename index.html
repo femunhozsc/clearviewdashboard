@@ -345,10 +345,16 @@
                     </div>
                 </div>
                 <div class="summary-stats-grid" id="summaryStats">
-                    <div class="sum-stat-box"><span class="sum-stat-label">Média Diária (Renda)</span><span class="sum-stat-val" id="sumMediaRenda" style="color: var(--success);">--</span></div>
-                    <div class="sum-stat-box"><span class="sum-stat-label">Média Diária (Gastos)</span><span class="sum-stat-val" id="sumMediaGasto" style="color: var(--danger);">--</span></div>
                     <div class="sum-stat-box"><span class="sum-stat-label">Taxa de Poupança</span><span class="sum-stat-val" id="sumPoupanca">--</span></div>
-                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Gasto</span><span class="sum-stat-val" id="sumMaior">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">% Despesas</span><span class="sum-stat-val" id="sumDesp">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Renda</span><span class="sum-stat-val" id="sumMaiorRenda" style="color: var(--success);">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Despesa</span><span class="sum-stat-val" id="sumMaior" style="color: var(--danger);">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Taxa de Poupança</span><span class="sum-stat-val" id="sumPoupanca" style="color:var(--text-main)">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">% Despesas</span><span class="sum-stat-val" id="sumDesp" style="color:var(--text-main)">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Média Diária (Renda)</span><span class="sum-stat-val" id="sumMediaRenda" style="color:var(--success)">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Média Diária (Gastos)</span><span class="sum-stat-val" id="sumMediaGasto" style="color:var(--danger)">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Renda</span><span class="sum-stat-val" id="sumMaiorRenda" style="color:var(--text-main)">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Despesa</span><span class="sum-stat-val" id="sumMaior" style="color:var(--text-main)">--</span></div>
                 </div>
             </div>
 
@@ -2880,26 +2886,16 @@ function updateFlowCharts(incomeDetails, expenseDetails) {
 }
 
 function updateSummaryStats(renda, gastos) {
+    // Dias para média
     var now = new Date();
     var dias = 1;
-    // Se for o mês/ano atual, usa o dia de hoje. Se for passado, usa o total de dias do mês.
     if(currentYear === now.getFullYear() && currentMonth === now.getMonth()) {
         dias = Math.max(1, now.getDate());
     } else {
         dias = new Date(currentYear, currentMonth + 1, 0).getDate();
     }
 
-    // 1. Média Diária (Renda)
-    var mediaRenda = renda / dias;
-    var elMediaRenda = document.getElementById('sumMediaRenda');
-    if(elMediaRenda) elMediaRenda.textContent = window.formatBRL(mediaRenda);
-
-    // 2. Média Diária (Gastos)
-    var mediaGasto = gastos / dias;
-    var elMediaGasto = document.getElementById('sumMediaGasto');
-    if(elMediaGasto) elMediaGasto.textContent = window.formatBRL(mediaGasto);
-
-    // 3. Taxa de Poupança
+    // 1. Taxa de Poupança
     var poupanca = 0;
     if(renda > 0) poupanca = ((renda - gastos) / renda) * 100;
     var elPoup = document.getElementById('sumPoupanca');
@@ -2907,8 +2903,46 @@ function updateSummaryStats(renda, gastos) {
         elPoup.textContent = poupanca.toFixed(1) + '%';
         elPoup.style.color = poupanca >= 20 ? 'var(--success)' : (poupanca > 0 ? 'var(--accent)' : 'var(--danger)');
     }
+    if(elPoup) elPoup.textContent = poupanca.toFixed(1) + '%';
 
-    // 4. Maior Categoria
+    // 2. % Despesas (Comprometimento)
+    var despPercent = 0;
+    if(renda > 0) despPercent = (gastos / renda) * 100;
+    var elDesp = document.getElementById('sumDesp');
+    if(elDesp) {
+        elDesp.textContent = despPercent.toFixed(1) + '%';
+        elDesp.style.color = despPercent > 100 ? 'var(--danger)' : 'var(--text-main)';
+    }
+    if(elDesp) elDesp.textContent = despPercent.toFixed(1) + '%';
+
+    // 3. Maior Renda (Categoria)
+    // 3. Médias Diárias
+    var mediaRenda = renda / dias;
+    var mediaGasto = gastos / dias;
+    var elMR = document.getElementById('sumMediaRenda'); if(elMR) elMR.textContent = window.formatBRL(mediaRenda);
+    var elMG = document.getElementById('sumMediaGasto'); if(elMG) elMG.textContent = window.formatBRL(mediaGasto);
+
+    // 4. Maior Renda (Categoria)
+    var maiorRendaCat = '—';
+    var maiorRendaVal = 0;
+    var incomeByCat = {};
+    rendaItems.forEach(function(item) {
+        if (item.val > 0) {
+            if (!incomeByCat[item.cat]) incomeByCat[item.cat] = 0;
+            incomeByCat[item.cat] += item.val;
+        }
+    });
+    for (const catLabel in incomeByCat) {
+        if(incomeByCat[catLabel] > maiorRendaVal) {
+            maiorRendaVal = incomeByCat[catLabel];
+            maiorRendaCat = catLabel;
+        }
+    }
+    var elMaiorRenda = document.getElementById('sumMaiorRenda');
+    if(elMaiorRenda) elMaiorRenda.textContent = maiorRendaCat;
+
+    // 4. Maior Despesa (Categoria)
+    // 5. Maior Despesa (Categoria)
     var maiorCat = '—';
     var maiorVal = 0;
     expenseCats.forEach(function(cat){

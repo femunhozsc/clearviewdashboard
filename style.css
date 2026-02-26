@@ -490,6 +490,7 @@ body.privacy-active .val-sensitive * { filter: none; }
     align-items: start;
     margin-bottom: 20px;
     width: 100%;
+    margin-top: 15px;
 }
 .finance-summary-item {
     display: flex;
