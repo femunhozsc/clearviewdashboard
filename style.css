@@ -5,11 +5,11 @@
     --accent: #ffcc00;
     --accent-dim: rgba(255,204,0,0.07);
     --accent-border: rgba(255,204,0,0.18);
-    --text-main: #efefef;
+    --text-main: #efefeff6;
     --text-sec: #aaaaaa;
     --text-muted: #666666;
-    --success: #4dcf94;
-    --danger: #ff5555;
+    --success: #30ad64;
+    --danger: #e93b3b;
     --c-rf:#ffcc00;--c-reserva:#c8960c;--c-rv:#d8d8d8;
     --c-imov:#999999;--c-cripto:#555555;--c-inter:#333333;--c-outros:#7a5c1e;
 }
@@ -222,7 +222,7 @@ body.privacy-active .val-sensitive * { filter: none; }
 .fluxo-saldo-valor {
     font-size: 2.8rem; /* This is now Renda Total */
     font-weight: 600;
-    color: #ffffff;
+    color: #ffffffe8;
     letter-spacing: -1px;
     margin-bottom: 16px;
     transition: color 0.3s;
