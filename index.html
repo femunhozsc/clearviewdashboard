@@ -224,8 +224,8 @@
     <nav class="navbar">
         <img src="logo.png" alt="Clearview" class="logo-img" onclick="resetToHome()" style="cursor:pointer">
         <div class="navbar-right">
-            <button class="privacy-toggle" onclick="togglePrivacyMode()" id="privacyBtn"><i class="fa-regular fa-eye"></i></button>
             <span id="sync-icon" class="sync-icon"></span>
+            <button class="privacy-toggle" onclick="togglePrivacyMode()" id="privacyBtn"><i class="fa-regular fa-eye"></i></button>
             <button class="hamburger" onclick="openNav()">&#9776;</button>
         </div>
     </nav>
@@ -264,76 +264,89 @@
 
         <!-- TAB: FLUXO -->
         <div id="tab-fluxo" class="tab-content active">
-            <!-- Renda -->
-            <div class="card">
-                <div class="card-title">
-                    <span>Renda</span>
-                    <button class="btn-quick-add-inline" onclick="openRendaModal()">+ Renda</button>
+            
+            <!-- NOVO HEADER DE SALDO -->
+            <div class="fluxo-header-card">
+                <div class="fluxo-saldo-label">Faturamento do Mês</div>
+                <div class="fluxo-saldo-valor val-sensitive" id="rendaTotal">R$ 0,00</div>
+                <div class="fluxo-progresso-bar">
+                    <div class="fluxo-progresso-gasto" id="fluxoGastoBar" style="width: 0%;"></div>
                 </div>
-                <div class="renda-total-box">
-                    <div>
-                        <div class="renda-total-label">Renda Mensal</div>
-                        <div class="renda-total-val val-sensitive" id="rendaTotal">R$ 0,00</div>
+                <div style="font-size:0.45rem;color:var(--text-muted);margin-top:-8px;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.7">Taxa Poupança</div>
+                <div class="fluxo-resumo-grid">
+                    <div class="fluxo-resumo-item">
+                        <span class="fluxo-resumo-label"><i class="fa-solid fa-circle" style="color:var(--danger); font-size:0.5rem;"></i> Despesas</span>
+                        <span class="fluxo-resumo-valor val-sensitive" id="gastosTotalDisplay">R$ 0,00</span>
                     </div>
-                    <div class="renda-entries-count" id="rendaCount">0 lançamentos</div>
-                </div>
-                
-                <button class="btn-renda-hist" id="btn-renda-toggle" onclick="toggleRendaDetails()" style="margin-top:14px;justify-content:center;font-weight:500;font-size:0.85rem;padding:14px;">Ver Categorias <span class="renda-hist-arrow" style="margin-left:8px">&#9660;</span></button>
-                
-                <div id="renda-expand-area" style="display:none;margin-top:14px;animation:slideDown 0.25s ease">
-                    <button class="btn-new-cat" id="btnNewRendaCat" onclick="openNewRendaCatModal()" style="margin-bottom:10px">+ Nova Categoria de Renda</button>
-                    <div id="renda-container"></div>
-                    <div class="list-actions-bar">
-                        <button class="btn-edit-small" id="btnEditRenda" onclick="toggleRendaEditMode()">Editar Categoria</button>
+                    <div class="fluxo-resumo-item">
+                        <span class="fluxo-resumo-label"><i class="fa-solid fa-circle" id="sobraCaixaIcon" style="font-size:0.5rem; color: var(--success);"></i> Sobra de Caixa</span>
+                        <span class="fluxo-resumo-valor val-sensitive" id="valInvest">R$ 0,00</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Gastos -->
-            <div class="card">
-                <div class="card-title">
-                    <span>Gastos</span>
-                    <button class="btn-quick-add-inline" onclick="openAddModal()">+ Gasto</button>
-                </div>
-                <div class="renda-total-box" style="border-color:var(--card-border); background:rgba(255,255,255,0.02);">
-                    <div>
-                        <div class="renda-total-label">Total Gasto</div>
-                        <div class="renda-total-val val-sensitive" id="gastosTotalDisplay" style="color:var(--text-main)">R$ 0,00</div>
-                    </div>
-                </div>
-                <div class="saldo-box positivo" id="saldoBox">
-                    <div>
-                        <div class="saldo-label">Sobra de Caixa</div>
-                        <div class="saldo-val val-sensitive" id="valInvest">R$ 0,00</div>
-                    </div>
-                </div>
-                
-                <button class="btn-renda-hist" id="btn-gastos-toggle" onclick="toggleGastosDetails()" style="margin-top:14px;justify-content:center;font-weight:500;font-size:0.85rem;padding:14px;">Ver Categorias <span class="renda-hist-arrow" style="margin-left:8px">&#9660;</span></button>
-                <div id="gastos-expand-area" style="display:none;margin-top:14px;animation:slideDown 0.25s ease">
-                    <button class="btn-new-cat" id="btnNewGastoCat" onclick="openNewGastoCatModal()" style="margin-bottom:10px">+ Nova Categoria de Gasto</button>
-                    <div id="gastos-container"></div>
-                    <div class="list-actions-bar">
-                        <button class="btn-edit-small" id="btnEditGastos" onclick="toggleGastosEditMode()">Editar Categoria</button>
-                    </div>
-                </div>
-                
-                <!-- Gastos removidos -->
-                <div id="gastos-hist-wrapper">
-                    <div class="gastos-hist-title">Removidos este mes</div>
-                    <div id="gastos-hist-list"></div>
-                </div>
+            <!-- NOVOS BOTÕES DE AÇÃO -->
+            <div class="fluxo-actions-grid">
+                <button class="fluxo-action-btn" onclick="pulseEl(this,'green');setTimeout(openRendaModal, 100)">
+                    <i class="fa-solid fa-arrow-up"></i>
+                    <span>Adicionar Renda</span>
+                </button>
+                <button class="fluxo-action-btn" onclick="pulseEl(this,'red');setTimeout(openAddModal, 100)">
+                    <i class="fa-solid fa-arrow-down"></i>
+                    <span>Adicionar Gasto</span>
+                </button>
             </div>
 
-            <!-- Novo Gráfico de Resumo -->
+            <!-- CATEGORIAS DE RENDA -->
+            <div class="card">
+                <div class="card-title">
+                    <span>Categorias de Renda</span>
+                    <button class="btn-edit-small" id="btnEditRenda" onclick="toggleRendaEditMode()">Editar</button>
+                </div>
+                <div id="renda-container" class="list-container"></div>
+                <button class="btn-ver-mais" id="btnVerMaisRenda" onclick="toggleCatList('renda')" style="display: none;">Ver mais</button>
+                <button class="btn-new-cat" id="btnNewRendaCat" onclick="openNewRendaCatModal()" style="margin-top:10px">+ Nova Categoria de Renda</button>
+            </div>
+
+            <!-- CATEGORIAS DE GASTOS -->
+            <div class="card">
+                <div class="card-title">
+                    <span>Categorias de Gastos</span>
+                    <button class="btn-edit-small" id="btnEditGastos" onclick="toggleGastosEditMode()">Editar</button>
+                </div>
+                <div id="gastos-container" class="list-container"></div>
+                <button class="btn-ver-mais" id="btnVerMaisGastos" onclick="toggleCatList('gastos')" style="display: none;">Ver mais</button>
+                <button class="btn-new-cat" id="btnNewGastoCat" onclick="openNewGastoCatModal()" style="margin-top:10px">+ Nova Categoria de Gasto</button>
+            </div>
+
+            <!-- GRÁFICO DE RESUMO -->
             <div class="card summary-chart-card">
-                <div class="card-title">Resumo do Mês</div>
-                <div class="summary-chart-container"><canvas id="summaryChart"></canvas></div>
-                <!-- Novas Estatísticas do Resumo -->
+                <div class="card-title">Resumo de Gastos</div>
+                <div class="chart-donut-container">
+                    <canvas id="summaryChart"></canvas>
+                </div>
+                <div class="total-center">
+                    <h3 id="summaryChartTotal" class="val-sensitive">R$ 0,00</h3>
+                    <span>Total Gasto</span>
+                </div>
+                <div class="summary-chart-legend" id="summaryChartLegend"></div>
                 <div class="summary-stats-grid" id="summaryStats">
                     <div class="sum-stat-box"><span class="sum-stat-label">Taxa Poupanca</span><span class="sum-stat-val" id="sumPoupanca">--</span></div>
                     <div class="sum-stat-box"><span class="sum-stat-label">Media Diaria</span><span class="sum-stat-val" id="sumMedia">--</span></div>
                     <div class="sum-stat-box"><span class="sum-stat-label">Maior Gasto</span><span class="sum-stat-val" id="sumMaior">--</span></div>
                 </div>
+            </div>
+
+            <!-- Gastos removidos (Mantido, mas estilizado como card) -->
+            <div class="card" id="gastos-hist-wrapper" style="display:none;">
+                <div class="gastos-hist-title">Removidos este mês</div>
+                <div id="gastos-hist-list"></div>
+            </div>
+
+            <!-- Elementos antigos que não são mais usados na UI, mas o JS pode precisar -->
+            <div style="display:none">
+                <div id="saldoBox"></div>
+                <div id="rendaCount"></div>
             </div>
         </div>
 
@@ -771,10 +784,6 @@ window.switchTab = function(tab,btn,dir){
     }
     newEl.classList.add('active');
     if(tab==='historico') window.renderHistorico();
-    if(tab==='ativos'){
-        var w=document.getElementById('chartWrap');
-        if(w){w.classList.remove('chart-anim');void w.offsetWidth;w.classList.add('chart-anim');}
-    }
     // Update tab indicator underline position
     var tIdx=curTabIdx;
     var tabsEl=document.getElementById('tabs-root');
@@ -946,6 +955,14 @@ window.deleteGastoCategory = function(key){if(window._deleteGastoCategory)window
 window.startRenameRendaCat = function(key){if(window._startRenameRendaCat)window._startRenameRendaCat(key);};
 window.startRenameGastoCat = function(key){if(window._startRenameGastoCat)window._startRenameGastoCat(key);};
 
+window.pulseEl = function(el, type) {
+    el.classList.remove('pulsing-green', 'pulsing-red');
+    void el.offsetWidth; // Força reflow para reiniciar animação se clicar rápido
+    el.classList.add('pulsing-' + type);
+    setTimeout(function(){ el.classList.remove('pulsing-' + type); }, 500);
+};
+
+window.toggleCatList = function(type){if(window._toggleCatList)window._toggleCatList(type);};
 /* INSTALL FUNCTIONS */
 window.triggerInstall = async function() {
     if (deferredPrompt) {
@@ -980,7 +997,8 @@ window.skipInstall = function() {
     var splash = document.getElementById('splash');
     splash.style.display = 'flex';
     // Pequeno delay para garantir transição suave
-    setTimeout(function(){ runSplashSequence(); }, 100);
+    // Passamos true para indicar que deve pular a introdução do logo
+    setTimeout(function(){ runSplashSequence(true); }, 50);
 };
 
 /* AUTH UI FUNCTIONS */
@@ -1133,6 +1151,10 @@ function renderGastos(){
     });
     sorted.sort(function(a,b){ return b.total - a.total; });
 
+    var moreContainer = document.createElement('div');
+    moreContainer.id = 'gastos-container-more';
+    moreContainer.className = 'list-more-wrapper';
+
     sorted.forEach(function(item, index){
         var cat = item.cat;
         var key = cat.id;
@@ -1151,7 +1173,6 @@ function renderGastos(){
         hdr.dataset.catKey = key; // Para drag
         hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}">${label}</span>${isEco?' (Alocacao)':''}</span><span class="cat-total" id="tot-'+key+'" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         hdr.onclick=function(){window.toggleCatEl(key);};
-        c.appendChild(hdr);
         
         var cont=document.createElement('div');
         cont.className='cat-content';cont.id='cat-'+key;
@@ -1162,8 +1183,27 @@ function renderGastos(){
             cont.appendChild(el);
         });
         var ab=document.createElement('button');ab.className='btn-add-row';ab.textContent='+ Adicionar linha';ab.onclick=function(){window.addRow(key);};
-        cont.appendChild(ab);c.appendChild(cont);
+        cont.appendChild(ab);
+
+        if (index < 3) {
+            c.appendChild(hdr);
+            c.appendChild(cont);
+        } else {
+            moreContainer.appendChild(hdr);
+            moreContainer.appendChild(cont);
+        }
     });
+    c.appendChild(moreContainer);
+
+    var btnVerMais = document.getElementById('btnVerMaisGastos');
+    if (sorted.length > 3) {
+        btnVerMais.style.display = 'block';
+        // Reset state on re-render
+        moreContainer.classList.remove('show');
+        btnVerMais.textContent = 'Ver mais';
+    } else {
+        btnVerMais.style.display = 'none';
+    }
     
     // Setup drag para as categorias de gastos
     var headers = c.querySelectorAll('.cat-header');
@@ -1458,6 +1498,10 @@ function renderRenda() {
     });
     sorted.sort(function(a,b){ return b.total - a.total; });
     
+    var moreContainer = document.createElement('div');
+    moreContainer.id = 'renda-container-more';
+    moreContainer.className = 'list-more-wrapper';
+
     sorted.forEach(function(item, index){
         var cat = item.cat;
         var key = cat.id;
@@ -1478,7 +1522,6 @@ function renderRenda() {
         hdr.innerHTML = `<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteRendaCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameRendaCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-rcat-${key}">${label}</span></span><span class="cat-total" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         
         hdr.onclick = function(){ window.toggleCatEl('r-'+key); }; // Reusing toggleCatEl logic but with prefix
-        c.appendChild(hdr);
 
         var cont = document.createElement('div');
         cont.className = 'cat-content'; cont.id = 'cat-r-'+key;
@@ -1490,12 +1533,28 @@ function renderRenda() {
             cont.appendChild(d);
         });
         
-        c.appendChild(cont);
+        if (index < 3) {
+            c.appendChild(hdr);
+            c.appendChild(cont);
+        } else {
+            moreContainer.appendChild(hdr);
+            moreContainer.appendChild(cont);
+        }
 
         // Setup drag
         var dragHandle = hdr.querySelector('.cat-drag-handle');
         setupRendaCatDrag(dragHandle, hdr);
     });
+    c.appendChild(moreContainer);
+
+    var btnVerMais = document.getElementById('btnVerMaisRenda');
+    if (sorted.length > 3) {
+        btnVerMais.style.display = 'block';
+        moreContainer.classList.remove('show');
+        btnVerMais.textContent = 'Ver mais';
+    } else {
+        btnVerMais.style.display = 'none';
+    }
     
     window._updateRendaCatSelect();
 }
@@ -1633,13 +1692,17 @@ window._toggleRendaDetails = function() {
 /* FLOW */
 function updateFlow(){
     var tr=rendaItems.reduce(function(s,r){return s+r.val;},0);
-    document.getElementById('rendaTotal').textContent=window.formatBRL(tr);
+    var elRenda = document.getElementById('rendaTotal'); if(elRenda) elRenda.textContent=window.formatBRL(tr);
     document.getElementById('rendaCount').textContent=rendaItems.length+' lancamento'+(rendaItems.length!==1?'s':'');
     var td=0;
+    var expenseDetails = []; // Para o novo gráfico de rosca
     expenseCats.forEach(function(cat){
         if(cat.id==='economias')return;
         var ct=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);
         td+=ct;
+        if (ct > 0) {
+            expenseDetails.push({ label: cat.label, value: ct });
+        }
         var el=document.getElementById('tot-'+cat.id);
         if(el)el.textContent=window.formatBRL(ct);
     });
@@ -1652,13 +1715,34 @@ function updateFlow(){
 
     var sob=tr-td;
     var sv=document.getElementById('valInvest');
-    sv.textContent=window.formatBRL(sob);
-    sv.style.color=sob<0?'var(--danger)':'var(--success)';
-    document.getElementById('saldoBox').className='saldo-box '+(sob<0?'negativo':'positivo');
+    if(sv) {
+        sv.textContent=window.formatBRL(sob);
+        sv.style.color = sob < 0 ? 'var(--danger)' : 'var(--success)';
+    }
+    var sobraIcon = document.getElementById('sobraCaixaIcon');
+    if(sobraIcon) sobraIcon.style.color = sob < 0 ? 'var(--danger)' : 'var(--success)';
+
+    var poupancaPercent = (tr > 0) ? ((tr - td) / tr) * 100 : 0;
+    var bar = document.getElementById('fluxoGastoBar');
+    if(bar) bar.style.width = Math.max(0, Math.min(poupancaPercent, 100)) + '%';
+
     window._saveAllData();
-    updateSummaryChart(tr, td, sob);
+    updateSummaryChart(expenseDetails);
     updateSummaryStats(tr, td);
 }
+
+/* "Ver mais" para listas de categoria */
+window._toggleCatList = function(type) {
+    var moreContainer = document.getElementById(type + '-container-more');
+    var btn = document.getElementById('btnVerMais' + (type === 'renda' ? 'Renda' : 'Gastos'));
+    if (moreContainer.classList.contains('show')) {
+        moreContainer.classList.remove('show');
+        btn.textContent = 'Ver mais';
+    } else {
+        moreContainer.classList.add('show');
+        btn.textContent = 'Ver menos';
+    }
+};
 
 /* ATIVOS (MODULAR) */
 var assetsTimer;
@@ -2133,10 +2217,10 @@ window._processAddExpense=function(){
     var row=gastosData[key][parseInt(idx)];
     row.val+=val;if(pay)row.pay=pay;row.date=getViewDateISO();
     renderGastos();
-    setTimeout(function(){
-        var c=document.getElementById('cat-'+key),h=document.getElementById('cat-hdr-'+key);
-        if(c)c.classList.add('show');if(h)h.classList.add('active');
-    },50);
+    // setTimeout(function(){
+    //     var c=document.getElementById('cat-'+key),h=document.getElementById('cat-hdr-'+key);
+    //     if(c)c.classList.add('show');if(h)h.classList.add('active');
+    // },50);
     updateFlow();window._saveAllData();window.closeAddModal();
 };
 
@@ -2688,33 +2772,70 @@ function initSummaryChart() {
     if(!ctx) return;
     
     summaryChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'doughnut',
         data: {
-            labels: ['Renda', 'Gastos', 'Caixa'],
+            labels: [],
             datasets: [{
-                data: [0, 0, 0],
-                backgroundColor: ['#4dcf94', '#ff5555', '#ffcc00'],
-                borderRadius: 4,
-                barThickness: 24
+                data: [],
+                backgroundColor: [],
+                borderWidth: 0,
+                hoverOffset: 4
             }]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c){ return ' ' + window.formatBRL(c.raw); } } } },
-            scales: {
-                x: { grid: { display: false }, ticks: { color: '#666', font: { family: 'DM Sans', size: 10 } } },
-                y: { display: false, grid: { display: false }, beginAtZero: true }
-            },
-            animation: { duration: 500 }
+            animation: { duration: 600, easing: 'easeOutQuart' },
+            cutout: '68%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#555',
+                        boxWidth: 8,
+                        padding: 12,
+                        font: { family: 'DM Sans', size: 10 },
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(c) {
+                            var tot = c.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                            var p = tot > 0 ? ((c.raw / tot) * 100).toFixed(1) + '%' : '0%';
+                            return ' ' + c.label + ': ' + c.raw.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + ' (' + p + ')';
+                        }
+                    }
+                }
+            }
         }
     });
 }
 
-function updateSummaryChart(renda, gastos, caixa) {
+function updateSummaryChart(expenseDetails) {
     if(!summaryChart) return;
-    summaryChart.data.datasets[0].data = [renda, gastos, caixa];
-    // Muda cor da barra de caixa se negativo
-    summaryChart.data.datasets[0].backgroundColor[2] = caixa < 0 ? '#ff5555' : '#ffcc00';
+
+    expenseDetails.sort((a, b) => b.value - a.value);
+
+    const labels = expenseDetails.map(d => d.label);
+    const data = expenseDetails.map(d => d.value);
+    const colors = expenseDetails.map((d, i) => ASSET_COLORS[i % ASSET_COLORS.length]);
+    
+    // Atualiza o texto central com o total
+    const totalGastos = data.reduce((a, b) => a + b, 0);
+    var totalEl = document.getElementById('summaryChartTotal');
+    if(totalEl) totalEl.textContent = window.formatBRL(totalGastos);
+
+    if (data.length === 0) {
+        summaryChart.data.labels = ['Sem gastos'];
+        summaryChart.data.datasets[0].data = [1];
+        summaryChart.data.datasets[0].backgroundColor = ['#222'];
+    } else {
+        summaryChart.data.labels = labels;
+        summaryChart.data.datasets[0].data = data;
+        summaryChart.data.datasets[0].backgroundColor = colors;
+    }
+
     summaryChart.update();
 }
 
@@ -2764,8 +2885,7 @@ function initCharts(){
         },
         options:{
             responsive:true,maintainAspectRatio:false,
-            // animation:false removido para permitir animação padrão
-            animation:{duration:600,easing:'easeOutQuart'},cutout:'68%',
+            animation:{duration:600,easing:'easeOutQuart'}, cutout:'68%',
             plugins:{
                 legend:{position:'bottom',labels:{color:'#555',boxWidth:8,padding:12,font:{family:'DM Sans',size:10},usePointStyle:true,pointStyle:'circle'}},
                 tooltip:{callbacks:{label:function(c){var tot=c.dataset.data.reduce(function(a,b){return a+b;},0);var p=tot>0?((c.raw/tot)*100).toFixed(1)+'%':'0%';return ' '+c.label+': '+c.raw.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' ('+p+')';  }}}
@@ -2805,27 +2925,54 @@ window._exportToCSV = function() {
 };
 
 /* BOOT SEQUENCE */
-async function runSplashSequence() {
+async function runSplashSequence(skipIntro) {
     var splash=document.getElementById('splash');
     
     // Reset animations
-    splash.classList.remove('phase2', 'phase3', 'exit');
+    splash.classList.remove('phase2', 'phase3', 'phase4', 'exit');
     var logo = splash.querySelector('.splash-logo');
-    if(logo) { logo.style.opacity='0'; logo.style.transform='scale(0.82) translateY(16px)'; logo.style.marginBottom='0'; }
+    
+    // Se NÃO for pular a intro (fluxo normal), prepara o logo para animar entrada
+    if(!skipIntro && logo) { 
+        // Limpa estilos inline para garantir que o CSS controle a animação corretamente
+        logo.style.opacity=''; 
+        logo.style.transform=''; 
+        logo.style.animation=''; 
+    } else if (logo) {
+        // Se for pular (veio do install), garante que o logo está visível e no lugar certo
+        logo.style.opacity='1';
+        logo.style.transform='translate(-50%, -50%) scale(1)';
+        logo.style.animation = 'none'; // Remove animação de entrada
+    }
+
     // Force reflow
     void splash.offsetWidth;
 
-    var minWait=new Promise(function(r){setTimeout(r,2000);}); 
+    // Define o tempo mínimo de espera, garantindo que as animações completem.
+    var waitTime = skipIntro ? 1500 : 2000;
+    var minWait=new Promise(function(r){setTimeout(r, waitTime);}); 
     var loadP=loadData();
     
-    // Fase 2: logo sobe/some + greeting aparece
-    setTimeout(function(){
-        splash.classList.add('phase2');
-        window.playWelcomeSound(); // Toca o som
-    }, 500); 
+    // Define o início da transição de saída do logo.
+    var phase2Delay = skipIntro ? 200 : 800; // Logo aparece rápido e já começa a sair
+    setTimeout(function(){ 
+        // BUG FIX: Limpa estilos inline que podem estar bloqueando a animação CSS (ex: animation: none)
+        if(logo) {
+            logo.style.opacity = '';
+            logo.style.transform = '';
+            logo.style.animation = '';
+        }
+        splash.classList.add('phase2'); 
+    }, phase2Delay); 
     
-    // Fase 3: tagline aparece
-    setTimeout(function(){splash.classList.add('phase3');}, 1400);
+    // Fase 3: Greeting aparece (cross-fade)
+    setTimeout(function(){
+        splash.classList.add('phase3');
+        window.playWelcomeSound(); // Toca o som
+    }, phase2Delay + 200); // Inicia o cross-fade mais cedo para uma transição mais suave
+    
+    // Fase 4: Tagline aparece (um pouco depois do greeting)
+    setTimeout(function(){ splash.classList.add('phase4'); }, phase2Delay + 400);
 
     await Promise.all([minWait,loadP]);
     
