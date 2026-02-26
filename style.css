@@ -39,9 +39,9 @@ body::-webkit-scrollbar { display: none; } /* Chrome, Safari e Opera */
     position: relative;
     width: 100%;
     height: 300px; /* Área fixa para animação */
-    transform: translateY(0);
+    transform: translateY(-10vh);
 }
-#splash.phase2 .splash-inner { transform: translateY(0); }
+#splash.phase2 .splash-inner { transform: translateY(-10vh); }
 
 /* Logo — animação mais cinematográfica */
 .splash-logo {
