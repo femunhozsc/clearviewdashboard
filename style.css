@@ -482,26 +482,41 @@ body.privacy-active .val-sensitive * { filter: none; }
 .chart-anim { animation:chartIn 0.65s cubic-bezier(0.16,1,0.3,1) both; }
 .total-center { text-align:center; margin-top:-2px; margin-bottom:16px; }
 
-/* SUMMARY CHART */
-.summary-chart-legend {
+/* SUMMARY CHART (FINANCE DUAL) */
+.finance-summary-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
+    align-items: start;
+    margin-bottom: 20px;
     width: 100%;
-    padding: 0 4px;
-    margin-bottom: 12px;
+}
+.finance-summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.finance-summary-item .chart-donut-container {
+    height: 120px;
+    width: 120px;
+    margin: 0;
+}
+.finance-summary-item .total-center {
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+.finance-summary-item .total-center h3 {
+    font-size: 1.1rem;
+}
+.finance-summary-item .total-center span {
+    font-size: 0.6rem;
 }
 
-.legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.5rem; background: rgba(255,255,255,0.02); padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; }
-.legend-dot { width: 8px; height: 8px; border-radius: 4px; flex-shrink: 0; }
-.legend-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-sec); flex-grow: 1; }
-.legend-percent { font-weight: 500; color: var(--text-main); white-space: nowrap; }
-
 /* SUMMARY STATS GRID */
-.summary-stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.04); }
-.sum-stat-box { text-align: center; }
-.sum-stat-label { display: block; font-size: 0.54rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 500; }
-.sum-stat-val { font-size: 0.82rem; font-weight: 600; color: var(--text-main); white-space: nowrap; }
+.summary-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.04); }
+.sum-stat-box { text-align: left; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 10px; }
+.sum-stat-label { display: block; font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 500; }
+.sum-stat-val { font-size: 1rem; font-weight: 600; color: var(--text-main); white-space: nowrap; }
 /* Ajuste para telas muito pequenas */
 @media (max-width: 340px) { .sum-stat-val { font-size: 0.75rem; } }
 

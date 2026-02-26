@@ -321,18 +321,33 @@
 
             <!-- GRÁFICO DE RESUMO -->
             <div class="card summary-chart-card">
-                <div class="card-title">Resumo de Gastos</div>
-                <div class="chart-donut-container">
-                    <canvas id="summaryChart"></canvas>
+                <div class="card-title">Resumo Financeiro</div>
+                <div class="finance-summary-grid">
+                    <!-- Left Chart: Renda -->
+                    <div class="finance-summary-item">
+                        <div class="chart-donut-container">
+                            <canvas id="incomeSummaryChart"></canvas>
+                        </div>
+                        <div class="total-center">
+                            <h3 id="incomeSummaryTotal" class="val-sensitive" style="color:var(--accent)">R$ 0,00</h3>
+                            <span>Total Renda</span>
+                        </div>
+                    </div>
+                    <!-- Right Chart: Gastos -->
+                    <div class="finance-summary-item">
+                        <div class="chart-donut-container">
+                            <canvas id="expenseSummaryChart"></canvas>
+                        </div>
+                        <div class="total-center">
+                            <h3 id="expenseSummaryTotal" class="val-sensitive" style="color:var(--danger)">R$ 0,00</h3>
+                            <span>Total Gasto</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="total-center">
-                    <h3 id="summaryChartTotal" class="val-sensitive">R$ 0,00</h3>
-                    <span>Total Gasto</span>
-                </div>
-                <div class="summary-chart-legend" id="summaryChartLegend"></div>
                 <div class="summary-stats-grid" id="summaryStats">
-                    <div class="sum-stat-box"><span class="sum-stat-label">Taxa Poupanca</span><span class="sum-stat-val" id="sumPoupanca">--</span></div>
-                    <div class="sum-stat-box"><span class="sum-stat-label">Media Diaria</span><span class="sum-stat-val" id="sumMedia">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Média Diária (Renda)</span><span class="sum-stat-val" id="sumMediaRenda" style="color: var(--success);">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Média Diária (Gastos)</span><span class="sum-stat-val" id="sumMediaGasto" style="color: var(--danger);">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Taxa de Poupança</span><span class="sum-stat-val" id="sumPoupanca">--</span></div>
                     <div class="sum-stat-box"><span class="sum-stat-label">Maior Gasto</span><span class="sum-stat-val" id="sumMaior">--</span></div>
                 </div>
             </div>
@@ -1068,7 +1083,7 @@ const auth = getAuth(fbApp);
 auth.languageCode = 'pt';
 
 let currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), currentDay=new Date().getDate();
-let donutChart=null, lineChart=null, ccChart=null, summaryChart=null;
+let donutChart=null, lineChart=null, ccChart=null, incomeSummaryChart=null, expenseSummaryChart=null;
 let rendaItems=[], gastosData={}, rowCounters={}, historico={}, gastosRemovidos=[];
 let assetsData = { categories: [], meta: 0 };
 let expenseCats = []; // Configuração dinâmica de categorias de GASTOS
@@ -1694,6 +1709,22 @@ function updateFlow(){
     var tr=rendaItems.reduce(function(s,r){return s+r.val;},0);
     var elRenda = document.getElementById('rendaTotal'); if(elRenda) elRenda.textContent=window.formatBRL(tr);
     document.getElementById('rendaCount').textContent=rendaItems.length+' lancamento'+(rendaItems.length!==1?'s':'');
+
+    // Group income by category for the chart
+    var incomeDetails = [];
+    var incomeByCat = {};
+    rendaItems.forEach(function(item) {
+        if (item.val > 0) {
+            if (!incomeByCat[item.cat]) {
+                incomeByCat[item.cat] = 0;
+            }
+            incomeByCat[item.cat] += item.val;
+        }
+    });
+    for (const catLabel in incomeByCat) {
+        incomeDetails.push({ label: catLabel, value: incomeByCat[catLabel] });
+    }
+
     var td=0;
     var expenseDetails = []; // Para o novo gráfico de rosca
     expenseCats.forEach(function(cat){
@@ -1727,7 +1758,7 @@ function updateFlow(){
     if(bar) bar.style.width = Math.max(0, Math.min(poupancaPercent, 100)) + '%';
 
     window._saveAllData();
-    updateSummaryChart(expenseDetails);
+    updateFlowCharts(incomeDetails, expenseDetails);
     updateSummaryStats(tr, td);
 }
 
@@ -1748,6 +1779,7 @@ window._toggleCatList = function(type) {
 var assetsTimer;
 var lastTotal = 0;
 const ASSET_COLORS = ['#ffcc00','#c8960c','#d8d8d8','#999999','#555555','#333333','#7a5c1e','#4dcf94','#ff5555','#3b82f6','#8b5cf6','#ec4899'];
+const EXPENSE_COLORS = ['#e93b3b', '#c73434', '#a52d2d', '#842626', '#621d1d', '#4f1a1a'];
 
 window._updateAssets = function(save){
     var meta = window.parseMoney(document.getElementById('metaVal').value);
@@ -2767,89 +2799,87 @@ async function loadData(){
 }
 
 /* SUMMARY CHART (FLUXO) */
-function initSummaryChart() {
-    var ctx = document.getElementById('summaryChart');
-    if(!ctx) return;
-    
-    summaryChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: [],
-            datasets: [{
-                data: [],
-                backgroundColor: [],
-                borderWidth: 0,
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            animation: { duration: 600, easing: 'easeOutQuart' },
-            cutout: '68%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#555',
-                        boxWidth: 8,
-                        padding: 12,
-                        font: { family: 'DM Sans', size: 10 },
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(c) {
-                            var tot = c.dataset.data.reduce(function(a, b) { return a + b; }, 0);
-                            var p = tot > 0 ? ((c.raw / tot) * 100).toFixed(1) + '%' : '0%';
-                            return ' ' + c.label + ': ' + c.raw.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + ' (' + p + ')';
-                        }
+function initFlowCharts() {
+    var incomeCtx = document.getElementById('incomeSummaryChart');
+    var expenseCtx = document.getElementById('expenseSummaryChart');
+    if(!incomeCtx || !expenseCtx) return;
+
+    const commonOptions = {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 600, easing: 'easeOutQuart' },
+        cutout: '68%',
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(c) {
+                        var tot = c.dataset.data.reduce((a, b) => a + b, 0);
+                        var p = tot > 0 ? ((c.raw / tot) * 100).toFixed(1) + '%' : '0%';
+                        return ` ${c.label}: ${c.raw.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (${p})`;
                     }
                 }
             }
         }
+    };
+
+    if(incomeSummaryChart) incomeSummaryChart.destroy();
+    incomeSummaryChart = new Chart(incomeCtx, {
+        type: 'doughnut',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 0, hoverOffset: 4 }] },
+        options: commonOptions
+    });
+
+    if(expenseSummaryChart) expenseSummaryChart.destroy();
+    expenseSummaryChart = new Chart(expenseCtx, {
+        type: 'doughnut',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 0, hoverOffset: 4 }] },
+        options: commonOptions
     });
 }
 
-function updateSummaryChart(expenseDetails) {
-    if(!summaryChart) return;
+function updateFlowCharts(incomeDetails, expenseDetails) {
+    if(!incomeSummaryChart || !expenseSummaryChart) return;
 
+    // Update Income Chart
+    incomeDetails.sort((a, b) => b.value - a.value);
+    const incomeLabels = incomeDetails.map(d => d.label);
+    const incomeData = incomeDetails.map(d => d.value);
+    const incomeColors = incomeDetails.map((d, i) => ASSET_COLORS[i % ASSET_COLORS.length]);
+    const totalIncome = incomeData.reduce((a, b) => a + b, 0);
+    document.getElementById('incomeSummaryTotal').textContent = window.formatBRL(totalIncome);
+
+    if (incomeData.length === 0) {
+        incomeSummaryChart.data.labels = ['Sem renda'];
+        incomeSummaryChart.data.datasets[0].data = [1];
+        incomeSummaryChart.data.datasets[0].backgroundColor = ['#222'];
+    } else {
+        incomeSummaryChart.data.labels = incomeLabels;
+        incomeSummaryChart.data.datasets[0].data = incomeData;
+        incomeSummaryChart.data.datasets[0].backgroundColor = incomeColors;
+    }
+    incomeSummaryChart.update();
+
+    // Update Expense Chart
     expenseDetails.sort((a, b) => b.value - a.value);
-
     const labels = expenseDetails.map(d => d.label);
     const data = expenseDetails.map(d => d.value);
-    const colors = expenseDetails.map((d, i) => ASSET_COLORS[i % ASSET_COLORS.length]);
-    
-    // Atualiza o texto central com o total
+    const colors = expenseDetails.map((d, i) => EXPENSE_COLORS[i % EXPENSE_COLORS.length]);
     const totalGastos = data.reduce((a, b) => a + b, 0);
-    var totalEl = document.getElementById('summaryChartTotal');
-    if(totalEl) totalEl.textContent = window.formatBRL(totalGastos);
+    document.getElementById('expenseSummaryTotal').textContent = window.formatBRL(totalGastos);
 
     if (data.length === 0) {
-        summaryChart.data.labels = ['Sem gastos'];
-        summaryChart.data.datasets[0].data = [1];
-        summaryChart.data.datasets[0].backgroundColor = ['#222'];
+        expenseSummaryChart.data.labels = ['Sem gastos'];
+        expenseSummaryChart.data.datasets[0].data = [1];
+        expenseSummaryChart.data.datasets[0].backgroundColor = ['#222'];
     } else {
-        summaryChart.data.labels = labels;
-        summaryChart.data.datasets[0].data = data;
-        summaryChart.data.datasets[0].backgroundColor = colors;
+        expenseSummaryChart.data.labels = labels;
+        expenseSummaryChart.data.datasets[0].data = data;
+        expenseSummaryChart.data.datasets[0].backgroundColor = colors;
     }
-
-    summaryChart.update();
+    expenseSummaryChart.update();
 }
 
 function updateSummaryStats(renda, gastos) {
-    // 1. Taxa de Poupança
-    var poupanca = 0;
-    if(renda > 0) poupanca = ((renda - gastos) / renda) * 100;
-    var elPoup = document.getElementById('sumPoupanca');
-    if(elPoup) {
-        elPoup.textContent = poupanca.toFixed(1) + '%';
-        elPoup.style.color = poupanca >= 20 ? 'var(--success)' : (poupanca > 0 ? 'var(--accent)' : 'var(--danger)');
-    }
-
-    // 2. Média Diária
     var now = new Date();
     var dias = 1;
     // Se for o mês/ano atual, usa o dia de hoje. Se for passado, usa o total de dias do mês.
@@ -2858,11 +2888,27 @@ function updateSummaryStats(renda, gastos) {
     } else {
         dias = new Date(currentYear, currentMonth + 1, 0).getDate();
     }
-    var media = gastos / dias;
-    var elMedia = document.getElementById('sumMedia');
-    if(elMedia) elMedia.textContent = window.formatBRL(media);
 
-    // 3. Maior Categoria
+    // 1. Média Diária (Renda)
+    var mediaRenda = renda / dias;
+    var elMediaRenda = document.getElementById('sumMediaRenda');
+    if(elMediaRenda) elMediaRenda.textContent = window.formatBRL(mediaRenda);
+
+    // 2. Média Diária (Gastos)
+    var mediaGasto = gastos / dias;
+    var elMediaGasto = document.getElementById('sumMediaGasto');
+    if(elMediaGasto) elMediaGasto.textContent = window.formatBRL(mediaGasto);
+
+    // 3. Taxa de Poupança
+    var poupanca = 0;
+    if(renda > 0) poupanca = ((renda - gastos) / renda) * 100;
+    var elPoup = document.getElementById('sumPoupanca');
+    if(elPoup) {
+        elPoup.textContent = poupanca.toFixed(1) + '%';
+        elPoup.style.color = poupanca >= 20 ? 'var(--success)' : (poupanca > 0 ? 'var(--accent)' : 'var(--danger)');
+    }
+
+    // 4. Maior Categoria
     var maiorCat = '—';
     var maiorVal = 0;
     expenseCats.forEach(function(cat){
@@ -2892,7 +2938,7 @@ function initCharts(){
             }
         }
     });
-    initSummaryChart();
+    initFlowCharts();
 }
 
 /* EXPORTAR CSV */
