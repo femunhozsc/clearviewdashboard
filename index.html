@@ -12,6 +12,8 @@
     <!-- SF Pro equivalente: DM Sans -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body style="background-color: #050505;">
@@ -82,10 +84,10 @@
                     <div id="login-email-section">
                         <div class="auth-field-group">
                             <div class="auth-field">
-                                <label class="auth-field-label">E-mail</label>
+                                <label class="auth-field-label">E-mail ou CPF</label>
                                 <div class="auth-field-wrap">
                                     <i class="fa-regular fa-envelope auth-field-icon"></i>
-                                    <input type="email" id="loginEmail" class="auth-field-input" placeholder="seu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')handleLogin()">
+                                    <input type="text" id="loginEmail" class="auth-field-input" placeholder="E-mail ou CPF" autocomplete="username" oninput="if(this.value.match(/^\d/)) maskCPF(this)" onkeydown="if(event.key==='Enter')handleLogin()">
                                 </div>
                             </div>
                             <div class="auth-field">
@@ -155,6 +157,13 @@
                                     <i class="fa-regular fa-user auth-field-icon"></i>
                                     <input type="text" id="regSurname" class="auth-field-input capitalize" placeholder="Silva" onkeydown="if(event.key==='Enter')handleRegister()">
                                 </div>
+                            </div>
+                        </div>
+                        <div class="auth-field" style="margin-bottom:12px">
+                            <label class="auth-field-label">CPF</label>
+                            <div class="auth-field-wrap">
+                                <i class="fa-regular fa-id-card auth-field-icon"></i>
+                                <input type="tel" id="regCPF" class="auth-field-input" placeholder="000.000.000-00" oninput="maskCPF(this)" onkeydown="if(event.key==='Enter')handleRegister()">
                             </div>
                         </div>
                         <div class="auth-field">
@@ -347,14 +356,10 @@
                 <div class="summary-stats-grid" id="summaryStats">
                     <div class="sum-stat-box"><span class="sum-stat-label">Taxa de Poupança</span><span class="sum-stat-val" id="sumPoupanca">--</span></div>
                     <div class="sum-stat-box"><span class="sum-stat-label">% Despesas</span><span class="sum-stat-val" id="sumDesp">--</span></div>
-                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Renda</span><span class="sum-stat-val" id="sumMaiorRenda" style="color: var(--success);">--</span></div>
-                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Despesa</span><span class="sum-stat-val" id="sumMaior" style="color: var(--danger);">--</span></div>
-                    <div class="sum-stat-box"><span class="sum-stat-label">Taxa de Poupança</span><span class="sum-stat-val" id="sumPoupanca" style="color:var(--text-main)">--</span></div>
-                    <div class="sum-stat-box"><span class="sum-stat-label">% Despesas</span><span class="sum-stat-val" id="sumDesp" style="color:var(--text-main)">--</span></div>
                     <div class="sum-stat-box"><span class="sum-stat-label">Média Diária (Renda)</span><span class="sum-stat-val" id="sumMediaRenda" style="color:var(--success)">--</span></div>
                     <div class="sum-stat-box"><span class="sum-stat-label">Média Diária (Gastos)</span><span class="sum-stat-val" id="sumMediaGasto" style="color:var(--danger)">--</span></div>
-                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Renda</span><span class="sum-stat-val" id="sumMaiorRenda" style="color:var(--text-main)">--</span></div>
-                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Despesa</span><span class="sum-stat-val" id="sumMaior" style="color:var(--text-main)">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Renda</span><span class="sum-stat-val" id="sumMaiorRenda" style="color: var(--success);">--</span></div>
+                    <div class="sum-stat-box"><span class="sum-stat-label">Maior Despesa</span><span class="sum-stat-val" id="sumMaior" style="color: var(--danger);">--</span></div>
                 </div>
             </div>
 
@@ -535,7 +540,10 @@
     </div><!-- /content -->
 
     <footer>
-        <div style="margin-bottom:10px"><button onclick="exportToCSV()" style="background:none;border:1px solid var(--card-border);color:var(--text-muted);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;">Exportar Dados (CSV)</button></div>
+        <div style="margin-bottom:10px;display:flex;gap:10px;justify-content:center">
+            <button onclick="exportToCSV()" style="background:none;border:1px solid var(--card-border);color:var(--text-muted);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;font-weight:500">CSV</button>
+            <button onclick="openPdfModal()" style="background:rgba(255,204,0,0.1);border:1px solid var(--accent-border);color:var(--accent);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;font-weight:600"><i class="fa-regular fa-file-pdf" style="margin-right:4px"></i> Relatório PDF</button>
+        </div>
         &copy; 2026 Clearview Capital. Todos os direitos reservados.
     </footer>
 </div>
@@ -618,6 +626,17 @@
         <input type="text" class="modal-input-desc" id="newCatName" placeholder="Nome da Categoria">
         <button class="btn-confirm-add" onclick="addNewCategory()">Criar</button>
         <button class="btn-close-modal" onclick="closeNewCatModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL EXPORTAR PDF -->
+<div id="pdfModal" class="modal-overlay" onclick="if(event.target===this)closePdfModal()">
+    <div class="modal-content">
+        <div class="modal-title">Gerar Relatório PDF</div>
+        <p style="font-size:0.8rem;color:var(--text-sec);margin-bottom:12px">Selecione o mês de referência para o relatório:</p>
+        <select id="pdfMonthSelect" class="modal-select"></select>
+        <button class="btn-confirm-add" onclick="generatePDF()">Gerar e Compartilhar</button>
+        <button class="btn-close-modal" onclick="closePdfModal()">Cancelar</button>
     </div>
 </div>
 
@@ -975,6 +994,9 @@ window.deleteRendaCategory = function(key){if(window._deleteRendaCategory)window
 window.deleteGastoCategory = function(key){if(window._deleteGastoCategory)window._deleteGastoCategory(key);};
 window.startRenameRendaCat = function(key){if(window._startRenameRendaCat)window._startRenameRendaCat(key);};
 window.startRenameGastoCat = function(key){if(window._startRenameGastoCat)window._startRenameGastoCat(key);};
+window.openPdfModal = function(){if(window._openPdfModal)window._openPdfModal();};
+window.closePdfModal = function(){document.getElementById('pdfModal').style.display='none';window.setModalState(false);};
+window.generatePDF = function(){if(window._generatePDF)window._generatePDF();};
 
 window.pulseEl = function(el, type) {
     el.classList.remove('pulsing-green', 'pulsing-red');
@@ -1047,6 +1069,15 @@ window.maskPhone = function(el){
     if(v.length > 2) r += ') ' + v.substring(2, 7);
     if(v.length > 7) r += ' ' + v.substring(7);
     el.value = r;
+};
+window.maskCPF = function(el){
+    var v = el.value.replace(/\D/g,'');
+    if(v.length > 11) v = v.slice(0,11);
+    // 000.000.000-00
+    if(v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    else if(v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{3})/, "$1.$2.$3");
+    else if(v.length > 3) v = v.replace(/(\d{3})(\d{3})/, "$1.$2");
+    el.value = v;
 };
 
 /* PRIVACY MODE */
@@ -2511,16 +2542,40 @@ function getFriendlyError(error) {
     return 'Erro: ' + error.message;
 }
 
-window._handleLogin = function() {
-    var email = document.getElementById('loginEmail').value;
+window._handleLogin = async function() {
+    var inputVal = document.getElementById('loginEmail').value.trim();
     var pass = document.getElementById('loginPass').value;
-    if(!email || !pass) return alert("Preencha e-mail e senha.");
+    if(!inputVal || !pass) return alert("Preencha e-mail/CPF e senha.");
     
     var btn = document.getElementById('btnLoginAction');
     var originalHTML = btn.innerHTML;
     btn.innerHTML = "Entrando..."; btn.disabled = true;
 
-    signInWithEmailAndPassword(auth, email, pass)
+    var emailToLogin = inputVal;
+
+    // Verifica se é CPF (se não tem @ e tem números)
+    if(!inputVal.includes('@')) {
+        var cpfClean = inputVal.replace(/\D/g,'');
+        if(cpfClean.length === 11) {
+            try {
+                var cpfDoc = await getDoc(doc(db, 'cpfs', cpfClean));
+                if(cpfDoc.exists()) {
+                    emailToLogin = cpfDoc.data().email;
+                } else {
+                    alert("CPF não encontrado.");
+                    btn.innerHTML = originalHTML; btn.disabled = false;
+                    return;
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Erro ao verificar CPF. Tente entrar com E-mail.");
+                btn.innerHTML = originalHTML; btn.disabled = false;
+                return;
+            }
+        }
+    }
+
+    signInWithEmailAndPassword(auth, emailToLogin, pass)
         .catch((error) => {
             alert(getFriendlyError(error));
             btn.innerHTML = originalHTML; btn.disabled = false;
@@ -2606,11 +2661,13 @@ window._handleRegister = function() {
     var name = document.getElementById('regName').value.trim().replace(/\b\w/g, l => l.toUpperCase());
     var surname = document.getElementById('regSurname').value.trim().replace(/\b\w/g, l => l.toUpperCase());
     var email = document.getElementById('regEmail').value.trim();
+    var cpf = document.getElementById('regCPF').value.replace(/\D/g,'');
     var dob = document.getElementById('regDob').value.trim();
     var phone = document.getElementById('regPhone').value.trim();
     var pass = document.getElementById('regPass').value;
 
     if(!name || !surname || !email || !pass) return alert("Preencha todos os campos obrigatórios.");
+    if(cpf && cpf.length !== 11) return alert("CPF inválido.");
     
     var btn = document.getElementById('btnRegAction');
     var originalText = btn.textContent;
@@ -2619,7 +2676,7 @@ window._handleRegister = function() {
     createUserWithEmailAndPassword(auth, email, pass)
         .then(async (userCredential) => {
             var user = userCredential.user;
-            var userData = { nome: name, sobrenome: surname, email: email, nascimento: dob, telefone: phone, createdAt: new Date().toISOString() };
+            var userData = { nome: name, sobrenome: surname, email: email, cpf: cpf, nascimento: dob, telefone: phone, createdAt: new Date().toISOString() };
             try {
                 await setDoc(doc(db, 'clientes', user.uid, 'perfil', 'dados'), userData);
                 // Salva índice telefone→email para permitir login por celular
@@ -2630,6 +2687,10 @@ window._handleRegister = function() {
                     if(digits.length >= 12) {
                         await setDoc(doc(db, 'telefones', cleanPhone), { email: email, uid: user.uid });
                     }
+                }
+                // Salva índice CPF→email para permitir login por CPF
+                if(cpf) {
+                    await setDoc(doc(db, 'cpfs', cpf), { email: email, uid: user.uid });
                 }
             } catch(e) { console.error("Erro Firestore:", e); }
         })
@@ -2903,7 +2964,6 @@ function updateSummaryStats(renda, gastos) {
         elPoup.textContent = poupanca.toFixed(1) + '%';
         elPoup.style.color = poupanca >= 20 ? 'var(--success)' : (poupanca > 0 ? 'var(--accent)' : 'var(--danger)');
     }
-    if(elPoup) elPoup.textContent = poupanca.toFixed(1) + '%';
 
     // 2. % Despesas (Comprometimento)
     var despPercent = 0;
@@ -2913,9 +2973,7 @@ function updateSummaryStats(renda, gastos) {
         elDesp.textContent = despPercent.toFixed(1) + '%';
         elDesp.style.color = despPercent > 100 ? 'var(--danger)' : 'var(--text-main)';
     }
-    if(elDesp) elDesp.textContent = despPercent.toFixed(1) + '%';
 
-    // 3. Maior Renda (Categoria)
     // 3. Médias Diárias
     var mediaRenda = renda / dias;
     var mediaGasto = gastos / dias;
@@ -2941,7 +2999,6 @@ function updateSummaryStats(renda, gastos) {
     var elMaiorRenda = document.getElementById('sumMaiorRenda');
     if(elMaiorRenda) elMaiorRenda.textContent = maiorRendaCat;
 
-    // 4. Maior Despesa (Categoria)
     // 5. Maior Despesa (Categoria)
     var maiorCat = '—';
     var maiorVal = 0;
@@ -3002,6 +3059,206 @@ window._exportToCSV = function() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+};
+
+/* EXPORTAR PDF */
+window._openPdfModal = function() {
+    var s = document.getElementById('pdfMonthSelect');
+    s.innerHTML = '';
+    
+    // Adiciona opção do mês atual (snapshot atual)
+    var nowOpt = document.createElement('option');
+    nowOpt.value = 'current';
+    nowOpt.textContent = MESES[currentMonth] + ' ' + currentYear + ' (Atual)';
+    s.appendChild(nowOpt);
+
+    // Adiciona histórico
+    var keys = Object.keys(historico).sort().reverse();
+    keys.forEach(function(k){
+        var h = historico[k];
+        var opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = MESES[h.month] + ' ' + h.year;
+        s.appendChild(opt);
+    });
+
+    document.getElementById('pdfModal').style.display = 'flex';
+    window.setModalState(true);
+};
+
+window._generatePDF = async function() {
+    var btn = document.querySelector('#pdfModal .btn-confirm-add');
+    var oldText = btn.textContent;
+    btn.textContent = "Gerando..."; btn.disabled = true;
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const key = document.getElementById('pdfMonthSelect').value;
+        
+        // Dados
+        let dataRenda = [], dataGastos = [], totalR = 0, totalG = 0, mesLabel = "";
+        
+        if(key === 'current') {
+            dataRenda = rendaItems;
+            // Reconstrói lista plana de gastos atuais
+            expenseCats.forEach(c => {
+                (gastosData[c.id]||[]).forEach(r => { if(r.val>0) dataGastos.push({...r, cat: c.label}); });
+            });
+            totalR = dataRenda.reduce((s,r)=>s+r.val,0);
+            totalG = dataGastos.reduce((s,r)=>s+r.val,0);
+            mesLabel = MESES[currentMonth] + ' ' + currentYear;
+        } else {
+            let h = historico[key];
+            dataRenda = h.renda || [];
+            let hCats = h.expenseCatsSnapshot || expenseCats;
+            hCats.forEach(c => {
+                (h.gastos && h.gastos[c.id]||[]).forEach(r => { if(r.val>0) dataGastos.push({...r, cat: c.label}); });
+            });
+            totalR = h.totalRenda;
+            totalG = h.totalDesp;
+            mesLabel = MESES[h.month] + ' ' + h.year;
+        }
+        let saldo = totalR - totalG;
+
+        // --- LAYOUT ---
+        
+        // 1. Logo (Carregar Base64)
+        const logoUrl = 'logo.png';
+        const getBase64FromUrl = async (url) => {
+            const data = await fetch(url);
+            const blob = await data.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = () => resolve(reader.result);
+            });
+        };
+        
+        // Header Background
+        doc.setFillColor(15, 15, 15); // #0f0f0f
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        try {
+            const imgData = await getBase64FromUrl(logoUrl);
+            doc.addImage(imgData, 'PNG', 15, 6, 50, 14); // Logo maior substituindo o texto
+        } catch(e) {
+            // Fallback se logo falhar
+            doc.setFontSize(16);
+            doc.setTextColor(255, 204, 0);
+            doc.text("CLEARVIEW CAPITAL", 15, 17);
+        }
+
+        doc.setFontSize(10);
+        doc.setTextColor(150, 150, 150);
+        doc.text("Relatório Financeiro Mensal", 15, 24);
+        
+        // Data e Usuário (Direita)
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.text(mesLabel, 195, 17, { align: 'right' });
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        doc.text(document.getElementById('splashName').textContent, 195, 24, { align: 'right' });
+
+        // 2. Resumo Cards
+        let startY = 50;
+        
+        const drawCard = (x, title, val, color) => {
+            doc.setFillColor(245, 245, 245);
+            doc.setDrawColor(220, 220, 220);
+            doc.roundedRect(x, startY, 55, 25, 3, 3, 'FD');
+            
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(title.toUpperCase(), x + 5, startY + 8);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(color[0], color[1], color[2]);
+            doc.setFont("helvetica", "bold");
+            doc.text(val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}), x + 5, startY + 19);
+            doc.setFont("helvetica", "normal");
+        };
+
+        drawCard(15, "Renda Total", totalR, [48, 173, 100]); // Green
+        drawCard(77.5, "Despesas", totalG, [233, 59, 59]); // Red
+        drawCard(140, "Saldo Líquido", saldo, saldo >= 0 ? [48, 173, 100] : [233, 59, 59]);
+
+        // 3. Tabelas
+        let currentY = startY + 35;
+
+        // Tabela Renda
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text("Detalhamento de Renda", 15, currentY);
+        currentY += 3;
+
+        doc.autoTable({
+            startY: currentY,
+            head: [['Categoria', 'Descrição', 'Data', 'Valor']],
+            body: dataRenda.map(r => [r.cat, r.desc||'-', window.formatDateShort(r.date), window.formatBRL(r.val)]),
+            theme: 'grid',
+            headStyles: { fillColor: [255, 204, 0], textColor: [0, 0, 0], fontStyle: 'bold' },
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: { 3: { halign: 'right', fontStyle: 'bold', textColor: [48, 173, 100] } }
+        });
+
+        currentY = doc.lastAutoTable.finalY + 15;
+
+        // Tabela Gastos
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text("Detalhamento de Despesas", 15, currentY);
+        currentY += 3;
+
+        // Ordenar gastos por valor
+        dataGastos.sort((a,b) => b.val - a.val);
+
+        doc.autoTable({
+            startY: currentY,
+            head: [['Categoria', 'Item', 'Data', 'Valor']],
+            body: dataGastos.map(r => [r.cat, r.label, window.formatDateShort(r.date), window.formatBRL(r.val)]),
+            theme: 'grid',
+            headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255] },
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: { 3: { halign: 'right', fontStyle: 'bold', textColor: [233, 59, 59] } }
+        });
+
+        // Footer
+        const pageCount = doc.internal.getNumberOfPages();
+        for(var i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150,150,150);
+            doc.text('Gerado via Clearview Dashboard', 105, 290, { align: 'center' });
+        }
+
+        // Compartilhar ou Baixar
+        const pdfBlob = doc.output('blob');
+        const fileName = `Relatorio_Clearview_${mesLabel.replace(/\s/g,'_')}.pdf`;
+        const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'Relatório Financeiro',
+                    text: `Relatório financeiro de ${mesLabel} gerado pelo Clearview.`
+                });
+            } catch (err) {
+                if (err.name !== 'AbortError') doc.save(fileName);
+            }
+        } else {
+            doc.save(fileName);
+        }
+
+        window.closePdfModal();
+    } catch(e) {
+        console.error(e);
+        alert("Erro ao gerar PDF: " + e.message);
+    } finally {
+        btn.textContent = oldText; btn.disabled = false;
+    }
 };
 
 /* BOOT SEQUENCE */
