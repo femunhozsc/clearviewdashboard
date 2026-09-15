@@ -296,13 +296,13 @@
 
             <!-- NOVOS BOTÕES DE AÇÃO -->
             <div class="fluxo-actions-grid">
-                <button class="fluxo-action-btn btn-add-renda" onclick="pulseEl(this,'green');setTimeout(openRendaModal, 100)">
+                <button class="fluxo-action-btn" onclick="pulseEl(this,'green');setTimeout(openRendaModal, 100)">
                     <i class="fa-solid fa-arrow-up"></i>
-                    <span>Adicionar <span class="btn-highlight-green">Renda</span></span>
+                    <span>Adicionar Renda</span>
                 </button>
-                <button class="fluxo-action-btn btn-add-gasto" onclick="pulseEl(this,'red');setTimeout(openAddModal, 100)">
+                <button class="fluxo-action-btn" onclick="pulseEl(this,'red');setTimeout(openAddModal, 100)">
                     <i class="fa-solid fa-arrow-down"></i>
-                    <span>Adicionar <span class="btn-highlight-red">Gasto</span></span>
+                    <span>Adicionar Gasto</span>
                 </button>
             </div>
 
@@ -1048,9 +1048,14 @@ window.triggerInstall = async function() {
 };
 
 window.skipInstall = function() {
-    var modal = document.getElementById('installModal');
-    if (modal) modal.style.display = 'none';
+    document.getElementById('installModal').style.display = 'none';
     window.setModalState(false);
+    // Inicia a sequência de splash que foi pausada
+    var splash = document.getElementById('splash');
+    splash.style.display = 'flex';
+    // Pequeno delay para garantir transição suave
+    // Passamos true para indicar que deve pular a introdução do logo
+    setTimeout(function(){ runSplashSequence(true); }, 50);
 };
 
 /* AUTH UI FUNCTIONS */
@@ -1135,8 +1140,8 @@ let assetsData = { categories: [], meta: 0 };
 let expenseCats = []; // Configuração dinâmica de categorias de GASTOS
 let incomeCats = []; // Configuração dinâmica de categorias de RENDA
 const MESES=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const CATEGORIAS=['Moradia','Transporte','Saude','Obrigacoes','Vida Diaria','Entretenimento','Investimentos'];
-const CAT_KEYS=['moradia','transporte','saude','obrigacoes','vida','entret','investimentos'];
+const CATEGORIAS=['Moradia','Transporte','Saude','Obrigacoes','Vida Diaria','Entretenimento','Economias'];
+const CAT_KEYS=['moradia','transporte','saude','obrigacoes','vida','entret','economias'];
 const CAT_DEFAULTS={
     moradia:   ['Aluguel/Parcela','Seguros','Conta de Luz','Conta de Agua','Telefone','Streaming','Internet','Eletrodomesticos','Melhorias','Outros'],
     transporte:['Parcela Carro','Seguro Carro','Combustivel','Onibus/App','Outros'],
@@ -1144,7 +1149,7 @@ const CAT_DEFAULTS={
     obrigacoes:['Dividas','Emprestimo Estudantil','Outros Emprestimos','Cartao de Credito','Taxas e Impostos','Investimento','Capital de Giro','Outros'],
     vida:      ['Supermercado','Suprimentos Pessoais','Roupas','Produtos de Limpeza','Jantar/Comer Fora','Salao/Barbearia','PetShop','Outros'],
     entret:    ['Filmes/Cinema','Musica','Games','Show','Livros','Hobbies','Esportes','Academia','Passeios','Ferias','Viagem','Teatro','Outros'],
-    investimentos: ['Projetos Visando Lucro','Desenvolvimento','Reserva & Aportes','Outros']
+    economias: ['Para Reserva','Para Investimentos','Outros']
 };
 const INCOME_DEFAULTS=['Salario','Serviço','Aluguel','Dividendos','Bonus','Venda'];
 
@@ -1223,6 +1228,7 @@ function renderGastos(){
         var cat = item.cat;
         var key = cat.id;
         var label = cat.label;
+        var isEco=key==='economias';
         var rows = item.rows;
         var ct = item.total;
         
@@ -1234,13 +1240,14 @@ function renderGastos(){
         hdr.className='cat-header';hdr.id='cat-hdr-'+key;
         hdr.style.setProperty('--i', index);
         hdr.dataset.catKey = key; // Para drag
-        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}">${window.escapeHTML(label)}</span></span><span class="cat-total" id="tot-${key}" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
+        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}">${window.escapeHTML(label)}</span>${isEco?' (Alocacao)':''}</span><span class="cat-total" id="tot-'+key+'" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         hdr.onclick=function(){window.toggleCatEl(key);};
         
         var cont=document.createElement('div');
         cont.className='cat-content';cont.id='cat-'+key;
+        if(isEco){var n=document.createElement('p');n.style.cssText='font-size:0.6rem;color:var(--text-muted);margin-bottom:8px';n.textContent='Valores nao descontados do saldo.';cont.appendChild(n);}
         rows.forEach(function(row, rIdx){
-            var el = buildRow(key,row);
+            var el = buildRow(key,row,isEco);
             el.style.setProperty('--i', rIdx);
             cont.appendChild(el);
         });
@@ -1273,7 +1280,7 @@ function renderGastos(){
     
     window._updateQuickCatSelect();
 }
-function buildRow(key,row){
+function buildRow(key,row,isEco){
     var div=document.createElement('div');
     div.className='expense-row';
     div.id='row-'+row.id;
@@ -1296,8 +1303,8 @@ function buildRow(key,row){
 
     // 3. Value Input
     var ve=document.createElement('input');
-    ve.type='tel';ve.className='box-input expense-input';
-    ve.dataset.cat=key;
+    ve.type='tel';ve.className='box-input '+(isEco?'eco-input':'expense-input');
+    if(!isEco)ve.dataset.cat=key;
     if(row.val){ve.value=String(Math.round(row.val*100));window.maskInput(ve);}
     ve.oninput=function(){window.maskInput(ve);row.val=window.parseMoney(ve.value);updateFlow();};
     ve.onkeyup=function(){window.maskInput(ve);row.val=window.parseMoney(ve.value);updateFlow();};
@@ -1463,7 +1470,7 @@ window._addRow=function(key){
     var nr={id:key+'_'+idx,label:'',val:0,pay:'',date:getViewDateISO()};
     gastosData[key].push(nr);
     var cont=document.getElementById('cat-'+key);
-    cont.insertBefore(buildRow(key,nr),cont.querySelector('.btn-add-row'));
+    cont.insertBefore(buildRow(key,nr,key==='economias'),cont.querySelector('.btn-add-row'));
     window._saveAllData();
 };
 
@@ -1783,6 +1790,7 @@ function updateFlow(){
     var td=0;
     var expenseDetails = []; // Para o novo gráfico de rosca
     expenseCats.forEach(function(cat){
+        if(cat.id==='economias')return;
         var ct=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);
         td+=ct;
         if (ct > 0) {
@@ -1791,6 +1799,8 @@ function updateFlow(){
         var el=document.getElementById('tot-'+cat.id);
         if(el)el.textContent=window.formatBRL(ct);
     });
+    var et=(gastosData['economias']||[]).reduce(function(s,r){return s+r.val;},0); // Fallback se economias existir
+    var ee=document.getElementById('tot-economias');if(ee)ee.textContent=window.formatBRL(et);
     
     // Atualiza o novo box de Total Gasto
     var elG=document.getElementById('gastosTotalDisplay');
@@ -2136,7 +2146,7 @@ function saveSnap(){
     var key=monthKey();
     var tr=rendaItems.reduce(function(s,r){return s+r.val;},0);
     var td=0;
-    expenseCats.forEach(function(cat){td+=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);});
+    expenseCats.forEach(function(cat){if(cat.id!=='economias')td+=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);});
     if(tr===0 && td===0 && rendaItems.length===0) {
         delete historico[key];
         return;
@@ -2203,7 +2213,7 @@ window._renderHistorico=function(){
         // Maior despesa (Gastos fixos)
         hExpCats.forEach(function(cat){
             var ct=(h.gastos&&h.gastos[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);
-            if(ct>mv){mv=ct;mc=cat.label;}
+            if(ct>mv && cat.id !== 'economias'){mv=ct;mc=cat.label;}
         });
         var comp=h.totalRenda>0?((h.totalDesp/h.totalRenda)*100).toFixed(1)+'%':'—';
         var fr=h.renda?h.renda.length:0;
@@ -2229,10 +2239,17 @@ window._renderHistorico=function(){
         // Gastos (Lista Simples)
         var gHtml='';
         hExpCats.forEach(function(cat){
+            if(cat.id==='economias')return;
             var rows=(h.gastos&&h.gastos[cat.id]||[]).filter(function(r){return r.val>0;});
             if(!rows.length)return;
             gHtml+='<div class="hist-section-title">'+window.escapeHTML(cat.label)+'</div>';
             rows.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.label)+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-neg val-sensitive">−'+window.formatBRL(r.val)+'</span></div>';});
+        });
+        var ecoR=(h.gastos&&h.gastos['economias']||[]).filter(function(r){return r.val>0;});
+        if(ecoR.length){
+            gHtml+='<div class="hist-section-title">Economias</div>';
+            ecoR.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.label)+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="val-sensitive" style="color:var(--accent);font-weight:500;font-size:0.82rem">'+window.formatBRL(r.val)+'</span></div>';});
+        }
         var card=document.createElement('div');card.className='historico-card';
         card.innerHTML=`
           <div class="historico-mes-header" onclick="toggleHistMes('${key}',this)">
@@ -2750,68 +2767,54 @@ function formatName(name) {
     return display.split(' ').map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }).join(' ');
 }
 
-function promiseWithTimeout(promise, ms, timeoutVal = null) {
-    return new Promise(function(resolve) {
-        var timer = setTimeout(function() {
-            console.warn("Operação no Firestore excedeu o tempo limite de " + ms + "ms");
-            resolve(timeoutVal);
-        }, ms);
-        promise.then(function(res) {
-            clearTimeout(timer);
-            resolve(res);
-        }).catch(function(err) {
-            clearTimeout(timer);
-            console.error("Erro na operação Firestore:", err);
-            resolve(timeoutVal);
-        });
-    });
-}
-
-function startApp(user) {
+async function startApp(user) {
     CLIENT_ID = user.uid; // Define ID único do usuário
     
-    // Configura nome do display inicial com displayName ou fallback imediato
-    var initialName = user.displayName || "Usuário";
-    document.getElementById('splashName').textContent = formatName(initialName);
+    // Tenta buscar nome do perfil no Firestore
+    var nameToDisplay = "Usuário";
+    try {
+        var docSnap = await getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
+        if(docSnap.exists()) {
+            var data = docSnap.data();
+            nameToDisplay = data.nome + ' ' + data.sobrenome;
+        } else if(user.displayName) {
+            nameToDisplay = user.displayName;
+        }
+    } catch(e) {
+        console.log("Erro ao buscar nome:", e);
+    }
+    
+    document.getElementById('splashName').textContent = formatName(nameToDisplay);
 
+    // Define saudação (Novo usuário vs Recorrente) - Lógica melhorada
+    // Se a conta foi criada há menos de 1 minuto, consideramos novo usuário.
+    // Caso contrário, é um retorno.
     var creationTime = new Date(user.metadata.creationTime).getTime();
     var now = new Date().getTime();
-    var isNewUser = (now - creationTime) < 60000;
+    var isNewUser = (now - creationTime) < 60000; // 60 segundos de tolerância
     var greeting = isNewUser ? "SEJA BEM-VINDO," : "BEM-VINDO DE VOLTA";
     document.getElementById('splashGreeting').textContent = greeting;
 
     // Esconde Auth
-    document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('auth-screen').classList.add('hidden');
 
-    // Inicia sequência de carregamento da splash imediatamente
-    var splash = document.getElementById('splash');
-    if(splash) splash.style.display = 'flex';
-    runSplashSequence();
-
-    // Busca nome do perfil no Firestore de forma não-bloqueante (timeout 2.5s)
-    promiseWithTimeout(getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados')), 2500, null)
-        .then(function(docSnap) {
-            if(docSnap && typeof docSnap.exists === 'function' && docSnap.exists()) {
-                var data = docSnap.data();
-                if(data && data.nome) {
-                    var fullName = data.nome + (data.sobrenome ? ' ' + data.sobrenome : '');
-                    document.getElementById('splashName').textContent = formatName(fullName);
-                }
-            }
-        }).catch(function(e){ console.log("Erro ao buscar nome:", e); });
-
-    // Verificação de instalação (PWA) não-bloqueante
+    // VERIFICAÇÃO DE INSTALAÇÃO (PWA)
+    // Se não estiver em modo standalone (instalado) e não for iOS (que não suporta detecção fácil via JS puro as vezes), mostra modal
+    // navigator.standalone é para iOS legacy. matchMedia é padrão moderno.
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    
     if (!isStandalone) {
-        setTimeout(function() {
-            var installModal = document.getElementById('installModal');
-            if (installModal) {
-                installModal.style.display = 'flex';
-                window.setModalState(true);
-            }
-        }, 3500);
+        // Mostra modal de instalação e PAUSA o fluxo. 
+        // O fluxo continua apenas quando chamar skipInstall()
+        document.getElementById('installModal').style.display = 'flex';
+        window.setModalState(true);
+        return; 
     }
+
+    // Inicia sequência de carregamento original
+    var splash = document.getElementById('splash');
+    splash.style.display = 'flex';
+    runSplashSequence();
 }
 
 /* FIREBASE */
@@ -2847,17 +2850,15 @@ async function loadData(){
     window.setStatus('saving');
     var data=null;
     try{
-        var snap=await promiseWithTimeout(getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard')), 3000, null);
-        if(snap && typeof snap.exists === 'function' && snap.exists()) data=snap.data();
+        var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
+        if(snap.exists()) data=snap.data();
     }catch(e){console.error("Erro ao carregar do Firestore:", e);}
 
     if(data){
         historico=data.historico||{};
         gastosRemovidos=data.gastosRemovidos||[];
         if(data.incomeCats && data.incomeCats.length) incomeCats=data.incomeCats;
-        if(data.expenseCats && data.expenseCats.length) {
-            expenseCats=data.expenseCats.map(c => c.id === 'economias' ? { id: 'investimentos', label: 'Investimentos' } : c);
-        }
+        if(data.expenseCats && data.expenseCats.length) expenseCats=data.expenseCats;
         
         if(data.privacyMode === true) {
             document.body.classList.add('privacy-active');
@@ -3047,6 +3048,7 @@ function updateSummaryStats(renda, gastos) {
     var maiorCat = '—';
     var maiorVal = 0;
     expenseCats.forEach(function(cat){
+        if(cat.id === 'economias') return;
         var totalCat = (gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);
         if(totalCat > maiorVal) { maiorVal = totalCat; maiorCat = cat.label; }
     });
@@ -3307,7 +3309,6 @@ window._generatePDF = async function() {
 /* BOOT SEQUENCE */
 async function runSplashSequence(skipIntro) {
     var splash=document.getElementById('splash');
-    if(!splash) return;
     
     // Reset animations
     splash.classList.remove('phase2', 'phase3', 'phase4', 'exit');
@@ -3333,7 +3334,6 @@ async function runSplashSequence(skipIntro) {
     var waitTime = skipIntro ? 1500 : 2000;
     var minWait=new Promise(function(r){setTimeout(r, waitTime);}); 
     var loadP=loadData();
-    var safetyTimeout = new Promise(function(r){setTimeout(r, 4000);});
     
     // Define o início da transição de saída do logo.
     var phase2Delay = skipIntro ? 200 : 800; // Logo aparece rápido e já começa a sair
@@ -3350,54 +3350,29 @@ async function runSplashSequence(skipIntro) {
     // Fase 3: Greeting aparece (cross-fade)
     setTimeout(function(){
         splash.classList.add('phase3');
-        if(window.playWelcomeSound) window.playWelcomeSound(); // Toca o som
+        window.playWelcomeSound(); // Toca o som
     }, phase2Delay + 200); // Inicia o cross-fade mais cedo para uma transição mais suave
     
     // Fase 4: Tagline aparece (um pouco depois do greeting)
     setTimeout(function(){ splash.classList.add('phase4'); }, phase2Delay + 400);
 
-    try {
-        await Promise.race([
-            Promise.all([minWait, loadP]),
-            safetyTimeout
-        ]);
-    } catch(e) {
-        console.error("Erro durante o carregamento de dados:", e);
-    } finally {
-        try {
-            initCharts(); 
-            initIncomeData();
-            renderMonthLabel();
-            loadMonthData();
-            if(window._updateAssets) window._updateAssets();
-        } catch(err) {
-            console.error("Erro ao inicializar componentes da interface:", err);
-        }
+    await Promise.all([minWait,loadP]);
+    
+    // CORREÇÃO: Inicia gráficos ANTES de carregar dados do mês
+    // Isso garante que o updateFlow() encontre o gráfico criado para atualizar
+    initCharts(); initIncomeData();
+    renderMonthLabel();loadMonthData();window._updateAssets();
 
-        window.scrollTo(0, 0);
-        var appEl = document.getElementById('app');
-        if(appEl) appEl.classList.add('visible');
-        splash.classList.add('exit');
-        setTimeout(function(){
-            splash.style.display = 'none';
-        }, 850);
-    }
+    window.scrollTo(0, 0);
+    document.getElementById('app').classList.add('visible');
+    splash.classList.add('exit');
+    setTimeout(function(){
+        splash.style.display='none';
+    },850);
 }
 
 /* INIT */
 window.addEventListener('load', function(){
-    // Fallback global: se a splash ainda estiver visível após 6s e a auth-screen oculta, força o encerramento da splash.
-    setTimeout(function(){
-        var splash = document.getElementById('splash');
-        var authScreen = document.getElementById('auth-screen');
-        var appEl = document.getElementById('app');
-        if(splash && splash.style.display !== 'none' && authScreen && authScreen.style.display === 'none') {
-            console.warn("Fallback global acionado: removendo splash screen travada.");
-            if(appEl) appEl.classList.add('visible');
-            splash.style.display = 'none';
-        }
-    }, 6000);
-
     onAuthStateChanged(auth, (user) => {
         if (user) {
             startApp(user);
