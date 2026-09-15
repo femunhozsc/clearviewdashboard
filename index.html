@@ -779,8 +779,22 @@ window.fillInput = function(id,val) {
     if(!val){el.value='';return;}
     el.value=String(Math.round(val*100)); window.maskInput(el);
 };
+window.escapeHTML = function(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+};
+
 window.formatDateShort = function(isoStr) {
     if(!isoStr) return '';
+    if (typeof isoStr === 'string' && isoStr.length >= 10 && isoStr.includes('-')) {
+        var parts = isoStr.split('T')[0].split('-');
+        if (parts.length === 3) return parts[2] + '/' + parts[1];
+    }
     var d = new Date(isoStr);
     return d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0');
 };
@@ -1086,7 +1100,7 @@ window.togglePrivacyMode = function() {
     var btn = document.getElementById('privacyBtn');
     var isActive = body.classList.toggle('privacy-active');
     btn.innerHTML = isActive ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
-    localStorage.setItem('cv_privacy', isActive ? 'true' : 'false');
+    if(CLIENT_ID && window._saveAllData) window._saveAllData();
 };
 
 /* AUTH UI HELPERS */
@@ -1151,20 +1165,23 @@ const DEFAULT_ASSET_CATEGORIES = [
 
 function monthKey(){return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;}
 function getViewDateISO() {
-    var d = new Date(currentYear, currentMonth, currentDay, 12, 0, 0);
-    return d.toISOString();
+    var y = String(currentYear).padStart(4, '0');
+    var m = String(currentMonth + 1).padStart(2, '0');
+    var d = String(currentDay).padStart(2, '0');
+    return `${y}-${m}-${d}T12:00:00.000Z`;
 }
 
 /* MÊS */
 window.handleDateChange = function(el) {
     if(!el.value) return;
-    // Adiciona T12:00:00 para evitar problemas de fuso horário subtraindo um dia
-    var d = new Date(el.value + 'T12:00:00');
-    saveSnap();
-    currentYear = d.getFullYear();
-    currentMonth = d.getMonth();
-    currentDay = d.getDate();
-    renderMonthLabel();loadMonthData();
+    var parts = el.value.split('-');
+    if(parts.length === 3) {
+        saveSnap();
+        currentYear = parseInt(parts[0], 10);
+        currentMonth = parseInt(parts[1], 10) - 1;
+        currentDay = parseInt(parts[2], 10);
+        renderMonthLabel(); loadMonthData();
+    }
 };
 
 function renderMonthLabel(){
@@ -1223,7 +1240,7 @@ function renderGastos(){
         hdr.className='cat-header';hdr.id='cat-hdr-'+key;
         hdr.style.setProperty('--i', index);
         hdr.dataset.catKey = key; // Para drag
-        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}">${label}</span>${isEco?' (Alocacao)':''}</span><span class="cat-total" id="tot-'+key+'" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
+        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}">${window.escapeHTML(label)}</span>${isEco?' (Alocacao)':''}</span><span class="cat-total" id="tot-'+key+'" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         hdr.onclick=function(){window.toggleCatEl(key);};
         
         var cont=document.createElement('div');
@@ -1431,10 +1448,20 @@ window._deleteGastoCategory = function(key) {
 };
 
 window._startRenameGastoCat = function(key) {
-    var newName = prompt("Novo nome da categoria:");
-    if(newName) {
-        var cat = expenseCats.find(c => c.id === key);
-        if(cat) { cat.label = newName; renderGastos(); window._saveAllData(); }
+    var cat = expenseCats.find(c => c.id === key);
+    if(!cat) return;
+    var oldLabel = cat.label;
+    var newName = prompt("Novo nome da categoria:", oldLabel);
+    if(newName && newName.trim() && newName.trim() !== oldLabel) {
+        newName = newName.trim();
+        cat.label = newName;
+        Object.keys(historico).forEach(mKey => {
+            var h = historico[mKey];
+            if(h && h.expenseCatsSnapshot) {
+                h.expenseCatsSnapshot.forEach(c => { if(c.id === key) c.label = newName; });
+            }
+        });
+        renderGastos(); window._saveAllData();
     }
 };
 
@@ -1446,47 +1473,42 @@ window._addRow=function(key){
     cont.insertBefore(buildRow(key,nr,key==='economias'),cont.querySelector('.btn-add-row'));
     window._saveAllData();
 };
+
 window._removeRow=function(key,rowId){
     var row=(gastosData[key]||[]).find(function(r){return r.id===rowId;});
     if(!row) return;
 
-    // 1. Se tiver valor, zera primeiro
+    if(!confirm('Excluir este item?')) return;
+
     if(row.val > 0) {
-        // Salva no histórico de removidos antes de zerar
         var catLabel = (expenseCats.find(c=>c.id===key)||{}).label || key;
-        gastosRemovidos.push({label:row.label||'Item',val:row.val,cat:catLabel,date:row.date||new Date().toISOString()});
+        gastosRemovidos.push({
+            id: row.id || Date.now().toString(),
+            label: row.label||'Item',
+            val: row.val,
+            cat: catLabel,
+            date: row.date||getViewDateISO(),
+            deletedAt: new Date().toISOString()
+        });
         renderGastosHist();
-
-        row.val = 0;
-        updateFlow();
-        window._saveAllData();
-        
-        // Atualiza visualmente o input para 0
-        var el = document.getElementById('row-'+rowId);
-        if(el) {
-            var input = el.querySelector('.box-input');
-            if(input) { input.value = 'R$ 0,00'; input.style.color='var(--text-muted)'; setTimeout(function(){input.style.color='';},400); }
-        }
-        return; // Para por aqui, não deleta a linha ainda
     }
-
-    // 2. Se já for zero, pede confirmação para excluir a linha
-    if(!confirm('Excluir esta linha permanentemente?')) return;
 
     var el=document.getElementById('row-'+rowId);
     if(el){el.style.opacity='0';el.style.transform='translateX(14px)';el.style.transition='0.2s';setTimeout(function(){el.remove();},200);}
     gastosData[key]=gastosData[key].filter(function(r){return r.id!==rowId;});
-    updateFlow();window._saveAllData();
+    updateFlow();
+    window._saveAllData();
 };
+
 function renderGastosHist(){
     var w=document.getElementById('gastos-hist-wrapper');
     var l=document.getElementById('gastos-hist-list');
     if(!w)return;
-    if(!gastosRemovidos.length){w.style.display='none';return;}
+    if(!gastosRemovidos || !gastosRemovidos.length){w.style.display='none';return;}
     w.style.display='block';l.innerHTML='';
     gastosRemovidos.forEach(function(item){
         var d=document.createElement('div');d.className='renda-item';d.style.opacity='0.7';
-        d.innerHTML='<div class="renda-item-left"><div class="renda-item-cat">'+item.cat+'</div><div class="renda-item-desc">'+item.label+' <span style="font-size:0.7em;color:var(--text-muted);margin-left:4px">'+window.formatDateShort(item.date)+'</span></div></div><span class="renda-item-val val-sensitive" style="color:var(--danger)">−'+window.formatBRL(item.val)+'</span>';
+        d.innerHTML='<div class="renda-item-left"><div class="renda-item-cat">'+window.escapeHTML(item.cat)+'</div><div class="renda-item-desc">'+window.escapeHTML(item.label)+' <span style="font-size:0.7em;color:var(--text-muted);margin-left:4px">'+window.formatDateShort(item.date)+'</span></div></div><span class="renda-item-val val-sensitive" style="color:var(--danger)">−'+window.formatBRL(item.val)+'</span>';
         l.appendChild(d);
     });
 }
@@ -1571,7 +1593,7 @@ function renderRenda() {
         hdr.id = 'cat-hdr-r-'+key;
         hdr.dataset.catKey = key;
 
-        hdr.innerHTML = `<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteRendaCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameRendaCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-rcat-${key}">${label}</span></span><span class="cat-total" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
+        hdr.innerHTML = `<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteRendaCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameRendaCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-rcat-${key}">${window.escapeHTML(label)}</span></span><span class="cat-total" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         
         hdr.onclick = function(){ window.toggleCatEl('r-'+key); }; // Reusing toggleCatEl logic but with prefix
 
@@ -1581,7 +1603,7 @@ function renderRenda() {
         items.forEach(function(item, rIdx){
             var d = document.createElement('div'); d.className = 'renda-item';
             d.style.setProperty('--i', rIdx);
-            d.innerHTML = '<div class="renda-item-left"><div class="renda-item-desc">'+(item.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted);margin-left:4px">'+window.formatDateShort(item.date)+'</span></div></div><span class="renda-item-val val-sensitive">+'+window.formatBRL(item.val)+'</span><button class="renda-item-del" onclick="removeRenda(\''+item.id+'\')">&times;</button>';
+            d.innerHTML = '<div class="renda-item-left"><div class="renda-item-desc">'+window.escapeHTML(item.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted);margin-left:4px">'+window.formatDateShort(item.date)+'</span></div></div><span class="renda-item-val val-sensitive">+'+window.formatBRL(item.val)+'</span><button class="renda-item-del" onclick="removeRenda(\''+item.id+'\')">&times;</button>';
             cont.appendChild(d);
         });
         
@@ -1676,15 +1698,24 @@ window._deleteRendaCategory = function(key) {
 };
 
 window._startRenameRendaCat = function(key) {
-    var newName = prompt("Novo nome da categoria:");
-    if(newName) {
-        var cat = incomeCats.find(c => c.id === key);
-        if(cat) {
-            // Atualiza itens antigos para o novo nome
-            rendaItems.forEach(r => { if(r.cat === cat.label) r.cat = newName; });
-            cat.label = newName;
-            renderRenda(); window._saveAllData();
-        }
+    var cat = incomeCats.find(c => c.id === key);
+    if(!cat) return;
+    var oldLabel = cat.label;
+    var newName = prompt("Novo nome da categoria:", oldLabel);
+    if(newName && newName.trim() && newName.trim() !== oldLabel) {
+        newName = newName.trim();
+        rendaItems.forEach(r => { if(r.cat === oldLabel) r.cat = newName; });
+        Object.keys(historico).forEach(mKey => {
+            var h = historico[mKey];
+            if(h && h.renda) {
+                h.renda.forEach(r => { if(r.cat === oldLabel) r.cat = newName; });
+            }
+            if(h && h.incomeCatsSnapshot) {
+                h.incomeCatsSnapshot.forEach(c => { if(c.id === key) c.label = newName; });
+            }
+        });
+        cat.label = newName;
+        renderRenda(); window._saveAllData();
     }
 };
 
@@ -1714,14 +1745,8 @@ window._removeRenda=function(id){
     var item = rendaItems.find(function(r){return r.id===id;});
     if(!item) return;
 
-    // 1. Zera se tiver valor
-    if(item.val > 0) {
-        item.val = 0;
-    } else {
-        // 2. Deleta se ja for zero
-        if(!confirm('Excluir este registro de renda?')) return;
-        rendaItems=rendaItems.filter(function(r){return r.id!==id;});
-    }
+    if(!confirm('Excluir este registro de renda?')) return;
+    rendaItems=rendaItems.filter(function(r){return r.id!==id;});
     renderRenda();updateFlow();window._saveAllData();
 };
 
@@ -1888,7 +1913,7 @@ function renderAssetList() {
         var entriesHtml = '';
         (cat.entries||[]).forEach((e, idx) => {
             entriesHtml += `<div class="asset-entry" style="--i:${idx}">
-                <span class="asset-entry-desc">${e.desc || 'Aporte'}</span>
+                <span class="asset-entry-desc">${window.escapeHTML(e.desc || 'Aporte')}</span>
                 <div style="display:flex;align-items:center">
                     <span class="asset-entry-val val-sensitive">${window.formatBRL(e.val)}</span>
                     <button class="asset-entry-del" onclick="deleteAssetEntry('${cat.id}','${e.id}')">&times;</button>
@@ -1909,8 +1934,8 @@ function renderAssetList() {
                     <button class="btn-rename-cat" onclick="event.stopPropagation();startRenameAssetCat('${cat.id}')"><i class="fa-solid fa-pencil" style="font-size:0.8rem"></i></button>
 
                     <div class="asset-color-dot" style="background:${cat.color}"></div>
-                    <span class="asset-cat-name" id="asset-name-${cat.id}">${cat.name}</span>
-                    <input class="asset-cat-rename-input" id="asset-rename-${cat.id}" value="${cat.name}"
+                    <span class="asset-cat-name" id="asset-name-${cat.id}">${window.escapeHTML(cat.name)}</span>
+                    <input class="asset-cat-rename-input" id="asset-rename-${cat.id}" value="${window.escapeHTML(cat.name)}"
                         onclick="event.stopPropagation()"
                         onblur="saveAssetCatName('${cat.id}',this.value)"
                         onkeydown="if(event.key==='Enter'){this.blur();}">
@@ -2035,16 +2060,11 @@ window._addAssetEntry = function() {
 
 window._deleteAssetEntry = function(catId, entryId) {
     var cat = assetsData.categories.find(c => c.id === catId);
-    if(cat) {
+    if(cat && cat.entries) {
         var entry = cat.entries.find(e => e.id === entryId);
         if(entry) {
-            if(entry.val > 0) {
-                // Zera primeiro
-                entry.val = 0;
-            } else {
-                // Deleta se confirmar
-                if(confirm('Excluir este aporte?')) cat.entries = cat.entries.filter(e => e.id !== entryId);
-            }
+            if(!confirm('Excluir este aporte?')) return;
+            cat.entries = cat.entries.filter(e => e.id !== entryId);
         }
         renderAssetList();
         window._updateAssets(true);
@@ -2127,7 +2147,10 @@ function saveSnap(){
     var tr=rendaItems.reduce(function(s,r){return s+r.val;},0);
     var td=0;
     expenseCats.forEach(function(cat){if(cat.id!=='economias')td+=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);});
-    if(tr===0&&td===0&&rendaItems.length===0)return;
+    if(tr===0 && td===0 && rendaItems.length===0) {
+        delete historico[key];
+        return;
+    }
     // Salva também a configuração de categorias de RENDA e GASTOS no momento do snapshot
     historico[key]={year:currentYear,month:currentMonth,renda:JSON.parse(JSON.stringify(rendaItems)),gastos:JSON.parse(JSON.stringify(gastosData)),incomeCatsSnapshot:JSON.parse(JSON.stringify(incomeCats)),expenseCatsSnapshot:JSON.parse(JSON.stringify(expenseCats)),totalRenda:tr,totalDesp:td,saldo:tr-td};
 }
@@ -2205,11 +2228,11 @@ window._renderHistorico=function(){
             
             rHtml += `<div class="hist-cat-group">
                 <div class="hist-cat-header" onclick="toggleHistCat(this)">
-                    <span class="hist-item-cat" style="font-size:0.7rem">${cat.label}</span>
+                    <span class="hist-item-cat" style="font-size:0.7rem">${window.escapeHTML(cat.label)}</span>
                     <div style="display:flex;align-items:center;gap:8px"><span class="val-sensitive" style="font-size:0.8rem;font-weight:500;color:var(--success)">+${window.formatBRL(catTotal)}</span><span class="arrow" style="font-size:0.5rem">&#9660;</span></div>
                 </div>
                 <div class="hist-cat-body">`;
-            rows.forEach(function(r){rHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+(r.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-pos val-sensitive">+'+window.formatBRL(r.val)+'</span></div>';});
+            rows.forEach(function(r){rHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-pos val-sensitive">+'+window.formatBRL(r.val)+'</span></div>';});
             rHtml += `</div></div>`;
         });
 
@@ -2219,13 +2242,13 @@ window._renderHistorico=function(){
             if(cat.id==='economias')return;
             var rows=(h.gastos&&h.gastos[cat.id]||[]).filter(function(r){return r.val>0;});
             if(!rows.length)return;
-            gHtml+='<div class="hist-section-title">'+cat.label+'</div>';
-            rows.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+r.label+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-neg val-sensitive">−'+window.formatBRL(r.val)+'</span></div>';});
+            gHtml+='<div class="hist-section-title">'+window.escapeHTML(cat.label)+'</div>';
+            rows.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.label)+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-neg val-sensitive">−'+window.formatBRL(r.val)+'</span></div>';});
         });
         var ecoR=(h.gastos&&h.gastos['economias']||[]).filter(function(r){return r.val>0;});
         if(ecoR.length){
             gHtml+='<div class="hist-section-title">Economias</div>';
-            ecoR.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+r.label+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="val-sensitive" style="color:var(--accent);font-weight:500;font-size:0.82rem">'+window.formatBRL(r.val)+'</span></div>';});
+            ecoR.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.label)+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="val-sensitive" style="color:var(--accent);font-weight:500;font-size:0.82rem">'+window.formatBRL(r.val)+'</span></div>';});
         }
         var card=document.createElement('div');card.className='historico-card';
         card.innerHTML=`
@@ -2798,40 +2821,60 @@ async function startApp(user) {
 var saveTimer;
 window._saveAllData=function(){
     saveSnap();
-    // assetsData já está atualizado em memória
     var cv={};
     ['txJuros','txInf','tempo'].forEach(function(id){var el=document.getElementById(id);if(el)cv[id]=el.value;});
-    var payload={historico:historico,ativos:assetsData,incomeCats:incomeCats,expenseCats:expenseCats,calc:cv,currentYear:currentYear,currentMonth:currentMonth,updatedAt:new Date().toISOString()};
-    localStorage.setItem('clearview_bkp_' + CLIENT_ID, JSON.stringify(payload));
+    var isPrivacyActive = document.body.classList.contains('privacy-active');
+    var payload={
+        historico:historico,
+        ativos:assetsData,
+        incomeCats:incomeCats,
+        expenseCats:expenseCats,
+        gastosRemovidos:gastosRemovidos,
+        privacyMode:isPrivacyActive,
+        calc:cv,
+        currentYear:currentYear,
+        currentMonth:currentMonth,
+        updatedAt:new Date().toISOString()
+    };
     clearTimeout(saveTimer);
     window.setStatus('saving');
     saveTimer=setTimeout(async function(){
         try{
             await setDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'),payload);
             window.setStatus('saved');
-        }catch(e){console.error(e);window.setStatus('offline');}
+        }catch(e){console.error("Erro ao salvar no Firestore:", e);window.setStatus('offline');}
     },1500);
 };
 
 async function loadData(){
     window.setStatus('saving');
     var data=null;
-    var lsKey = 'clearview_bkp_' + CLIENT_ID; // chave por usuário, evita vazar dados entre contas
-    try{var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));if(snap.exists())data=snap.data();}catch(e){console.error(e);}
-    if(!data){var l=localStorage.getItem(lsKey);if(l)try{data=JSON.parse(l);}catch(e){}}
+    try{
+        var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
+        if(snap.exists()) data=snap.data();
+    }catch(e){console.error("Erro ao carregar do Firestore:", e);}
+
     if(data){
         historico=data.historico||{};
-        // REMOVIDO: Não recupera mais o ano/mês salvo. 
-        // O app sempre inicia na data atual (definida no topo do script).
-        if(data.incomeCats) incomeCats=data.incomeCats;
-        if(data.expenseCats) expenseCats=data.expenseCats;
+        gastosRemovidos=data.gastosRemovidos||[];
+        if(data.incomeCats && data.incomeCats.length) incomeCats=data.incomeCats;
+        if(data.expenseCats && data.expenseCats.length) expenseCats=data.expenseCats;
         
+        if(data.privacyMode === true) {
+            document.body.classList.add('privacy-active');
+            var pBtn = document.getElementById('privacyBtn');
+            if(pBtn) pBtn.innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
+        } else if(data.privacyMode === false) {
+            document.body.classList.remove('privacy-active');
+            var pBtn = document.getElementById('privacyBtn');
+            if(pBtn) pBtn.innerHTML = '<i class="fa-regular fa-eye"></i>';
+        }
+
         // MIGRATION LOGIC FOR ASSETS
         var av = data.ativos || {};
         if(av.categories && av.categories.length > 0) {
             assetsData = av;
         } else {
-            // Migrar formato antigo ou inicializar padrão
             assetsData = { categories: [], meta: av.metaVal || 0 };
             var oldMap = [
                 {k:'rf', n:'Renda Fixa', c:'#ffcc00'},
@@ -2851,9 +2894,11 @@ async function loadData(){
     } else {
         // Novo usuário — inicializa categorias padrão
         assetsData = { categories: DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries:[]})), meta: 0 };
+        gastosRemovidos = [];
     }
     initIncomeData();
     renderAssetList();
+    renderGastosHist();
     window.fillInput('metaVal', assetsData.meta);
     
     if(data) {
@@ -3328,13 +3373,6 @@ async function runSplashSequence(skipIntro) {
 
 /* INIT */
 window.addEventListener('load', function(){
-    // Carregar preferência de privacidade
-    var privacy = localStorage.getItem('cv_privacy');
-    if(privacy === 'true') {
-        document.body.classList.add('privacy-active');
-        document.getElementById('privacyBtn').innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
-    }
-
     onAuthStateChanged(auth, (user) => {
         if (user) {
             startApp(user);
