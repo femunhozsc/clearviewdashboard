@@ -1048,14 +1048,9 @@ window.triggerInstall = async function() {
 };
 
 window.skipInstall = function() {
-    document.getElementById('installModal').style.display = 'none';
+    var modal = document.getElementById('installModal');
+    if (modal) modal.style.display = 'none';
     window.setModalState(false);
-    // Inicia a sequência de splash que foi pausada
-    var splash = document.getElementById('splash');
-    splash.style.display = 'flex';
-    // Pequeno delay para garantir transição suave
-    // Passamos true para indicar que deve pular a introdução do logo
-    setTimeout(function(){ runSplashSequence(true); }, 50);
 };
 
 /* AUTH UI FUNCTIONS */
@@ -2784,25 +2779,25 @@ async function startApp(user) {
     document.getElementById('splashGreeting').textContent = greeting;
 
     // Esconde Auth
+    document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('auth-screen').classList.add('hidden');
 
-    // VERIFICAÇÃO DE INSTALAÇÃO (PWA)
-    // Se não estiver em modo standalone (instalado) e não for iOS (que não suporta detecção fácil via JS puro as vezes), mostra modal
-    // navigator.standalone é para iOS legacy. matchMedia é padrão moderno.
-    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    
-    if (!isStandalone) {
-        // Mostra modal de instalação e PAUSA o fluxo. 
-        // O fluxo continua apenas quando chamar skipInstall()
-        document.getElementById('installModal').style.display = 'flex';
-        window.setModalState(true);
-        return; 
-    }
-
-    // Inicia sequência de carregamento original
+    // Inicia sequência de carregamento
     var splash = document.getElementById('splash');
     splash.style.display = 'flex';
     runSplashSequence();
+
+    // Verificação de instalação (PWA) não-bloqueante
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (!isStandalone) {
+        setTimeout(function() {
+            var installModal = document.getElementById('installModal');
+            if (installModal) {
+                installModal.style.display = 'flex';
+                window.setModalState(true);
+            }
+        }, 3500);
+    }
 }
 
 /* FIREBASE */
@@ -3345,19 +3340,28 @@ async function runSplashSequence(skipIntro) {
     // Fase 4: Tagline aparece (um pouco depois do greeting)
     setTimeout(function(){ splash.classList.add('phase4'); }, phase2Delay + 400);
 
-    await Promise.all([minWait,loadP]);
-    
-    // CORREÇÃO: Inicia gráficos ANTES de carregar dados do mês
-    // Isso garante que o updateFlow() encontre o gráfico criado para atualizar
-    initCharts(); initIncomeData();
-    renderMonthLabel();loadMonthData();window._updateAssets();
+    try {
+        await Promise.all([minWait, loadP]);
+    } catch(e) {
+        console.error("Erro durante o carregamento de dados:", e);
+    } finally {
+        try {
+            initCharts(); 
+            initIncomeData();
+            renderMonthLabel();
+            loadMonthData();
+            window._updateAssets();
+        } catch(err) {
+            console.error("Erro ao inicializar componentes da interface:", err);
+        }
 
-    window.scrollTo(0, 0);
-    document.getElementById('app').classList.add('visible');
-    splash.classList.add('exit');
-    setTimeout(function(){
-        splash.style.display='none';
-    },850);
+        window.scrollTo(0, 0);
+        document.getElementById('app').classList.add('visible');
+        splash.classList.add('exit');
+        setTimeout(function(){
+            splash.style.display = 'none';
+        }, 850);
+    }
 }
 
 /* INIT */
