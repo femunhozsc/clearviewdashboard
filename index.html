@@ -572,16 +572,59 @@
 <div id="addModal" class="modal-overlay" onclick="if(event.target===this)closeAddModal()">
     <div class="modal-content">
         <div class="modal-title">Adicionar Gasto</div>
-        <input type="tel" class="modal-input-lg" id="quickValue" placeholder="R$ 0,00" oninput="maskInput(this)">
+        <input type="tel" class="modal-input-lg" id="quickValue" placeholder="R$ 0,00" oninput="maskInput(this); updateCreditCalcPreview();">
         <select id="quickCat" class="modal-select" onchange="updateSubcats()">
             <option value="" disabled selected>Categoria</option>
         </select>
         <select id="quickSub" class="modal-select" disabled>
             <option value="" disabled selected>Item</option>
         </select>
-        <input type="text" class="modal-input-desc" id="quickPay" placeholder="Metodo Pagamento (opcional)">
+        <select id="quickPay" class="modal-select" onchange="handlePaymentMethodChange(this)">
+            <option value="" disabled selected>Método de Pagamento</option>
+            <option value="Débito em conta">Débito em conta</option>
+            <option value="Crédito">Crédito</option>
+        </select>
         <button class="btn-confirm-add" onclick="processAddExpense()">Confirmar</button>
         <button class="btn-close-modal" onclick="closeAddModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL CONFIGURAÇÃO CRÉDITO -->
+<div id="creditModal" class="modal-overlay" style="z-index:10500" onclick="if(event.target===this)closeCreditModal()">
+    <div class="modal-content">
+        <div class="modal-title"><i class="fa-regular fa-credit-card" style="color:var(--accent);margin-right:8px"></i> Configurar Cartão de Crédito</div>
+        
+        <div style="display:flex;gap:10px;margin-bottom:16px">
+            <button id="btnCreditVista" type="button" class="btn-auth-v2 btn-auth-gold" style="flex:1;padding:12px;margin:0;font-size:0.85rem" onclick="selectCreditType('vista')">À vista</button>
+            <button id="btnCreditParcelado" type="button" class="btn-auth-v2 btn-auth-outline" style="flex:1;padding:12px;margin:0;font-size:0.85rem" onclick="selectCreditType('parcelado')">Parcelado</button>
+        </div>
+
+        <div id="creditParcelasBox" style="display:none;margin-bottom:16px">
+            <label style="font-size:0.78rem;color:var(--text-sec);display:block;margin-bottom:6px">Número de Parcelas</label>
+            <select id="creditInstallmentCount" class="modal-select" onchange="updateCreditCalcPreview()">
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
+                <option value="5">5x</option>
+                <option value="6">6x</option>
+                <option value="7">7x</option>
+                <option value="8">8x</option>
+                <option value="9">9x</option>
+                <option value="10">10x</option>
+                <option value="11">11x</option>
+                <option value="12">12x</option>
+                <option value="18">18x</option>
+                <option value="24">24x</option>
+            </select>
+        </div>
+
+        <div id="creditPreviewBox" style="background:rgba(255,255,255,0.04);border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;margin-bottom:16px;text-align:center">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">Resumo da Compra</div>
+            <div id="creditPreviewText" style="font-size:0.92rem;font-weight:600;color:var(--accent)">À vista</div>
+        </div>
+
+        <button class="btn-confirm-add" onclick="confirmCreditConfig()">Confirmar Crédito</button>
+        <button class="btn-close-modal" onclick="closeCreditModal()">Cancelar</button>
     </div>
 </div>
 
@@ -959,6 +1002,71 @@ window.closeRendaModal = function(){
     window.setModalState(false);
 };
 window.addRenda = function(){if(window._addRenda)window._addRenda();};
+let currentCreditConfig = { mode: 'vista', installments: 1 };
+
+window.handlePaymentMethodChange = function(el) {
+    if(el.value === 'Crédito') {
+        window.openCreditModal();
+    }
+};
+window.openCreditModal = function() {
+    document.getElementById('creditModal').style.display = 'flex';
+    window.setModalState(true);
+    window.selectCreditType(currentCreditConfig.mode || 'vista');
+};
+window.closeCreditModal = function() {
+    var mc = document.querySelector('#creditModal .modal-content');
+    if(mc) mc.style.animation = 'slideDownModal 0.3s forwards';
+    setTimeout(function(){
+        document.getElementById('creditModal').style.display = 'none';
+        if(mc) mc.style.animation = '';
+    }, 300);
+    window.setModalState(false);
+};
+window.selectCreditType = function(type) {
+    currentCreditConfig.mode = type;
+    var btnV = document.getElementById('btnCreditVista');
+    var btnP = document.getElementById('btnCreditParcelado');
+    var pBox = document.getElementById('creditParcelasBox');
+    if(btnV && btnP && pBox) {
+        if(type === 'vista') {
+            btnV.className = 'btn-auth-v2 btn-auth-gold';
+            btnP.className = 'btn-auth-v2 btn-auth-outline';
+            pBox.style.display = 'none';
+        } else {
+            btnP.className = 'btn-auth-v2 btn-auth-gold';
+            btnV.className = 'btn-auth-v2 btn-auth-outline';
+            pBox.style.display = 'block';
+        }
+    }
+    window.updateCreditCalcPreview();
+};
+window.updateCreditCalcPreview = function() {
+    var totalVal = window.parseMoney(document.getElementById('quickValue').value);
+    var pText = document.getElementById('creditPreviewText');
+    if(!pText) return;
+    if(currentCreditConfig.mode === 'vista') {
+        pText.textContent = 'À vista' + (totalVal > 0 ? ' (' + window.formatBRL(totalVal) + ')' : '');
+    } else {
+        var n = parseInt(document.getElementById('creditInstallmentCount').value) || 2;
+        currentCreditConfig.installments = n;
+        var pVal = totalVal > 0 ? totalVal / n : 0;
+        pText.textContent = n + 'x de ' + window.formatBRL(pVal) + ' / mês' + (totalVal > 0 ? ' (Total ' + window.formatBRL(totalVal) + ')' : '');
+    }
+};
+window.confirmCreditConfig = function() {
+    var totalVal = window.parseMoney(document.getElementById('quickValue').value);
+    var paySelect = document.getElementById('quickPay');
+    if(currentCreditConfig.mode === 'vista') {
+        paySelect.dataset.payMeta = JSON.stringify({ mode: 'vista', installments: 1 });
+    } else {
+        var n = parseInt(document.getElementById('creditInstallmentCount').value) || 2;
+        currentCreditConfig.installments = n;
+        paySelect.dataset.payMeta = JSON.stringify({ mode: 'parcelado', installments: n, totalVal: totalVal });
+    }
+    window.closeCreditModal();
+};
+
 window.openAddModal = function(){
     document.getElementById('addModal').style.display='flex';
     document.getElementById('quickValue').value='';
@@ -966,7 +1074,9 @@ window.openAddModal = function(){
     document.getElementById('quickCat').value='';
     document.getElementById('quickSub').innerHTML='<option value="" disabled selected>Item</option>';
     document.getElementById('quickSub').disabled=true;
-    document.getElementById('quickPay').value='';
+    var qPay = document.getElementById('quickPay');
+    if(qPay) { qPay.value=''; delete qPay.dataset.payMeta; }
+    currentCreditConfig = { mode: 'vista', installments: 1 };
     setTimeout(function(){document.getElementById('quickValue').focus();},120);
     window.setModalState(true);
 };
@@ -2293,16 +2403,98 @@ window._processAddExpense=function(){
     var val=window.parseMoney(document.getElementById('quickValue').value);
     var key=document.getElementById('quickCat').value;
     var idx=document.getElementById('quickSub').value;
-    var pay=document.getElementById('quickPay').value;
+    var payEl=document.getElementById('quickPay');
+    var payMethod = payEl ? payEl.value : '';
+
     if(!val||!key||idx===''){alert('Preencha valor, categoria e item.');return;}
+    
     var row=gastosData[key][parseInt(idx)];
-    row.val+=val;if(pay)row.pay=pay;row.date=getViewDateISO();
+    var baseLabel = row.label || ('Item ' + (parseInt(idx)+1));
+    
+    var meta = null;
+    if(payEl && payEl.dataset && payEl.dataset.payMeta) {
+        try { meta = JSON.parse(payEl.dataset.payMeta); } catch(e){}
+    }
+
+    if(payMethod === 'Crédito' && meta && meta.mode === 'parcelado' && meta.installments > 1) {
+        var N = meta.installments;
+        var instVal = val / N;
+        var cleanBase = baseLabel.replace(/\s*\(\d+\/\d+\)$/, '');
+
+        // 1. Mês Atual
+        row.val += instVal;
+        row.label = cleanBase + ' (1/' + N + ')';
+        row.pay = 'Crédito (1/' + N + ')';
+        row.date = getViewDateISO();
+
+        // 2. Meses Futuros (2 até N)
+        for(var m = 1; m < N; m++) {
+            var targetDate = new Date(currentYear, currentMonth + m, 1);
+            var tYear = targetDate.getFullYear();
+            var tMonth = targetDate.getMonth();
+            var tKey = `${tYear}-${String(tMonth + 1).padStart(2, '0')}`;
+            
+            var instLabel = cleanBase + ' (' + (m + 1) + '/' + N + ')';
+            var instPay = 'Crédito (' + (m + 1) + '/' + N + ')';
+            var instDate = new Date(tYear, tMonth, Math.min(currentDay, 28), 12, 0, 0).toISOString();
+
+            if(!historico[tKey]) {
+                historico[tKey] = {
+                    year: tYear,
+                    month: tMonth,
+                    renda: [],
+                    gastos: {},
+                    incomeCatsSnapshot: JSON.parse(JSON.stringify(incomeCats)),
+                    expenseCatsSnapshot: JSON.parse(JSON.stringify(expenseCats)),
+                    totalRenda: 0,
+                    totalDesp: 0,
+                    saldo: 0
+                };
+            }
+            if(!historico[tKey].gastos) historico[tKey].gastos = {};
+            if(!historico[tKey].gastos[key]) {
+                var defaultRows = (CAT_DEFAULTS[key] || []).map(function(n, j){
+                    return { id: key + '_' + j, label: n, val: 0, pay: '', date: instDate };
+                });
+                historico[tKey].gastos[key] = defaultRows;
+            }
+
+            var tRows = historico[tKey].gastos[key];
+            var existingInst = tRows.find(function(r){ return r.label === instLabel || r.label === cleanBase; });
+            if(existingInst) {
+                existingInst.val += instVal;
+                existingInst.label = instLabel;
+                existingInst.pay = instPay;
+            } else {
+                tRows.push({
+                    id: key + '_' + Date.now() + '_' + m,
+                    label: instLabel,
+                    val: instVal,
+                    pay: instPay,
+                    date: instDate
+                });
+            }
+
+            var hTd = 0;
+            Object.keys(historico[tKey].gastos).forEach(function(cId){
+                hTd += (historico[tKey].gastos[cId] || []).reduce(function(s, r){ return s + r.val; }, 0);
+            });
+            historico[tKey].totalDesp = hTd;
+            historico[tKey].saldo = historico[tKey].totalRenda - hTd;
+        }
+
+    } else {
+        row.val += val;
+        if(payMethod) {
+            row.pay = (payMethod === 'Crédito' && meta && meta.mode === 'vista') ? 'Crédito (à vista)' : payMethod;
+        }
+        row.date = getViewDateISO();
+    }
+
     renderGastos();
-    // setTimeout(function(){
-    //     var c=document.getElementById('cat-'+key),h=document.getElementById('cat-hdr-'+key);
-    //     if(c)c.classList.add('show');if(h)h.classList.add('active');
-    // },50);
-    updateFlow();window._saveAllData();window.closeAddModal();
+    updateFlow();
+    window._saveAllData();
+    window.closeAddModal();
 };
 
 /* CALCULADORA DE JUROS COMPOSTOS */
