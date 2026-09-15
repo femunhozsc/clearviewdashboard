@@ -2750,31 +2750,33 @@ function formatName(name) {
     return display.split(' ').map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }).join(' ');
 }
 
-async function startApp(user) {
+function promiseWithTimeout(promise, ms, timeoutVal = null) {
+    return new Promise(function(resolve) {
+        var timer = setTimeout(function() {
+            console.warn("Operação no Firestore excedeu o tempo limite de " + ms + "ms");
+            resolve(timeoutVal);
+        }, ms);
+        promise.then(function(res) {
+            clearTimeout(timer);
+            resolve(res);
+        }).catch(function(err) {
+            clearTimeout(timer);
+            console.error("Erro na operação Firestore:", err);
+            resolve(timeoutVal);
+        });
+    });
+}
+
+function startApp(user) {
     CLIENT_ID = user.uid; // Define ID único do usuário
     
-    // Tenta buscar nome do perfil no Firestore
-    var nameToDisplay = "Usuário";
-    try {
-        var docSnap = await getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
-        if(docSnap.exists()) {
-            var data = docSnap.data();
-            nameToDisplay = data.nome + ' ' + data.sobrenome;
-        } else if(user.displayName) {
-            nameToDisplay = user.displayName;
-        }
-    } catch(e) {
-        console.log("Erro ao buscar nome:", e);
-    }
-    
-    document.getElementById('splashName').textContent = formatName(nameToDisplay);
+    // Configura nome do display inicial com displayName ou fallback imediato
+    var initialName = user.displayName || "Usuário";
+    document.getElementById('splashName').textContent = formatName(initialName);
 
-    // Define saudação (Novo usuário vs Recorrente) - Lógica melhorada
-    // Se a conta foi criada há menos de 1 minuto, consideramos novo usuário.
-    // Caso contrário, é um retorno.
     var creationTime = new Date(user.metadata.creationTime).getTime();
     var now = new Date().getTime();
-    var isNewUser = (now - creationTime) < 60000; // 60 segundos de tolerância
+    var isNewUser = (now - creationTime) < 60000;
     var greeting = isNewUser ? "SEJA BEM-VINDO," : "BEM-VINDO DE VOLTA";
     document.getElementById('splashGreeting').textContent = greeting;
 
@@ -2782,10 +2784,22 @@ async function startApp(user) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('auth-screen').classList.add('hidden');
 
-    // Inicia sequência de carregamento
+    // Inicia sequência de carregamento da splash imediatamente
     var splash = document.getElementById('splash');
-    splash.style.display = 'flex';
+    if(splash) splash.style.display = 'flex';
     runSplashSequence();
+
+    // Busca nome do perfil no Firestore de forma não-bloqueante (timeout 2.5s)
+    promiseWithTimeout(getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados')), 2500, null)
+        .then(function(docSnap) {
+            if(docSnap && typeof docSnap.exists === 'function' && docSnap.exists()) {
+                var data = docSnap.data();
+                if(data && data.nome) {
+                    var fullName = data.nome + (data.sobrenome ? ' ' + data.sobrenome : '');
+                    document.getElementById('splashName').textContent = formatName(fullName);
+                }
+            }
+        }).catch(function(e){ console.log("Erro ao buscar nome:", e); });
 
     // Verificação de instalação (PWA) não-bloqueante
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -2833,8 +2847,8 @@ async function loadData(){
     window.setStatus('saving');
     var data=null;
     try{
-        var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
-        if(snap.exists()) data=snap.data();
+        var snap=await promiseWithTimeout(getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard')), 3000, null);
+        if(snap && typeof snap.exists === 'function' && snap.exists()) data=snap.data();
     }catch(e){console.error("Erro ao carregar do Firestore:", e);}
 
     if(data){
@@ -3293,6 +3307,7 @@ window._generatePDF = async function() {
 /* BOOT SEQUENCE */
 async function runSplashSequence(skipIntro) {
     var splash=document.getElementById('splash');
+    if(!splash) return;
     
     // Reset animations
     splash.classList.remove('phase2', 'phase3', 'phase4', 'exit');
@@ -3318,6 +3333,7 @@ async function runSplashSequence(skipIntro) {
     var waitTime = skipIntro ? 1500 : 2000;
     var minWait=new Promise(function(r){setTimeout(r, waitTime);}); 
     var loadP=loadData();
+    var safetyTimeout = new Promise(function(r){setTimeout(r, 4000);});
     
     // Define o início da transição de saída do logo.
     var phase2Delay = skipIntro ? 200 : 800; // Logo aparece rápido e já começa a sair
@@ -3334,14 +3350,17 @@ async function runSplashSequence(skipIntro) {
     // Fase 3: Greeting aparece (cross-fade)
     setTimeout(function(){
         splash.classList.add('phase3');
-        window.playWelcomeSound(); // Toca o som
+        if(window.playWelcomeSound) window.playWelcomeSound(); // Toca o som
     }, phase2Delay + 200); // Inicia o cross-fade mais cedo para uma transição mais suave
     
     // Fase 4: Tagline aparece (um pouco depois do greeting)
     setTimeout(function(){ splash.classList.add('phase4'); }, phase2Delay + 400);
 
     try {
-        await Promise.all([minWait, loadP]);
+        await Promise.race([
+            Promise.all([minWait, loadP]),
+            safetyTimeout
+        ]);
     } catch(e) {
         console.error("Erro durante o carregamento de dados:", e);
     } finally {
@@ -3350,13 +3369,14 @@ async function runSplashSequence(skipIntro) {
             initIncomeData();
             renderMonthLabel();
             loadMonthData();
-            window._updateAssets();
+            if(window._updateAssets) window._updateAssets();
         } catch(err) {
             console.error("Erro ao inicializar componentes da interface:", err);
         }
 
         window.scrollTo(0, 0);
-        document.getElementById('app').classList.add('visible');
+        var appEl = document.getElementById('app');
+        if(appEl) appEl.classList.add('visible');
         splash.classList.add('exit');
         setTimeout(function(){
             splash.style.display = 'none';
@@ -3366,6 +3386,18 @@ async function runSplashSequence(skipIntro) {
 
 /* INIT */
 window.addEventListener('load', function(){
+    // Fallback global: se a splash ainda estiver visível após 6s e a auth-screen oculta, força o encerramento da splash.
+    setTimeout(function(){
+        var splash = document.getElementById('splash');
+        var authScreen = document.getElementById('auth-screen');
+        var appEl = document.getElementById('app');
+        if(splash && splash.style.display !== 'none' && authScreen && authScreen.style.display === 'none') {
+            console.warn("Fallback global acionado: removendo splash screen travada.");
+            if(appEl) appEl.classList.add('visible');
+            splash.style.display = 'none';
+        }
+    }, 6000);
+
     onAuthStateChanged(auth, (user) => {
         if (user) {
             startApp(user);
