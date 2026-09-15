@@ -296,13 +296,13 @@
 
             <!-- NOVOS BOTÕES DE AÇÃO -->
             <div class="fluxo-actions-grid">
-                <button class="fluxo-action-btn" onclick="pulseEl(this,'green');setTimeout(openRendaModal, 100)">
+                <button class="fluxo-action-btn btn-add-renda" onclick="pulseEl(this,'green');setTimeout(openRendaModal, 100)">
                     <i class="fa-solid fa-arrow-up"></i>
-                    <span>Adicionar Renda</span>
+                    <span>Adicionar <span class="btn-highlight-green">Renda</span></span>
                 </button>
-                <button class="fluxo-action-btn" onclick="pulseEl(this,'red');setTimeout(openAddModal, 100)">
+                <button class="fluxo-action-btn btn-add-gasto" onclick="pulseEl(this,'red');setTimeout(openAddModal, 100)">
                     <i class="fa-solid fa-arrow-down"></i>
-                    <span>Adicionar Gasto</span>
+                    <span>Adicionar <span class="btn-highlight-red">Gasto</span></span>
                 </button>
             </div>
 
@@ -1140,8 +1140,8 @@ let assetsData = { categories: [], meta: 0 };
 let expenseCats = []; // Configuração dinâmica de categorias de GASTOS
 let incomeCats = []; // Configuração dinâmica de categorias de RENDA
 const MESES=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const CATEGORIAS=['Moradia','Transporte','Saude','Obrigacoes','Vida Diaria','Entretenimento','Economias'];
-const CAT_KEYS=['moradia','transporte','saude','obrigacoes','vida','entret','economias'];
+const CATEGORIAS=['Moradia','Transporte','Saude','Obrigacoes','Vida Diaria','Entretenimento','Investimentos'];
+const CAT_KEYS=['moradia','transporte','saude','obrigacoes','vida','entret','investimentos'];
 const CAT_DEFAULTS={
     moradia:   ['Aluguel/Parcela','Seguros','Conta de Luz','Conta de Agua','Telefone','Streaming','Internet','Eletrodomesticos','Melhorias','Outros'],
     transporte:['Parcela Carro','Seguro Carro','Combustivel','Onibus/App','Outros'],
@@ -1149,7 +1149,7 @@ const CAT_DEFAULTS={
     obrigacoes:['Dividas','Emprestimo Estudantil','Outros Emprestimos','Cartao de Credito','Taxas e Impostos','Investimento','Capital de Giro','Outros'],
     vida:      ['Supermercado','Suprimentos Pessoais','Roupas','Produtos de Limpeza','Jantar/Comer Fora','Salao/Barbearia','PetShop','Outros'],
     entret:    ['Filmes/Cinema','Musica','Games','Show','Livros','Hobbies','Esportes','Academia','Passeios','Ferias','Viagem','Teatro','Outros'],
-    economias: ['Para Reserva','Para Investimentos','Outros']
+    investimentos: ['Projetos Visando Lucro','Desenvolvimento','Reserva & Aportes','Outros']
 };
 const INCOME_DEFAULTS=['Salario','Serviço','Aluguel','Dividendos','Bonus','Venda'];
 
@@ -1228,7 +1228,6 @@ function renderGastos(){
         var cat = item.cat;
         var key = cat.id;
         var label = cat.label;
-        var isEco=key==='economias';
         var rows = item.rows;
         var ct = item.total;
         
@@ -1240,14 +1239,13 @@ function renderGastos(){
         hdr.className='cat-header';hdr.id='cat-hdr-'+key;
         hdr.style.setProperty('--i', index);
         hdr.dataset.catKey = key; // Para drag
-        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}">${window.escapeHTML(label)}</span>${isEco?' (Alocacao)':''}</span><span class="cat-total" id="tot-'+key+'" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
+        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}">${window.escapeHTML(label)}</span></span><span class="cat-total" id="tot-${key}" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         hdr.onclick=function(){window.toggleCatEl(key);};
         
         var cont=document.createElement('div');
         cont.className='cat-content';cont.id='cat-'+key;
-        if(isEco){var n=document.createElement('p');n.style.cssText='font-size:0.6rem;color:var(--text-muted);margin-bottom:8px';n.textContent='Valores nao descontados do saldo.';cont.appendChild(n);}
         rows.forEach(function(row, rIdx){
-            var el = buildRow(key,row,isEco);
+            var el = buildRow(key,row);
             el.style.setProperty('--i', rIdx);
             cont.appendChild(el);
         });
@@ -1280,7 +1278,7 @@ function renderGastos(){
     
     window._updateQuickCatSelect();
 }
-function buildRow(key,row,isEco){
+function buildRow(key,row){
     var div=document.createElement('div');
     div.className='expense-row';
     div.id='row-'+row.id;
@@ -1303,8 +1301,8 @@ function buildRow(key,row,isEco){
 
     // 3. Value Input
     var ve=document.createElement('input');
-    ve.type='tel';ve.className='box-input '+(isEco?'eco-input':'expense-input');
-    if(!isEco)ve.dataset.cat=key;
+    ve.type='tel';ve.className='box-input expense-input';
+    ve.dataset.cat=key;
     if(row.val){ve.value=String(Math.round(row.val*100));window.maskInput(ve);}
     ve.oninput=function(){window.maskInput(ve);row.val=window.parseMoney(ve.value);updateFlow();};
     ve.onkeyup=function(){window.maskInput(ve);row.val=window.parseMoney(ve.value);updateFlow();};
@@ -1470,7 +1468,7 @@ window._addRow=function(key){
     var nr={id:key+'_'+idx,label:'',val:0,pay:'',date:getViewDateISO()};
     gastosData[key].push(nr);
     var cont=document.getElementById('cat-'+key);
-    cont.insertBefore(buildRow(key,nr,key==='economias'),cont.querySelector('.btn-add-row'));
+    cont.insertBefore(buildRow(key,nr),cont.querySelector('.btn-add-row'));
     window._saveAllData();
 };
 
@@ -1790,7 +1788,6 @@ function updateFlow(){
     var td=0;
     var expenseDetails = []; // Para o novo gráfico de rosca
     expenseCats.forEach(function(cat){
-        if(cat.id==='economias')return;
         var ct=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);
         td+=ct;
         if (ct > 0) {
@@ -1799,8 +1796,6 @@ function updateFlow(){
         var el=document.getElementById('tot-'+cat.id);
         if(el)el.textContent=window.formatBRL(ct);
     });
-    var et=(gastosData['economias']||[]).reduce(function(s,r){return s+r.val;},0); // Fallback se economias existir
-    var ee=document.getElementById('tot-economias');if(ee)ee.textContent=window.formatBRL(et);
     
     // Atualiza o novo box de Total Gasto
     var elG=document.getElementById('gastosTotalDisplay');
@@ -2146,7 +2141,7 @@ function saveSnap(){
     var key=monthKey();
     var tr=rendaItems.reduce(function(s,r){return s+r.val;},0);
     var td=0;
-    expenseCats.forEach(function(cat){if(cat.id!=='economias')td+=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);});
+    expenseCats.forEach(function(cat){td+=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);});
     if(tr===0 && td===0 && rendaItems.length===0) {
         delete historico[key];
         return;
@@ -2213,7 +2208,7 @@ window._renderHistorico=function(){
         // Maior despesa (Gastos fixos)
         hExpCats.forEach(function(cat){
             var ct=(h.gastos&&h.gastos[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);
-            if(ct>mv && cat.id !== 'economias'){mv=ct;mc=cat.label;}
+            if(ct>mv){mv=ct;mc=cat.label;}
         });
         var comp=h.totalRenda>0?((h.totalDesp/h.totalRenda)*100).toFixed(1)+'%':'—';
         var fr=h.renda?h.renda.length:0;
@@ -2239,17 +2234,10 @@ window._renderHistorico=function(){
         // Gastos (Lista Simples)
         var gHtml='';
         hExpCats.forEach(function(cat){
-            if(cat.id==='economias')return;
             var rows=(h.gastos&&h.gastos[cat.id]||[]).filter(function(r){return r.val>0;});
             if(!rows.length)return;
             gHtml+='<div class="hist-section-title">'+window.escapeHTML(cat.label)+'</div>';
             rows.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.label)+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-neg val-sensitive">−'+window.formatBRL(r.val)+'</span></div>';});
-        });
-        var ecoR=(h.gastos&&h.gastos['economias']||[]).filter(function(r){return r.val>0;});
-        if(ecoR.length){
-            gHtml+='<div class="hist-section-title">Economias</div>';
-            ecoR.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.label)+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="val-sensitive" style="color:var(--accent);font-weight:500;font-size:0.82rem">'+window.formatBRL(r.val)+'</span></div>';});
-        }
         var card=document.createElement('div');card.className='historico-card';
         card.innerHTML=`
           <div class="historico-mes-header" onclick="toggleHistMes('${key}',this)">
@@ -2858,7 +2846,9 @@ async function loadData(){
         historico=data.historico||{};
         gastosRemovidos=data.gastosRemovidos||[];
         if(data.incomeCats && data.incomeCats.length) incomeCats=data.incomeCats;
-        if(data.expenseCats && data.expenseCats.length) expenseCats=data.expenseCats;
+        if(data.expenseCats && data.expenseCats.length) {
+            expenseCats=data.expenseCats.map(c => c.id === 'economias' ? { id: 'investimentos', label: 'Investimentos' } : c);
+        }
         
         if(data.privacyMode === true) {
             document.body.classList.add('privacy-active');
@@ -3048,7 +3038,6 @@ function updateSummaryStats(renda, gastos) {
     var maiorCat = '—';
     var maiorVal = 0;
     expenseCats.forEach(function(cat){
-        if(cat.id === 'economias') return;
         var totalCat = (gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);
         if(totalCat > maiorVal) { maiorVal = totalCat; maiorCat = cat.label; }
     });
