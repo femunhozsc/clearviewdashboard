@@ -157,7 +157,21 @@ body::-webkit-scrollbar { display: none; } /* Chrome, Safari e Opera */
     transition: 0.2s;
 }
 .privacy-toggle:active { color: var(--text-main); }
-body.privacy-active .val-sensitive { filter: blur(4px); user-select:none; transition: filter 0.3s ease; }
+body.privacy-active .val-sensitive,
+body.privacy-active .box-input,
+body.privacy-active .money-input,
+body.privacy-active .renda-total-val,
+body.privacy-active .saldo-val,
+body.privacy-active #displayTotal,
+body.privacy-active #valInvest,
+body.privacy-active #gastosTotalDisplay,
+body.privacy-active #rendaTotal { 
+    filter: blur(14px) grayscale(1) !important; 
+    opacity: 0.12 !important; 
+    user-select: none !important; 
+    pointer-events: none !important; 
+    transition: filter 0.3s ease, opacity 0.3s ease; 
+}
 body.privacy-active .val-sensitive * { filter: none; }
 
 /* SIDENAV */

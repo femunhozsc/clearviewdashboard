@@ -235,13 +235,20 @@
         <div class="navbar-right">
             <span id="sync-icon" class="sync-icon"></span>
             <button class="privacy-toggle" onclick="togglePrivacyMode()" id="privacyBtn"><i class="fa-regular fa-eye"></i></button>
+            <button class="notif-toggle" onclick="openNotifModal()" id="notifBtn" style="position:relative;background:none;border:none;color:var(--text-sec);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px">
+                <i class="fa-regular fa-bell"></i>
+                <span id="notifBadge" class="notif-badge" style="display:none;position:absolute;top:2px;right:4px;width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent)"></span>
+            </button>
             <button class="hamburger" onclick="openNav()">&#9776;</button>
         </div>
     </nav>
 
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <div class="menu-title">Atendimento</div>
+        <div class="menu-title">Área Restrita</div>
+        <a href="javascript:void(0)" onclick="openConsultantPassModal()" style="color:var(--accent);font-weight:600;"><i class="fa-solid fa-user-tie"></i> Painel Consultor</a>
+        
+        <div class="menu-title" style="margin-top:16px">Atendimento</div>
         <a href="https://wa.me/44991293357" target="_blank">WhatsApp</a>
         <a href="/cdn-cgi/l/email-protection#52313d3c2633263d12313e373320243b37253133223b26333e7c313d3f7c3020">E-mail</a>
         <a href="javascript:void(0)" onclick="logoutApp()" style="color:var(--danger)">Sair da Conta</a>
@@ -537,6 +544,56 @@
                 </div>
             </div>
         </div>
+
+        <!-- TAB: CONSULTOR -->
+        <div id="tab-consultor" class="tab-content">
+            <div class="calc-fullscreen-header" style="margin-bottom:16px">
+                <button class="calc-back-btn" onclick="resetToHome()">&#8592; Voltar ao Dashboard</button>
+            </div>
+
+            <div class="card" style="border:1px solid rgba(255,204,0,0.3);background:linear-gradient(145deg, rgba(20,20,20,0.9), rgba(10,10,10,0.95))">
+                <div class="card-title" style="color:var(--accent);display:flex;align-items:center;gap:8px">
+                    <i class="fa-solid fa-user-tie"></i> Painel do Consultor
+                </div>
+
+                <!-- Resumo das finanças do usuário -->
+                <div style="font-size:0.75rem;color:var(--text-sec);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Resumo das Finanças do Usuário</div>
+                <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+                    <div class="stat-box"><span class="stat-lbl">Faturamento Mês</span><span class="stat-val val-sensitive" style="color:var(--accent)" id="consultantSumRenda">R$ 0,00</span></div>
+                    <div class="stat-box"><span class="stat-lbl">Gastos Mês</span><span class="stat-val val-sensitive" style="color:var(--danger)" id="consultantSumGastos">R$ 0,00</span></div>
+                    <div class="stat-box"><span class="stat-lbl">Sobra de Caixa</span><span class="stat-val val-sensitive" style="color:var(--success)" id="consultantSumSobra">R$ 0,00</span></div>
+                    <div class="stat-box"><span class="stat-lbl">Patrimônio em Ativos</span><span class="stat-val val-sensitive" style="color:#fff" id="consultantSumAtivos">R$ 0,00</span></div>
+                </div>
+
+                <!-- Definição de Metas -->
+                <div style="font-size:0.75rem;color:var(--text-sec);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;border-top:1px solid var(--card-border);padding-top:16px">Definição de Metas do Consultor</div>
+                
+                <div class="input-group" style="margin-bottom:12px">
+                    <span class="input-label">Meta de Renda Mensal</span>
+                    <input type="tel" class="money-input" id="cGoalIncome" placeholder="R$ 0,00" oninput="maskInput(this)" style="font-size:0.95rem">
+                </div>
+
+                <div style="font-size:0.7rem;color:var(--accent);margin-top:14px;margin-bottom:8px;font-weight:600">Metas de Patrimônio / Ativos (R$)</div>
+                <div id="consultantAssetGoalsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+
+                <div style="font-size:0.7rem;color:var(--accent);margin-top:14px;margin-bottom:8px;font-weight:600">Metas de Gastos por Categoria (% da Renda)</div>
+                <div id="consultantCategoryPercGoalsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+
+                <button class="btn-confirm-add" onclick="saveConsultantGoals()" style="margin-bottom:24px"><i class="fa-solid fa-floppy-disk" style="margin-right:6px"></i> Salvar Metas do Consultor</button>
+
+                <!-- Enviar Notificação -->
+                <div style="font-size:0.75rem;color:var(--text-sec);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;border-top:1px solid var(--card-border);padding-top:16px">Enviar Notificação ao Usuário</div>
+                <div class="auth-field" style="margin-bottom:10px">
+                    <label class="auth-field-label">Título da Notificação</label>
+                    <input type="text" id="notifTitleInput" class="modal-input-desc" placeholder="Ex: Ajuste na reserva de emergência" style="margin:0">
+                </div>
+                <div class="auth-field" style="margin-bottom:14px">
+                    <label class="auth-field-label">Conteúdo / Mensagem</label>
+                    <textarea id="notifBodyInput" class="modal-input-desc" style="height:80px;resize:none;margin:0;font-family:inherit" placeholder="Escreva a mensagem para o usuário..."></textarea>
+                </div>
+                <button class="btn-auth-v2 btn-auth-gold" onclick="sendConsultantNotification()" style="margin:0;width:100%"><i class="fa-paper-plane fa-solid" style="margin-right:6px"></i> Enviar Notificação</button>
+            </div>
+        </div>
     </div><!-- /content -->
 
     <footer>
@@ -753,6 +810,35 @@
         <div class="termos-footer">
             <button class="btn-auth-v2 btn-auth-gold" onclick="closeTermos()" style="margin:0;max-width:280px">Entendi e Aceito</button>
         </div>
+    </div>
+</div>
+
+<!-- MODAL SENHA CONSULTOR -->
+<div id="consultantPassModal" class="modal-overlay" onclick="if(event.target===this)closeConsultantPassModal()">
+    <div class="modal-content" style="max-width:340px;text-align:center">
+        <div class="modal-title" style="justify-content:center"><i class="fa-solid fa-user-tie" style="color:var(--accent);margin-right:8px"></i> Painel do Consultor</div>
+        <p style="font-size:0.8rem;color:var(--text-sec);margin-bottom:16px">Digite a PIN de acesso de 6 dígitos:</p>
+        <input type="password" id="consultantPinInput" maxlength="6" class="modal-input-lg" style="letter-spacing:8px;text-align:center;font-size:1.5rem" placeholder="••••••" onkeydown="if(event.key==='Enter')verifyConsultantPass()">
+        <button class="btn-confirm-add" onclick="verifyConsultantPass()" style="margin-top:12px">Entrar</button>
+        <button class="btn-close-modal" onclick="closeConsultantPassModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL NOTIFICAÇÕES -->
+<div id="notifModal" class="modal-overlay" onclick="if(event.target===this)closeNotifModal()">
+    <div class="modal-content" style="max-width:420px;max-height:85vh;display:flex;flex-direction:column">
+        <div class="modal-title"><i class="fa-regular fa-bell" style="color:var(--accent);margin-right:8px"></i> Notificações</div>
+        <div id="notifListContainer" style="overflow-y:auto;max-height:50vh;margin-bottom:16px;padding-right:4px"></div>
+        <button class="btn-close-modal" onclick="closeNotifModal()">Fechar</button>
+    </div>
+</div>
+
+<!-- MODAL META DA CATEGORIA -->
+<div id="metaCategoryModal" class="modal-overlay" onclick="if(event.target===this)closeMetaCategoryModal()">
+    <div class="modal-content" style="max-width:380px">
+        <div class="modal-title" id="metaCatModalTitle"><i class="fa-solid fa-bullseye" style="color:var(--accent);margin-right:8px"></i> Meta da Categoria</div>
+        <div id="metaCatModalBody" style="margin-bottom:16px"></div>
+        <button class="btn-close-modal" onclick="closeMetaCategoryModal()">Fechar</button>
     </div>
 </div>
 
@@ -1273,6 +1359,346 @@ const DEFAULT_ASSET_CATEGORIES = [
     {id:'outros_ativos',name:'Outros',            color:'#7a5c1e'}
 ];
 
+let consultantGoals = { monthlyIncome: 0, assetGoals: {}, categoryPercents: {} };
+let notifications = [];
+let lastWeeklyNotifDate = null;
+
+/* CONSULTANT & NOTIFICATIONS LOGIC */
+window.openConsultantPassModal = function() {
+    var m = document.getElementById('consultantPassModal');
+    if(!m) return;
+    var inp = document.getElementById('consultantPinInput');
+    if(inp) inp.value = '';
+    m.style.display = 'flex';
+    window.setModalState(true);
+    setTimeout(function(){ if(inp) inp.focus(); }, 120);
+};
+
+window.closeConsultantPassModal = function() {
+    var m = document.getElementById('consultantPassModal');
+    if(m) m.style.display = 'none';
+    window.setModalState(false);
+};
+
+window.verifyConsultantPass = function() {
+    var pin = (document.getElementById('consultantPinInput').value || '').trim();
+    if(pin === '102366') {
+        window.closeConsultantPassModal();
+        window.openConsultantPanel();
+    } else {
+        alert('Senha incorreta! Digite a senha válida fornecida.');
+    }
+};
+
+window.openConsultantPanel = function() {
+    var mk = monthKey();
+    var curData = historico[mk] || {};
+    var rList = curData.rendaItems || [];
+    var totalRenda = rList.reduce((s, r) => s + (r.val || 0), 0);
+    
+    var gData = curData.gastosData || {};
+    var totalGastos = 0;
+    Object.keys(gData).forEach(k => {
+        (gData[k] || []).forEach(r => { totalGastos += (r.val || 0); });
+    });
+    var sobra = totalRenda - totalGastos;
+    var totalAtivos = (assetsData.categories || []).reduce((s, cat) => {
+        return s + (cat.entries || []).reduce((es, e) => es + (e.val || 0), 0);
+    }, 0);
+
+    var elR = document.getElementById('consultantSumRenda');
+    var elG = document.getElementById('consultantSumGastos');
+    var elS = document.getElementById('consultantSumSobra');
+    var elA = document.getElementById('consultantSumAtivos');
+    if(elR) elR.textContent = window.formatBRL(totalRenda);
+    if(elG) elG.textContent = window.formatBRL(totalGastos);
+    if(elS) elS.textContent = window.formatBRL(sobra);
+    if(elA) elA.textContent = window.formatBRL(totalAtivos);
+
+    window.fillInput('cGoalIncome', consultantGoals.monthlyIncome || 0);
+
+    var assetGoalsContainer = document.getElementById('consultantAssetGoalsList');
+    if(assetGoalsContainer) {
+        assetGoalsContainer.innerHTML = '';
+        var cats = (assetsData.categories && assetsData.categories.length) ? assetsData.categories : DEFAULT_ASSET_CATEGORIES;
+        cats.forEach(c => {
+            var val = (consultantGoals.assetGoals && consultantGoals.assetGoals[c.id]) || 0;
+            var row = document.createElement('div');
+            row.className = 'input-group';
+            row.style.marginBottom = '0';
+            row.style.border = '1px solid var(--card-border)';
+            row.innerHTML = `<span class="input-label" style="font-size:0.8rem;color:#fff">${window.escapeHTML(c.name)}</span>
+            <input type="tel" class="money-input c-asset-goal-input" data-cat-id="${c.id}" placeholder="R$ 0,00" oninput="maskInput(this)" style="font-size:0.9rem">`;
+            assetGoalsContainer.appendChild(row);
+            if(val > 0) window.fillInput(row.querySelector('input').id || '', val);
+            var inpEl = row.querySelector('input');
+            if(inpEl && val > 0) { inpEl.value = window.formatBRL(val); }
+        });
+    }
+
+    var catPercGoalsContainer = document.getElementById('consultantCategoryPercGoalsList');
+    if(catPercGoalsContainer) {
+        catPercGoalsContainer.innerHTML = '';
+        var expCats = (expenseCats && expenseCats.length) ? expenseCats : CATEGORIAS.map((n, i) => ({ id: CAT_KEYS[i], label: n }));
+        expCats.forEach(c => {
+            var percVal = (consultantGoals.categoryPercents && consultantGoals.categoryPercents[c.id]) !== undefined ? consultantGoals.categoryPercents[c.id] : '';
+            var row = document.createElement('div');
+            row.className = 'input-group';
+            row.style.marginBottom = '0';
+            row.style.border = '1px solid var(--card-border)';
+            row.innerHTML = `<span class="input-label" style="font-size:0.8rem;color:#fff">${window.escapeHTML(c.label)}</span>
+            <div style="display:flex;align-items:center;gap:4px">
+                <input type="number" step="0.1" min="0" max="100" class="c-cat-perc-input" data-cat-id="${c.id}" placeholder="Ex: 30" style="background:none;border:none;color:var(--accent);font-weight:600;font-size:0.9rem;text-align:right;width:70px" value="${percVal}">
+                <span style="color:var(--accent);font-weight:600">%</span>
+            </div>`;
+            catPercGoalsContainer.appendChild(row);
+        });
+    }
+
+    window.switchTab('consultor');
+    window.closeNav();
+    window.scrollTo({top:0, behavior:'smooth'});
+};
+
+window.saveConsultantGoals = function() {
+    var incVal = window.parseMoney(document.getElementById('cGoalIncome').value);
+    
+    var assetGoals = {};
+    document.querySelectorAll('.c-asset-goal-input').forEach(inp => {
+        var catId = inp.dataset.catId;
+        var val = window.parseMoney(inp.value);
+        if(catId) assetGoals[catId] = val;
+    });
+
+    var categoryPercents = {};
+    document.querySelectorAll('.c-cat-perc-input').forEach(inp => {
+        var catId = inp.dataset.catId;
+        var val = parseFloat(inp.value);
+        if(catId && !isNaN(val)) categoryPercents[catId] = val;
+    });
+
+    consultantGoals = {
+        monthlyIncome: incVal,
+        assetGoals: assetGoals,
+        categoryPercents: categoryPercents
+    };
+
+    window.triggerSave();
+    alert('Metas do consultor salvas com sucesso!');
+};
+
+window.sendConsultantNotification = function() {
+    var titleEl = document.getElementById('notifTitleInput');
+    var bodyEl = document.getElementById('notifBodyInput');
+    var title = (titleEl ? titleEl.value : '').trim();
+    var body = (bodyEl ? bodyEl.value : '').trim();
+
+    if(!title || !body) {
+        alert('Por favor, preencha o título e a mensagem da notificação.');
+        return;
+    }
+
+    var notif = {
+        id: Date.now(),
+        title: title,
+        body: body,
+        date: new Date().toISOString(),
+        read: false
+    };
+
+    notifications.unshift(notif);
+    if(titleEl) titleEl.value = '';
+    if(bodyEl) bodyEl.value = '';
+
+    window.updateNotifBadge();
+    window.triggerSave();
+    alert('Notificação enviada com sucesso para o usuário!');
+};
+
+window.openNotifModal = function() {
+    var modal = document.getElementById('notifModal');
+    if(!modal) return;
+    
+    notifications.forEach(n => n.read = true);
+    window.updateNotifBadge();
+    window.triggerSave();
+
+    var container = document.getElementById('notifListContainer');
+    if(container) {
+        if(notifications.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:24px 0">Nenhuma notificação no momento.</div>';
+        } else {
+            container.innerHTML = '';
+            notifications.forEach(n => {
+                var d = new Date(n.date);
+                var dateStr = d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+                var card = document.createElement('div');
+                card.style.background = 'rgba(255,255,255,0.03)';
+                card.style.border = '1px solid var(--card-border)';
+                card.style.borderRadius = '12px';
+                card.style.padding = '12px 14px';
+                card.style.marginBottom = '10px';
+                card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <span style="font-weight:600;color:var(--accent);font-size:0.88rem">${window.escapeHTML(n.title)}</span>
+                    <span style="font-size:0.68rem;color:var(--text-muted)">${dateStr}</span>
+                </div>
+                <div style="font-size:0.82rem;color:var(--text-sec);line-height:1.4;white-space:pre-wrap">${window.escapeHTML(n.body)}</div>`;
+                container.appendChild(card);
+            });
+        }
+    }
+
+    modal.style.display = 'flex';
+    window.setModalState(true);
+};
+
+window.closeNotifModal = function() {
+    var modal = document.getElementById('notifModal');
+    if(modal) modal.style.display = 'none';
+    window.setModalState(false);
+};
+
+window.updateNotifBadge = function() {
+    var hasUnread = notifications.some(n => !n.read);
+    var badge = document.getElementById('notifBadge');
+    if(badge) badge.style.display = hasUnread ? 'block' : 'none';
+};
+
+window.showCategoryMetaModal = function(key) {
+    var modal = document.getElementById('metaCategoryModal');
+    if(!modal) return;
+
+    var catObj = (expenseCats || []).find(c => c.id === key);
+    var catName = catObj ? catObj.label : (CATEGORIAS[CAT_KEYS.indexOf(key)] || key);
+
+    var titleEl = document.getElementById('metaCatModalTitle');
+    if(titleEl) titleEl.innerHTML = `<i class="fa-solid fa-bullseye" style="color:var(--accent);margin-right:8px"></i> Meta: ${window.escapeHTML(catName)}`;
+
+    var mk = monthKey();
+    var curData = historico[mk] || {};
+    var rList = curData.rendaItems || [];
+    var totalRenda = rList.reduce((s, r) => s + (r.val || 0), 0);
+
+    var rows = (curData.gastosData || {})[key] || [];
+    var currentGasto = rows.reduce((s, r) => s + (r.val || 0), 0);
+
+    var targetPerc = (consultantGoals.categoryPercents && consultantGoals.categoryPercents[key] !== undefined) ? consultantGoals.categoryPercents[key] : null;
+
+    var bodyEl = document.getElementById('metaCatModalBody');
+    if(bodyEl) {
+        if(targetPerc === null || targetPerc === '' || isNaN(parseFloat(targetPerc))) {
+            bodyEl.innerHTML = `<div style="text-align:center;padding:16px 0;color:var(--text-sec);font-size:0.85rem">
+                O seu consultor ainda não definiu uma meta percentual para a categoria <strong>${window.escapeHTML(catName)}</strong>.
+            </div>`;
+        } else {
+            var numericPerc = parseFloat(targetPerc);
+            var targetVal = (numericPerc / 100) * totalRenda;
+            var currentPerc = totalRenda > 0 ? (currentGasto / totalRenda) * 100 : 0;
+            var isWithin = currentGasto <= targetVal;
+            var diff = Math.abs(currentGasto - targetVal);
+
+            var statusColor = isWithin ? 'var(--success)' : 'var(--danger)';
+            var statusText = isWithin ? 'Dentro da Meta' : 'Acima da Meta';
+            var statusSub = isWithin 
+                ? `Você está ${window.formatBRL(diff)} abaixo do limite definido.` 
+                : `Você ultrapassou a meta em ${window.formatBRL(diff)}.`;
+
+            bodyEl.innerHTML = `
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--card-border);border-radius:12px;padding:14px;margin-bottom:12px">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Meta do Consultor</span>
+                        <span style="font-size:0.85rem;font-weight:600;color:var(--accent)">${numericPerc}% da renda (${window.formatBRL(targetVal)})</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Gasto Atual</span>
+                        <span style="font-size:0.85rem;font-weight:600;color:${statusColor}">${currentPerc.toFixed(1)}% da renda (${window.formatBRL(currentGasto)})</span>
+                    </div>
+                    <div class="progress-track" style="margin-top:10px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden">
+                        <div style="height:100%;width:${Math.min(100, currentPerc)}%;background:${statusColor};transition:width 0.3s ease"></div>
+                    </div>
+                </div>
+                <div style="text-align:center;padding:10px;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid ${statusColor}">
+                    <div style="font-size:0.85rem;font-weight:700;color:${statusColor};margin-bottom:4px">${statusText}</div>
+                    <div style="font-size:0.78rem;color:var(--text-sec)">${statusSub}</div>
+                </div>
+            `;
+        }
+    }
+
+    modal.style.display = 'flex';
+    window.setModalState(true);
+};
+
+window.closeMetaCategoryModal = function() {
+    var modal = document.getElementById('metaCategoryModal');
+    if(modal) modal.style.display = 'none';
+    window.setModalState(false);
+};
+
+window.checkWeeklyNotification = function() {
+    var nowMs = Date.now();
+    var SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    
+    if(lastWeeklyNotifDate) {
+        var lastMs = new Date(lastWeeklyNotifDate).getTime();
+        if(!isNaN(lastMs) && (nowMs - lastMs) < SEVEN_DAYS_MS) {
+            return;
+        }
+    }
+
+    var mk = monthKey();
+    var curData = historico[mk] || {};
+    var rList = curData.rendaItems || [];
+    var totalRenda = rList.reduce((s, r) => s + (r.val || 0), 0);
+    var gData = curData.gastosData || {};
+    var catPercs = consultantGoals.categoryPercents || {};
+
+    var offMetaCategories = [];
+
+    var expCats = (expenseCats && expenseCats.length) ? expenseCats : CATEGORIAS.map((n, i) => ({ id: CAT_KEYS[i], label: n }));
+    
+    expCats.forEach(cat => {
+        var targetPerc = catPercs[cat.id];
+        if(targetPerc !== undefined && targetPerc !== null && targetPerc !== '') {
+            var rows = gData[cat.id] || [];
+            var spent = rows.reduce((s, r) => s + (r.val || 0), 0);
+            var currentPerc = totalRenda > 0 ? (spent / totalRenda) * 100 : 0;
+            if(currentPerc > parseFloat(targetPerc)) {
+                offMetaCategories.push({
+                    label: cat.label,
+                    targetPerc: targetPerc,
+                    currentPerc: currentPerc,
+                    spent: spent
+                });
+            }
+        }
+    });
+
+    if(offMetaCategories.length > 0) {
+        var msgText = "Atenção: Existem categorias de gastos acima das metas estipuladas pelo seu consultor:\n\n";
+        offMetaCategories.forEach(item => {
+            msgText += `• ${item.label}: Meta de ${item.targetPerc}%, atualmente em ${item.currentPerc.toFixed(1)}% (${window.formatBRL(item.spent)})\n`;
+        });
+        msgText += "\nEssas metas são definidas pelo seu consultor. Se tiver alguma dúvida, entre em contato com ele.";
+
+        var autoNotif = {
+            id: nowMs,
+            title: "Relatório Semanal de Metas de Gastos",
+            body: msgText,
+            date: new Date().toISOString(),
+            read: false
+        };
+
+        notifications.unshift(autoNotif);
+        lastWeeklyNotifDate = new Date().toISOString();
+        window.updateNotifBadge();
+        window.triggerSave();
+    } else if(Object.keys(catPercs).length > 0) {
+        lastWeeklyNotifDate = new Date().toISOString();
+        window.triggerSave();
+    }
+};
+
 function monthKey(){return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;}
 function getViewDateISO() {
     var y = String(currentYear).padStart(4, '0');
@@ -1349,7 +1775,7 @@ function renderGastos(){
         hdr.className='cat-header';hdr.id='cat-hdr-'+key;
         hdr.style.setProperty('--i', index);
         hdr.dataset.catKey = key; // Para drag
-        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}">${window.escapeHTML(label)}</span></span><span class="cat-total" id="tot-'+key+'" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
+        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button><button class="btn-cat-action btn-meta-cat" onclick="event.stopPropagation();window.showCategoryMetaModal('${key}')" title="Meta do Consultor"><i class="fa-solid fa-bullseye" style="font-size:0.75rem;color:var(--accent)"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}" onclick="event.stopPropagation();window.showCategoryMetaModal('${key}')" style="cursor:pointer" title="Clique para ver a meta do consultor">${window.escapeHTML(label)}</span></span><span class="cat-total" id="tot-${key}" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         hdr.onclick=function(){window.toggleCatEl(key);};
         
         var cont=document.createElement('div');
@@ -3015,6 +3441,9 @@ window._saveAllData=function(){
         calc:cv,
         currentYear:currentYear,
         currentMonth:currentMonth,
+        consultantGoals:consultantGoals,
+        notifications:notifications,
+        lastWeeklyNotifDate:lastWeeklyNotifDate,
         updatedAt:new Date().toISOString()
     };
     clearTimeout(saveTimer);
@@ -3038,6 +3467,9 @@ async function loadData(){
     if(data){
         historico=data.historico||{};
         gastosRemovidos=data.gastosRemovidos||[];
+        consultantGoals=data.consultantGoals||{ monthlyIncome: 0, assetGoals: {}, categoryPercents: {} };
+        notifications=data.notifications||[];
+        lastWeeklyNotifDate=data.lastWeeklyNotifDate||null;
         if(data.incomeCats && data.incomeCats.length) incomeCats=data.incomeCats;
         if(data.expenseCats && data.expenseCats.length) {
             expenseCats = data.expenseCats.map(c => {
@@ -3081,6 +3513,9 @@ async function loadData(){
         // Novo usuário — inicializa categorias padrão
         assetsData = { categories: DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries:[]})), meta: 0 };
         gastosRemovidos = [];
+        consultantGoals = { monthlyIncome: 0, assetGoals: {}, categoryPercents: {} };
+        notifications = [];
+        lastWeeklyNotifDate = null;
     }
     initIncomeData();
     renderAssetList();
@@ -3093,6 +3528,8 @@ async function loadData(){
         if(cv.txInf){var e=document.getElementById('txInf');if(e)e.value=cv.txInf;}
         if(cv.tempo){var e=document.getElementById('tempo');if(e)e.value=cv.tempo;}
     }
+    window.updateNotifBadge();
+    window.checkWeeklyNotification();
     window.setStatus('');
 }
 
