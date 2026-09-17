@@ -633,6 +633,21 @@
     </div>
 </div>
 
+<!-- MODAL EDITAR RENDA -->
+<div id="editRendaModal" class="modal-overlay" onclick="if(event.target===this)closeEditRendaModal()">
+    <div class="modal-content">
+        <div class="modal-title"><i class="fa-solid fa-pen-to-square" style="color:var(--accent);margin-right:6px"></i> Editar Renda</div>
+        <input type="hidden" id="editRendaId">
+        <input type="tel" class="modal-input-lg" id="editRendaValor" placeholder="R$ 0,00" oninput="maskInput(this)">
+        <select id="editRendaCat" class="modal-select">
+            <option value="" disabled selected>Categoria</option>
+        </select>
+        <input type="text" class="modal-input-desc" id="editRendaDesc" placeholder="Descrição">
+        <button class="btn-confirm-add" onclick="saveEditRenda()">Salvar Alterações</button>
+        <button class="btn-close-modal" onclick="closeEditRendaModal()">Cancelar</button>
+    </div>
+</div>
+
 <!-- MODAL GASTO RAPIDO -->
 <div id="addModal" class="modal-overlay" onclick="if(event.target===this)closeAddModal()">
     <div class="modal-content">
@@ -894,7 +909,7 @@
                 Copie o prompt abaixo e envie para qualquer IA (ChatGPT, Claude, Gemini) junto com os seus <strong>extratos bancários em PDF/imagem/texto ou faturas de cartão</strong>.
             </p>
             <div style="position:relative">
-                <textarea id="aiPromptTextarea" readonly style="width:100%;height:220px;background:rgba(0,0,0,0.5);border:1px solid var(--card-border);border-radius:10px;color:var(--accent);padding:12px;font-family:monospace;font-size:0.75rem;line-height:1.4;resize:none">Você é um assistente especialista em organização financeira pessoal para o aplicativo Clearview Dashboard.
+                <textarea id="aiPromptTextarea" readonly style="width:100%;height:240px;background:rgba(0,0,0,0.5);border:1px solid var(--card-border);border-radius:10px;color:var(--accent);padding:12px;font-family:monospace;font-size:0.75rem;line-height:1.4;resize:none">Você é um assistente especialista em organização financeira pessoal para o aplicativo Clearview Dashboard.
 Sua tarefa é analisar os extratos bancários e/ou faturas de cartão de crédito fornecidos e gerar um arquivo no formato `.cview`.
 
 REGRAS DE FILTRAGEM E CATEGORIZAÇÃO:
@@ -902,7 +917,10 @@ REGRAS DE FILTRAGEM E CATEGORIZAÇÃO:
    - Desconsidere Pix recebidos e devolvidos em seguida para a mesma pessoa/mesmo valor.
    - Desconsidere transferências entre contas próprias do mesmo titular.
    - Desconsidere estornos e pagamentos de fatura de cartão de crédito (pois os lançamentos individuais da fatura serão contabilizados).
-2. CATEGORIZAÇÃO DE GASTOS:
+2. IDENTIFICAÇÃO E CATEGORIZAÇÃO DE RENDAS:
+   - Identifique a natureza dos depósitos/créditos recebidos (ex: "Salário", "Pensão", "Rendimentos", "Dividendos", "Vendas", "Freelance", "Benefício", "Pró-labore", "Outros").
+   - Defina obrigatoriamente a "categoria" da renda e uma "descricao" detalhada sobre sua origem (ex: "Salário Empresa X", "Pensão INSS", "Rendimento Nubank", "Pix Venda").
+3. CATEGORIZAÇÃO DE GASTOS:
    - Moradia: Aluguel, condomínio, luz, água, gás, internet, streaming, reformas, seguros residenciais.
    - Transporte: Combustível, Uber/99, parcela de veículo, seguro auto, estacionamento, transporte público.
    - Saúde: Farmácia, consultas, exames, seguro de vida, plano de saúde, dentista, veterinário/pet.
@@ -910,7 +928,7 @@ REGRAS DE FILTRAGEM E CATEGORIZAÇÃO:
    - Vida Diária: Supermercado, feira, roupas, restaurantes/comida fora, salão/barbearia, produtos pessoais.
    - Entretenimento: Cinema, shows, jogos, passeios, viagens, hobbies, academia, esportes.
    - Investimentos: Aplicações financeiras (CDB, Tesouro, Ações, FIIs, Cripto), projetos visando lucro, desenvolvimento.
-3. ITEM "Aplicações financeiras":
+4. ITEM "Aplicações financeiras":
    - Sempre que houver um aporte para investimentos ou reserva de emergência, coloque a categoria como "Investimentos" e o item exatamente como "Aplicações financeiras".
 
 FORMATO DA SAÍDA:
@@ -923,7 +941,8 @@ Retorne EXATAMENTE a estrutura JSON no seguinte formato (sem explicações ou te
       "ano": 2026,
       "mes": 3,
       "renda": [
-        { "categoria": "Salário", "descricao": "Empresa X", "valor": 5000.00, "data": "2026-03-05" }
+        { "categoria": "Salário", "descricao": "Empresa X", "valor": 5000.00, "data": "2026-03-05" },
+        { "categoria": "Pensão", "descricao": "Benefício INSS", "valor": 1200.00, "data": "2026-03-08" }
       ],
       "gastos": [
         { "categoria": "Moradia", "item": "Aluguel/Parcela", "valor": 1800.00, "metodo": "Débito em conta", "data": "2026-03-05" },
@@ -1185,6 +1204,16 @@ window.closeRendaModal = function(){
     window.setModalState(false);
 };
 window.addRenda = function(){if(window._addRenda)window._addRenda();};
+window.openEditRendaModal = function(id){if(window._openEditRendaModal)window._openEditRendaModal(id);};
+window.closeEditRendaModal = function(){
+    var m = document.getElementById('editRendaModal');
+    if(!m) return;
+    var mc = m.querySelector('.modal-content');
+    if(mc) mc.style.animation = 'slideDownModal 0.3s forwards';
+    setTimeout(function(){ m.style.display = 'none'; if(mc) mc.style.animation = ''; }, 300);
+    window.setModalState(false);
+};
+window.saveEditRenda = function(){if(window._saveEditRenda)window._saveEditRenda();};
 let currentCreditConfig = { mode: 'vista', installments: 1 };
 
 window.handlePaymentMethodChange = function(el) {
@@ -2039,9 +2068,18 @@ window.confirmCviewImport = function() {
         (m.renda || []).forEach(r => {
             var val = typeof r.valor === 'number' ? r.valor : window.parseMoney(r.valor);
             if(!val) return;
-            var cat = r.categoria || 'Outros';
+            var cat = (r.categoria || r.cat || 'Salário').trim();
             var desc = r.descricao || r.desc || '';
             var rDate = r.data ? new Date(r.data).toISOString() : new Date(year, month, 1, 12, 0, 0).toISOString();
+
+            // Normaliza ou cria a categoria em incomeCats se não existir
+            var existingCat = (incomeCats || []).find(c => c.label.trim().toLowerCase() === cat.toLowerCase());
+            if(existingCat) {
+                cat = existingCat.label;
+            } else if(cat) {
+                var newIncId = 'inc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+                incomeCats.push({ id: newIncId, label: cat });
+            }
 
             if(strategy === 'merge') {
                 var dup = (h.renda || []).find(item => item.cat === cat && item.val === val && item.desc === desc);
@@ -2529,6 +2567,19 @@ function initIncomeData() {
 function renderRenda() {
     var c = document.getElementById('renda-container'); c.innerHTML = '';
     
+    // Auto-cria categorias de renda se houver itens com categorias inéditas
+    (rendaItems || []).forEach(r => {
+        if(!r || !r.cat) return;
+        var rCatLabel = r.cat.trim();
+        var match = incomeCats.find(ic => ic.label.trim().toLowerCase() === rCatLabel.toLowerCase());
+        if(match) {
+            r.cat = match.label; // Normaliza para o rótulo oficial da categoria
+        } else {
+            var newIncId = 'inc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            incomeCats.push({ id: newIncId, label: rCatLabel });
+        }
+    });
+
     // Ordenar por valor (maior para menor)
     var sorted = incomeCats.map(function(cat){
         var items = rendaItems.filter(r => r.cat === cat.label);
@@ -2560,7 +2611,7 @@ function renderRenda() {
 
         hdr.innerHTML = `<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteRendaCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameRendaCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-rcat-${key}">${window.escapeHTML(label)}</span></span><span class="cat-total" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         
-        hdr.onclick = function(){ window.toggleCatEl('r-'+key); }; // Reusing toggleCatEl logic but with prefix
+        hdr.onclick = function(){ window.toggleCatEl('r-'+key); };
 
         var cont = document.createElement('div');
         cont.className = 'cat-content'; cont.id = 'cat-r-'+key;
@@ -2568,7 +2619,7 @@ function renderRenda() {
         items.forEach(function(item, rIdx){
             var d = document.createElement('div'); d.className = 'renda-item';
             d.style.setProperty('--i', rIdx);
-            d.innerHTML = '<div class="renda-item-left"><div class="renda-item-desc">'+window.escapeHTML(item.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted);margin-left:4px">'+window.formatDateShort(item.date)+'</span></div></div><span class="renda-item-val val-sensitive">+'+window.formatBRL(item.val)+'</span><button class="renda-item-del" onclick="removeRenda(\''+item.id+'\')">&times;</button>';
+            d.innerHTML = '<div class="renda-item-left"><div class="renda-item-desc">'+window.escapeHTML(item.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted);margin-left:4px">'+window.formatDateShort(item.date)+'</span></div></div><span class="renda-item-val val-sensitive">+'+window.formatBRL(item.val)+'</span><button class="renda-item-edit" onclick="event.stopPropagation();openEditRendaModal(\''+item.id+'\')" title="Editar Renda" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:2px 6px;margin-right:4px"><i class="fa-solid fa-pencil" style="font-size:0.65rem"></i></button><button class="renda-item-del" onclick="event.stopPropagation();removeRenda(\''+item.id+'\')">&times;</button>';
             cont.appendChild(d);
         });
         
@@ -2728,6 +2779,71 @@ window._removeRenda=function(id){
     }
 
     renderRenda();updateFlow();window._saveAllData();
+};
+
+window._openEditRendaModal = function(id) {
+    var item = rendaItems.find(r => r.id === id);
+    if(!item) return;
+    
+    document.getElementById('editRendaId').value = item.id;
+    document.getElementById('editRendaValor').value = window.formatBRL(item.val);
+    document.getElementById('editRendaDesc').value = item.desc || '';
+    
+    var s = document.getElementById('editRendaCat');
+    s.innerHTML = '<option value="" disabled>Categoria</option>';
+    (incomeCats || []).forEach(function(cat){
+        var o = document.createElement('option');
+        o.value = cat.label;
+        o.textContent = cat.label;
+        s.appendChild(o);
+    });
+    if(item.cat && !incomeCats.some(c => c.label === item.cat)) {
+        var o = document.createElement('option');
+        o.value = item.cat;
+        o.textContent = item.cat;
+        s.appendChild(o);
+    }
+    s.value = item.cat || (incomeCats[0] ? incomeCats[0].label : 'Salário');
+    
+    document.getElementById('editRendaModal').style.display = 'flex';
+    window.setModalState(true);
+};
+
+window._saveEditRenda = function() {
+    var id = document.getElementById('editRendaId').value;
+    var val = window.parseMoney(document.getElementById('editRendaValor').value);
+    var cat = document.getElementById('editRendaCat').value;
+    var desc = document.getElementById('editRendaDesc').value.trim();
+    
+    if(!val || !cat) {
+        alert('Preencha o valor e a categoria.');
+        return;
+    }
+    
+    var item = rendaItems.find(r => r.id === id);
+    if(!item) return;
+    
+    var oldCat = item.cat;
+    var oldDesc = item.desc;
+    var wasSalary = isSalaryCat(oldCat, oldDesc);
+    var isNowSalary = isSalaryCat(cat, desc);
+    
+    item.val = val;
+    item.cat = cat;
+    item.desc = desc;
+    
+    if(wasSalary || isNowSalary) {
+        var salItem = rendaItems.find(r => isSalaryCat(r.cat, r.desc));
+        var salVal = salItem ? salItem.val : 0;
+        var salCat = salItem ? salItem.cat : cat;
+        var salDesc = salItem ? salItem.desc : desc;
+        propagateSalaryToFutureMonths(salVal, salCat, salDesc);
+    }
+    
+    renderRenda();
+    updateFlow();
+    window._saveAllData();
+    window.closeEditRendaModal();
 };
 
 window._toggleRendaDetails = function() {
@@ -3270,9 +3386,15 @@ window._renderHistorico=function(){
         
         // Rendas (Accordion por Categoria)
         var rHtml='';
-        var hIncCats = h.incomeCatsSnapshot || incomeCats;
-        hIncCats.forEach(function(cat){
-            var rows = (h.renda||[]).filter(r => r.cat === cat.label);
+        var hIncCats = (h.incomeCatsSnapshot && h.incomeCatsSnapshot.length) ? h.incomeCatsSnapshot : incomeCats;
+        var processedRendaIds = new Set();
+        (hIncCats || []).forEach(function(cat){
+            var rows = (h.renda||[]).filter(r => {
+                if(!r) return false;
+                var match = r.cat && (r.cat === cat.label || r.cat.trim().toLowerCase() === cat.label.trim().toLowerCase());
+                if(match) processedRendaIds.add(r.id);
+                return match;
+            });
             if(!rows.length) return;
             var catTotal = rows.reduce((s,r)=>s+r.val,0);
             
@@ -3285,6 +3407,20 @@ window._renderHistorico=function(){
             rows.forEach(function(r){rHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-pos val-sensitive">+'+window.formatBRL(r.val)+'</span></div>';});
             rHtml += `</div></div>`;
         });
+
+        // Caso haja rendas com categoria diferente das do snapshot
+        var orphanRendas = (h.renda||[]).filter(r => r && (!r.id || !processedRendaIds.has(r.id)));
+        if(orphanRendas.length > 0) {
+            var catTotalOrphan = orphanRendas.reduce((s,r)=>s+r.val,0);
+            rHtml += `<div class="hist-cat-group">
+                <div class="hist-cat-header" onclick="toggleHistCat(this)">
+                    <span class="hist-item-cat" style="font-size:0.7rem">Outras Rendas</span>
+                    <div style="display:flex;align-items:center;gap:8px"><span class="val-sensitive" style="font-size:0.8rem;font-weight:500;color:var(--success)">+${window.formatBRL(catTotalOrphan)}</span><span class="arrow" style="font-size:0.5rem">&#9660;</span></div>
+                </div>
+                <div class="hist-cat-body">`;
+            orphanRendas.forEach(function(r){rHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc"><strong>['+window.escapeHTML(r.cat||'Renda')+']</strong> '+window.escapeHTML(r.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-pos val-sensitive">+'+window.formatBRL(r.val)+'</span></div>';});
+            rHtml += `</div></div>`;
+        }
 
         // Gastos (Lista Simples)
         var gHtml='';
