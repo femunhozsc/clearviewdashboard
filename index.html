@@ -3169,8 +3169,19 @@ function loadMonthData(){
     if(h) {
         rendaItems = h.renda ? JSON.parse(JSON.stringify(h.renda)) : [];
         gastosData = h.gastos ? JSON.parse(JSON.stringify(h.gastos)) : {};
-        if(h.incomeCatsSnapshot) incomeCats = JSON.parse(JSON.stringify(h.incomeCatsSnapshot));
-        if(h.expenseCatsSnapshot) expenseCats = JSON.parse(JSON.stringify(h.expenseCatsSnapshot));
+        if(h.incomeCatsSnapshot && h.incomeCatsSnapshot.length) incomeCats = JSON.parse(JSON.stringify(h.incomeCatsSnapshot));
+        if(h.expenseCatsSnapshot && h.expenseCatsSnapshot.length) expenseCats = JSON.parse(JSON.stringify(h.expenseCatsSnapshot));
+        
+        if(!expenseCats || !expenseCats.length) {
+            expenseCats = CAT_KEYS.map((k, i) => ({ id: k, label: CATEGORIAS[i] }));
+        }
+        if(!incomeCats || !incomeCats.length) {
+            incomeCats = INCOME_DEFAULTS.map((l, i) => ({ id: 'inc_'+i, label: l }));
+        }
+        expenseCats.forEach(function(cat){
+            if(!gastosData[cat.id]) gastosData[cat.id] = [];
+            rowCounters[cat.id] = gastosData[cat.id].length;
+        });
     } else {
         rendaItems = [];
         if(latestSalaryConfig && latestSalaryConfig.val > 0) {
@@ -3187,6 +3198,7 @@ function loadMonthData(){
             }
         }
         initGastosData();
+        initIncomeData();
     }
     renderRenda();
     renderGastos();
@@ -3629,34 +3641,7 @@ window._calcCompleta = function() {
     });
 };
 
-/* LOAD MONTH */
-function loadMonthData(){
-    gastosRemovidos=[];renderGastosHist();
-    var key=monthKey();
-    if(historico[key]){
-        var h=historico[key];
-        rendaItems=JSON.parse(JSON.stringify(h.renda||[]));
-        gastosData=JSON.parse(JSON.stringify(h.gastos||{}));
-        if(!expenseCats || !expenseCats.length) {
-            if(h.expenseCatsSnapshot && h.expenseCatsSnapshot.length) {
-                expenseCats = JSON.parse(JSON.stringify(h.expenseCatsSnapshot));
-            } else {
-                expenseCats = CAT_KEYS.map((k, i) => ({ id: k, label: CATEGORIAS[i] }));
-            }
-        }
-        
-        if(!incomeCats || !incomeCats.length) {
-            if(h.incomeCatsSnapshot && h.incomeCatsSnapshot.length) {
-                incomeCats = JSON.parse(JSON.stringify(h.incomeCatsSnapshot));
-            } else {
-                incomeCats = INCOME_DEFAULTS.map((l, i) => ({ id: 'inc_'+i, label: l }));
-            }
-        }
 
-        expenseCats.forEach(function(cat){if(!gastosData[cat.id])gastosData[cat.id]=[];rowCounters[cat.id]=gastosData[cat.id].length;});
-    }else{rendaItems=[];initGastosData();initIncomeData();}
-    renderGastos();renderRenda();updateFlow();
-}
 
 /* AUTHENTICATION LOGIC */
 function switchAuthPanel(panelId) {
@@ -4487,19 +4472,23 @@ async function runSplashSequence(skipIntro) {
     // Fase 4: Tagline aparece (um pouco depois do greeting)
     setTimeout(function(){ splash.classList.add('phase4'); }, phase2Delay + 400);
 
-    await Promise.all([minWait,loadP]);
-    
-    // CORREÇÃO: Inicia gráficos ANTES de carregar dados do mês
-    // Isso garante que o updateFlow() encontre o gráfico criado para atualizar
-    initCharts(); initIncomeData();
-    renderMonthLabel();loadMonthData();window._updateAssets();
-
-    window.scrollTo(0, 0);
-    document.getElementById('app').classList.add('visible');
-    splash.classList.add('exit');
-    setTimeout(function(){
-        splash.style.display='none';
-    },850);
+    try {
+        await Promise.all([minWait,loadP]);
+        initCharts(); 
+        initIncomeData();
+        renderMonthLabel();
+        loadMonthData();
+        if(typeof window._updateAssets === 'function') window._updateAssets();
+    } catch(e) {
+        console.error("Erro durante o carregamento inicial:", e);
+    } finally {
+        window.scrollTo(0, 0);
+        document.getElementById('app').classList.add('visible');
+        splash.classList.add('exit');
+        setTimeout(function(){
+            splash.style.display='none';
+        },850);
+    }
 }
 
 /* INIT */
