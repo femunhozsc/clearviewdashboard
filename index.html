@@ -1345,7 +1345,7 @@ const CAT_DEFAULTS={
     obrigacoes:['Dividas','Emprestimo Estudantil','Outros Emprestimos','Cartao de Credito','Taxas e Impostos','Investimento','Capital de Giro','Outros'],
     vida:      ['Supermercado','Suprimentos Pessoais','Roupas','Produtos de Limpeza','Jantar/Comer Fora','Salao/Barbearia','PetShop','Outros'],
     entret:    ['Filmes/Cinema','Musica','Games','Show','Livros','Hobbies','Esportes','Academia','Passeios','Ferias','Viagem','Teatro','Outros'],
-    investimentos: ['Projetos visando lucro','Desenvolvimento']
+    investimentos: ['Aplicações financeiras','Projetos visando lucro','Desenvolvimento']
 };
 const INCOME_DEFAULTS=['Salario','Serviço','Aluguel','Dividendos','Bonus','Venda'];
 
@@ -1362,6 +1362,75 @@ const DEFAULT_ASSET_CATEGORIES = [
 let consultantGoals = { monthlyIncome: 0, assetGoals: {}, categoryPercents: {} };
 let notifications = [];
 let lastWeeklyNotifDate = null;
+let latestSalaryConfig = null;
+
+function isAplicacoesFinanceiras(catKey, rowLabel) {
+    if (!rowLabel) return false;
+    var normLabel = rowLabel.trim().toLowerCase();
+    if (normLabel !== 'aplicações financeiras' && normLabel !== 'aplicacoes financeiras') return false;
+    var catObj = (expenseCats || []).find(c => c.id === catKey);
+    var catLabel = catObj ? catObj.label : catKey;
+    return (catKey === 'investimentos' || (catLabel && catLabel.toLowerCase().includes('investimento')));
+}
+
+function isSalaryCat(catLabel, descLabel) {
+    var c = (catLabel || '').trim().toLowerCase();
+    var d = (descLabel || '').trim().toLowerCase();
+    return c.startsWith('salár') || c.startsWith('salar') || d.startsWith('salár') || d.startsWith('salar');
+}
+
+function propagateSalaryToFutureMonths(salVal, salCat, salDesc) {
+    var curY = currentYear;
+    var curM = currentMonth;
+    latestSalaryConfig = { val: salVal, cat: salCat || 'Salário', desc: salDesc || '', setYear: curY, setMonth: curM };
+
+    Object.keys(historico).forEach(function(tKey) {
+        var h = historico[tKey];
+        if(!h) return;
+        var y = h.year !== undefined ? h.year : parseInt(tKey.split('-')[0], 10);
+        var m = h.month !== undefined ? h.month : parseInt(tKey.split('-')[1], 10) - 1;
+
+        if (y > curY || (y === curY && m > curM)) {
+            if(!h.renda) h.renda = [];
+            
+            var existingSal = h.renda.find(r => isSalaryCat(r.cat, r.desc));
+            if(existingSal) {
+                if(salVal > 0) {
+                    existingSal.val = salVal;
+                    if(salCat) existingSal.cat = salCat;
+                } else {
+                    h.renda = h.renda.filter(r => r !== existingSal);
+                }
+            } else if(salVal > 0) {
+                h.renda.push({
+                    id: 'sal_' + Date.now() + '_' + tKey,
+                    val: salVal,
+                    cat: salCat || 'Salário',
+                    desc: salDesc || '',
+                    date: new Date(y, m, Math.min(currentDay || 1, 28), 12, 0, 0).toISOString()
+                });
+            }
+
+            var tr = h.renda.reduce((s, r) => s + r.val, 0);
+            var td = 0;
+            var aplic = 0;
+            var hExpCats = h.expenseCatsSnapshot || expenseCats;
+            hExpCats.forEach(c => {
+                (h.gastos && h.gastos[c.id] || []).forEach(r => {
+                    if (isAplicacoesFinanceiras(c.id, r.label)) {
+                        aplic += r.val;
+                    } else {
+                        td += r.val;
+                    }
+                });
+            });
+            h.totalRenda = tr;
+            h.totalDesp = td;
+            h.aplicacoesTotal = aplic;
+            h.saldo = tr - td - aplic;
+        }
+    });
+}
 
 /* CONSULTANT & NOTIFICATIONS LOGIC */
 window.openConsultantPassModal = function() {
@@ -2272,7 +2341,14 @@ window._addRenda=function(){
     var cat=document.getElementById('rendaCat').value;
     var desc=document.getElementById('rendaDesc').value.trim();
     if(!val||!cat){alert('Preencha o valor e a categoria.');return;}
-    rendaItems.push({id:Date.now().toString(),val:val,cat:cat,desc:desc,date:getViewDateISO()});
+    
+    var newItem = {id:Date.now().toString(),val:val,cat:cat,desc:desc,date:getViewDateISO()};
+    rendaItems.push(newItem);
+
+    if (isSalaryCat(cat, desc)) {
+        propagateSalaryToFutureMonths(val, cat, desc);
+    }
+
     renderRenda();updateFlow();window._saveAllData();window.closeRendaModal();
 };
 window._removeRenda=function(id){
@@ -2280,7 +2356,15 @@ window._removeRenda=function(id){
     if(!item) return;
 
     if(!confirm('Excluir este registro de renda?')) return;
+    var wasSalary = isSalaryCat(item.cat, item.desc);
     rendaItems=rendaItems.filter(function(r){return r.id!==id;});
+
+    if (wasSalary) {
+        var remainingSal = rendaItems.find(r => isSalaryCat(r.cat, r.desc));
+        var newVal = remainingSal ? remainingSal.val : 0;
+        propagateSalaryToFutureMonths(newVal, item.cat, item.desc);
+    }
+
     renderRenda();updateFlow();window._saveAllData();
 };
 
@@ -2322,22 +2406,34 @@ function updateFlow(){
     }
 
     var td=0;
+    var aplicacoesTotal=0;
     var expenseDetails = []; // Para o novo gráfico de rosca
     expenseCats.forEach(function(cat){
-        var ct=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);
-        td+=ct;
-        if (ct > 0) {
-            expenseDetails.push({ label: cat.label, value: ct });
+        var rows = gastosData[cat.id] || [];
+        var catTotalExcludingAplicacoes = 0;
+        var catTotalAll = 0;
+        rows.forEach(function(r){
+            catTotalAll += r.val;
+            if (isAplicacoesFinanceiras(cat.id, r.label)) {
+                aplicacoesTotal += r.val;
+            } else {
+                catTotalExcludingAplicacoes += r.val;
+            }
+        });
+        td += catTotalExcludingAplicacoes;
+        if (catTotalExcludingAplicacoes > 0) {
+            expenseDetails.push({ label: cat.label, value: catTotalExcludingAplicacoes });
         }
         var el=document.getElementById('tot-'+cat.id);
-        if(el)el.textContent=window.formatBRL(ct);
+        if(el) el.textContent=window.formatBRL(catTotalAll);
     });
     
-    // Atualiza o novo box de Total Gasto
+    // Atualiza o novo box de Total Gasto (sem Aplicações financeiras)
     var elG=document.getElementById('gastosTotalDisplay');
     if(elG) elG.textContent = window.formatBRL(td);
 
-    var sob=tr-td;
+    // Sobra de caixa descontando Aplicações financeiras
+    var sob=tr - td - aplicacoesTotal;
     var sv=document.getElementById('valInvest');
     if(sv) {
         sv.textContent=window.formatBRL(sob);
@@ -2346,7 +2442,7 @@ function updateFlow(){
     var sobraIcon = document.getElementById('sobraCaixaIcon');
     if(sobraIcon) sobraIcon.style.color = sob < 0 ? 'var(--danger)' : 'var(--success)';
 
-    var poupancaPercent = (tr > 0) ? ((tr - td) / tr) * 100 : 0;
+    var poupancaPercent = (tr > 0) ? (sob / tr) * 100 : 0;
     var bar = document.getElementById('fluxoGastoBar');
     if(bar) bar.style.width = Math.max(0, Math.min(poupancaPercent, 100)) + '%';
 
@@ -2677,13 +2773,62 @@ function saveSnap(){
     var key=monthKey();
     var tr=rendaItems.reduce(function(s,r){return s+r.val;},0);
     var td=0;
-    expenseCats.forEach(function(cat){td+=(gastosData[cat.id]||[]).reduce(function(s,r){return s+r.val;},0);});
-    if(tr===0 && td===0 && rendaItems.length===0) {
+    var aplicacoesTotal=0;
+    expenseCats.forEach(function(cat){
+        (gastosData[cat.id]||[]).forEach(function(r){
+            if (isAplicacoesFinanceiras(cat.id, r.label)) {
+                aplicacoesTotal += r.val;
+            } else {
+                td += r.val;
+            }
+        });
+    });
+    if(tr===0 && td===0 && aplicacoesTotal===0 && rendaItems.length===0) {
         delete historico[key];
         return;
     }
-    // Salva também a configuração de categorias de RENDA e GASTOS no momento do snapshot
-    historico[key]={year:currentYear,month:currentMonth,renda:JSON.parse(JSON.stringify(rendaItems)),gastos:JSON.parse(JSON.stringify(gastosData)),incomeCatsSnapshot:JSON.parse(JSON.stringify(incomeCats)),expenseCatsSnapshot:JSON.parse(JSON.stringify(expenseCats)),totalRenda:tr,totalDesp:td,saldo:tr-td};
+    historico[key]={
+        year:currentYear,
+        month:currentMonth,
+        renda:JSON.parse(JSON.stringify(rendaItems)),
+        gastos:JSON.parse(JSON.stringify(gastosData)),
+        incomeCatsSnapshot:JSON.parse(JSON.stringify(incomeCats)),
+        expenseCatsSnapshot:JSON.parse(JSON.stringify(expenseCats)),
+        totalRenda:tr,
+        totalDesp:td,
+        aplicacoesTotal:aplicacoesTotal,
+        saldo:tr - td - aplicacoesTotal
+    };
+}
+
+function loadMonthData(){
+    var k = monthKey();
+    var h = historico[k];
+    if(h) {
+        rendaItems = h.renda ? JSON.parse(JSON.stringify(h.renda)) : [];
+        gastosData = h.gastos ? JSON.parse(JSON.stringify(h.gastos)) : {};
+        if(h.incomeCatsSnapshot) incomeCats = JSON.parse(JSON.stringify(h.incomeCatsSnapshot));
+        if(h.expenseCatsSnapshot) expenseCats = JSON.parse(JSON.stringify(h.expenseCatsSnapshot));
+    } else {
+        rendaItems = [];
+        if(latestSalaryConfig && latestSalaryConfig.val > 0) {
+            var setY = latestSalaryConfig.setYear;
+            var setM = latestSalaryConfig.setMonth;
+            if(currentYear > setY || (currentYear === setY && currentMonth >= setM)) {
+                rendaItems.push({
+                    id: 'sal_' + Date.now(),
+                    val: latestSalaryConfig.val,
+                    cat: latestSalaryConfig.cat || 'Salário',
+                    desc: latestSalaryConfig.desc || '',
+                    date: getViewDateISO()
+                });
+            }
+        }
+        initGastosData();
+    }
+    renderRenda();
+    renderGastos();
+    updateFlow();
 }
 
 /* HISTORICO NOVO (AGRUPADO POR ANO) */
@@ -3444,6 +3589,7 @@ window._saveAllData=function(){
         consultantGoals:consultantGoals,
         notifications:notifications,
         lastWeeklyNotifDate:lastWeeklyNotifDate,
+        latestSalaryConfig:latestSalaryConfig,
         updatedAt:new Date().toISOString()
     };
     clearTimeout(saveTimer);
@@ -3470,6 +3616,7 @@ async function loadData(){
         consultantGoals=data.consultantGoals||{ monthlyIncome: 0, assetGoals: {}, categoryPercents: {} };
         notifications=data.notifications||[];
         lastWeeklyNotifDate=data.lastWeeklyNotifDate||null;
+        latestSalaryConfig=data.latestSalaryConfig||null;
         if(data.incomeCats && data.incomeCats.length) incomeCats=data.incomeCats;
         if(data.expenseCats && data.expenseCats.length) {
             expenseCats = data.expenseCats.map(c => {
