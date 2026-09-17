@@ -421,6 +421,14 @@
 
         <!-- TAB: HISTORICO -->
         <div id="tab-historico" class="tab-content">
+            <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+                <button class="btn-auth-v2 btn-auth-gold" onclick="openImportCviewModal()" style="flex:1;min-width:180px;padding:12px;margin:0;font-size:0.82rem">
+                    <i class="fa-solid fa-file-import" style="margin-right:6px"></i> Importar Arquivo .cview
+                </button>
+                <button class="btn-auth-v2 btn-auth-outline" onclick="openAiPromptGuideModal()" style="flex:1;min-width:180px;padding:12px;margin:0;font-size:0.82rem">
+                    <i class="fa-solid fa-robot" style="margin-right:6px"></i> Gerar .cview com IA
+                </button>
+            </div>
             <div id="historico-container"></div>
         </div>
 
@@ -842,6 +850,95 @@
     </div>
 </div>
 
+<!-- MODAL IMPORTAR ARQUIVO .CVIEW -->
+<div id="importCviewModal" class="modal-overlay" onclick="if(event.target===this)closeImportCviewModal()">
+    <div class="modal-content" style="max-width:440px">
+        <div class="modal-title"><i class="fa-solid fa-file-import" style="color:var(--accent);margin-right:8px"></i> Importar Arquivo .cview</div>
+        <p style="font-size:0.8rem;color:var(--text-sec);margin-bottom:14px">Selecione o arquivo <code>.cview</code> gerado pela IA para importar o fluxo dos meses automaticamente:</p>
+
+        <!-- Dropzone / Picker -->
+        <div onclick="document.getElementById('cviewFileInput').click()" style="border:2px dashed var(--accent-border);background:rgba(255,204,0,0.03);border-radius:12px;padding:24px;text-align:center;cursor:pointer;margin-bottom:14px;transition:all 0.2s">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem;color:var(--accent);margin-bottom:8px;display:block"></i>
+            <span style="font-size:0.85rem;color:#fff;font-weight:500;display:block">Clique para selecionar ou arraste o arquivo .cview</span>
+            <span style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;display:block">Formatos suportados: .cview, .json</span>
+            <input type="file" id="cviewFileInput" accept=".cview,.json,application/json" style="display:none" onchange="handleCviewFileSelect(event)">
+        </div>
+
+        <!-- Strategy selector -->
+        <div style="margin-bottom:14px">
+            <label style="font-size:0.75rem;color:var(--text-sec);display:block;margin-bottom:6px">Se um mês já existir no aplicativo:</label>
+            <select id="cviewStrategySelect" class="modal-select" style="margin:0">
+                <option value="merge" selected>Mesclar (Adicionar novos lançamentos sem apagar nada)</option>
+                <option value="skip">Pular (Manter os meses do app e ignorar do arquivo)</option>
+                <option value="overwrite">Substituir (Sobrescrever totalmente o mês do app)</option>
+            </select>
+        </div>
+
+        <!-- Preview Box -->
+        <div id="cviewPreviewBox" style="display:none;background:rgba(255,255,255,0.04);border:1px solid var(--card-border);border-radius:10px;padding:12px;margin-bottom:14px;font-size:0.8rem">
+            <div style="font-weight:600;color:var(--accent);margin-bottom:4px" id="cviewPreviewTitle">Arquivo Carregado</div>
+            <div id="cviewPreviewBody" style="color:var(--text-sec);line-height:1.4"></div>
+        </div>
+
+        <button class="btn-confirm-add" id="btnConfirmCviewImport" onclick="confirmCviewImport()" disabled style="opacity:0.5"><i class="fa-solid fa-check" style="margin-right:6px"></i> Confirmar Importação</button>
+        <button class="btn-close-modal" onclick="closeImportCviewModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL GUIA DE PROMPT PARA IA -->
+<div id="aiPromptGuideModal" class="modal-overlay" onclick="if(event.target===this)closeAiPromptGuideModal()">
+    <div class="modal-content" style="max-width:520px;max-height:85vh;display:flex;flex-direction:column">
+        <div class="modal-title"><i class="fa-solid fa-robot" style="color:var(--accent);margin-right:8px"></i> Gerar .cview com IA</div>
+        <div style="overflow-y:auto;padding-right:4px;margin-bottom:14px">
+            <p style="font-size:0.82rem;color:var(--text-sec);line-height:1.4;margin-bottom:10px">
+                Copie o prompt abaixo e envie para qualquer IA (ChatGPT, Claude, Gemini) junto com os seus <strong>extratos bancários em PDF/imagem/texto ou faturas de cartão</strong>.
+            </p>
+            <div style="position:relative">
+                <textarea id="aiPromptTextarea" readonly style="width:100%;height:220px;background:rgba(0,0,0,0.5);border:1px solid var(--card-border);border-radius:10px;color:var(--accent);padding:12px;font-family:monospace;font-size:0.75rem;line-height:1.4;resize:none">Você é um assistente especialista em organização financeira pessoal para o aplicativo Clearview Dashboard.
+Sua tarefa é analisar os extratos bancários e/ou faturas de cartão de crédito fornecidos e gerar um arquivo no formato `.cview`.
+
+REGRAS DE FILTRAGEM E CATEGORIZAÇÃO:
+1. DESCONSIDERAR RUÍDOS E TRANSAÇÕES NEUTRAS:
+   - Desconsidere Pix recebidos e devolvidos em seguida para a mesma pessoa/mesmo valor.
+   - Desconsidere transferências entre contas próprias do mesmo titular.
+   - Desconsidere estornos e pagamentos de fatura de cartão de crédito (pois os lançamentos individuais da fatura serão contabilizados).
+2. CATEGORIZAÇÃO DE GASTOS:
+   - Moradia: Aluguel, condomínio, luz, água, gás, internet, streaming, reformas, seguros residenciais.
+   - Transporte: Combustível, Uber/99, parcela de veículo, seguro auto, estacionamento, transporte público.
+   - Saúde: Farmácia, consultas, exames, seguro de vida, plano de saúde, dentista, veterinário/pet.
+   - Obrigações: Dívidas, empréstimos, impostos (IPTU/IPVA), taxas bancárias, juros.
+   - Vida Diária: Supermercado, feira, roupas, restaurantes/comida fora, salão/barbearia, produtos pessoais.
+   - Entretenimento: Cinema, shows, jogos, passeios, viagens, hobbies, academia, esportes.
+   - Investimentos: Aplicações financeiras (CDB, Tesouro, Ações, FIIs, Cripto), projetos visando lucro, desenvolvimento.
+3. ITEM "Aplicações financeiras":
+   - Sempre que houver um aporte para investimentos ou reserva de emergência, coloque a categoria como "Investimentos" e o item exatamente como "Aplicações financeiras".
+
+FORMATO DA SAÍDA:
+Retorne EXATAMENTE a estrutura JSON no seguinte formato (sem explicações ou texto antes/depois):
+
+{
+  "version": "1.0",
+  "meses": [
+    {
+      "ano": 2026,
+      "mes": 3,
+      "renda": [
+        { "categoria": "Salário", "descricao": "Empresa X", "valor": 5000.00, "data": "2026-03-05" }
+      ],
+      "gastos": [
+        { "categoria": "Moradia", "item": "Aluguel/Parcela", "valor": 1800.00, "metodo": "Débito em conta", "data": "2026-03-05" },
+        { "categoria": "Investimentos", "item": "Aplicações financeiras", "valor": 1000.00, "metodo": "Débito em conta", "data": "2026-03-10" }
+      ]
+    }
+  ]
+}</textarea>
+            </div>
+        </div>
+        <button class="btn-confirm-add" onclick="copyAiPrompt()"><i class="fa-regular fa-copy" style="margin-right:6px"></i> Copiar Prompt Oficial</button>
+        <button class="btn-close-modal" onclick="closeAiPromptGuideModal()">Fechar</button>
+    </div>
+</div>
+
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1207,6 +1304,13 @@ window.startRenameGastoCat = function(key){if(window._startRenameGastoCat)window
 window.openPdfModal = function(){if(window._openPdfModal)window._openPdfModal();};
 window.closePdfModal = function(){document.getElementById('pdfModal').style.display='none';window.setModalState(false);};
 window.generatePDF = function(){if(window._generatePDF)window._generatePDF();};
+window.openImportCviewModal = function(){if(window.openImportCviewModal)window.openImportCviewModal();};
+window.closeImportCviewModal = function(){if(window.closeImportCviewModal)window.closeImportCviewModal();};
+window.openAiPromptGuideModal = function(){if(window.openAiPromptGuideModal)window.openAiPromptGuideModal();};
+window.closeAiPromptGuideModal = function(){if(window.closeAiPromptGuideModal)window.closeAiPromptGuideModal();};
+window.copyAiPrompt = function(){if(window.copyAiPrompt)window.copyAiPrompt();};
+window.handleCviewFileSelect = function(e){if(window.handleCviewFileSelect)window.handleCviewFileSelect(e);};
+window.confirmCviewImport = function(){if(window.confirmCviewImport)window.confirmCviewImport();};
 
 window.pulseEl = function(el, type) {
     el.classList.remove('pulsing-green', 'pulsing-red');
@@ -1766,6 +1870,264 @@ window.checkWeeklyNotification = function() {
         lastWeeklyNotifDate = new Date().toISOString();
         window.triggerSave();
     }
+};
+
+/* CVIEW IMPORT & AI PROMPT LOGIC */
+let parsedCviewData = null;
+
+window.openImportCviewModal = function() {
+    var modal = document.getElementById('importCviewModal');
+    if(!modal) return;
+    parsedCviewData = null;
+    var inp = document.getElementById('cviewFileInput');
+    if(inp) inp.value = '';
+    var pBox = document.getElementById('cviewPreviewBox');
+    if(pBox) pBox.style.display = 'none';
+    var btn = document.getElementById('btnConfirmCviewImport');
+    if(btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+    modal.style.display = 'flex';
+    window.setModalState(true);
+};
+
+window.closeImportCviewModal = function() {
+    var modal = document.getElementById('importCviewModal');
+    if(modal) modal.style.display = 'none';
+    window.setModalState(false);
+};
+
+window.openAiPromptGuideModal = function() {
+    var modal = document.getElementById('aiPromptGuideModal');
+    if(!modal) return;
+    modal.style.display = 'flex';
+    window.setModalState(true);
+};
+
+window.closeAiPromptGuideModal = function() {
+    var modal = document.getElementById('aiPromptGuideModal');
+    if(modal) modal.style.display = 'none';
+    window.setModalState(false);
+};
+
+window.copyAiPrompt = function() {
+    var txt = document.getElementById('aiPromptTextarea');
+    if(!txt) return;
+    txt.select();
+    txt.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(txt.value).then(() => {
+        alert('Prompt copiado com sucesso! Agora é só colar na sua IA de preferência (ChatGPT, Claude, Gemini) com seus extratos.');
+    }).catch(() => {
+        alert('Prompt selecionado! Pressione Ctrl+C para copiar.');
+    });
+};
+
+window.handleCviewFileSelect = function(event) {
+    var file = event.target.files && event.target.files[0];
+    if(!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            var rawText = e.target.result;
+            rawText = rawText.replace(/```json/gi, '').replace(/```cview/gi, '').replace(/```/g, '').trim();
+            var json = JSON.parse(rawText);
+
+            if(!json || (!json.meses && !Array.isArray(json))) {
+                throw new Error("Formato inválido. O arquivo não contém a estrutura de meses esperada.");
+            }
+
+            var months = json.meses || json;
+            if(!Array.isArray(months) || months.length === 0) {
+                throw new Error("Nenhum mês encontrado no arquivo.");
+            }
+
+            parsedCviewData = months;
+
+            var totalRendas = 0;
+            var totalGastosCount = 0;
+            months.forEach(m => {
+                totalRendas += (m.renda || []).length;
+                totalGastosCount += (m.gastos || []).length;
+            });
+
+            var pBox = document.getElementById('cviewPreviewBox');
+            var pTitle = document.getElementById('cviewPreviewTitle');
+            var pBody = document.getElementById('cviewPreviewBody');
+            
+            pTitle.textContent = `Arquivo Válido: ${file.name}`;
+            pBody.innerHTML = `<strong>${months.length} mês(es)</strong> encontrado(s)<br>` +
+                              `• Lançamentos de Renda: ${totalRendas}<br>` +
+                              `• Lançamentos de Gastos: ${totalGastosCount}`;
+            
+            pBox.style.display = 'block';
+
+            var btn = document.getElementById('btnConfirmCviewImport');
+            if(btn) { btn.disabled = false; btn.style.opacity = '1'; }
+
+        } catch(err) {
+            alert("Erro ao ler o arquivo .cview:\n" + err.message);
+            parsedCviewData = null;
+        }
+    };
+    reader.readAsText(file);
+};
+
+window.confirmCviewImport = function() {
+    if(!parsedCviewData || !parsedCviewData.length) {
+        alert("Nenhum dado válido para importar.");
+        return;
+    }
+
+    var strategy = document.getElementById('cviewStrategySelect').value || 'merge';
+
+    function mapExpenseCategory(catStr) {
+        if(!catStr) return 'vida';
+        var s = catStr.trim().toLowerCase();
+        if(s.includes('moradia')) return 'moradia';
+        if(s.includes('transporte')) return 'transporte';
+        if(s.includes('saude') || s.includes('saúde')) return 'saude';
+        if(s.includes('obrigacao') || s.includes('obricaçoes') || s.includes('obrigações')) return 'obrigacoes';
+        if(s.includes('vida')) return 'vida';
+        if(s.includes('entretenimento') || s.includes('entret')) return 'entret';
+        if(s.includes('investimento')) return 'investimentos';
+        
+        var matched = (expenseCats || []).find(c => c.label.toLowerCase() === s);
+        return matched ? matched.id : 'vida';
+    }
+
+    var importedCount = 0;
+    var skippedCount = 0;
+
+    parsedCviewData.forEach(m => {
+        var year = parseInt(m.ano || m.year);
+        var month = parseInt(m.mes || m.month) - 1;
+        if(isNaN(year) || isNaN(month)) return;
+
+        var tKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+        var exists = !!historico[tKey];
+
+        if(exists && strategy === 'skip') {
+            skippedCount++;
+            return;
+        }
+
+        if(!exists || strategy === 'overwrite') {
+            historico[tKey] = {
+                year: year,
+                month: month,
+                renda: [],
+                gastos: {},
+                incomeCatsSnapshot: JSON.parse(JSON.stringify(incomeCats)),
+                expenseCatsSnapshot: JSON.parse(JSON.stringify(expenseCats)),
+                totalRenda: 0,
+                totalDesp: 0,
+                aplicacoesTotal: 0,
+                saldo: 0
+            };
+        }
+
+        var h = historico[tKey];
+        if(!h.gastos) h.gastos = {};
+
+        (expenseCats || []).forEach(c => {
+            if(!h.gastos[c.id]) {
+                var defs = CAT_DEFAULTS[c.id] || [];
+                h.gastos[c.id] = defs.map((n, j) => ({ id: c.id + '_' + j, label: n, val: 0, pay: '', date: new Date(year, month, 1, 12, 0, 0).toISOString() }));
+            }
+        });
+
+        // 1. Importa Renda
+        (m.renda || []).forEach(r => {
+            var val = typeof r.valor === 'number' ? r.valor : window.parseMoney(r.valor);
+            if(!val) return;
+            var cat = r.categoria || 'Outros';
+            var desc = r.descricao || r.desc || '';
+            var rDate = r.data ? new Date(r.data).toISOString() : new Date(year, month, 1, 12, 0, 0).toISOString();
+
+            if(strategy === 'merge') {
+                var dup = (h.renda || []).find(item => item.cat === cat && item.val === val && item.desc === desc);
+                if(dup) return;
+            }
+
+            if(!h.renda) h.renda = [];
+            h.renda.push({
+                id: 'inc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                val: val,
+                cat: cat,
+                desc: desc,
+                date: rDate
+            });
+
+            if(isSalaryCat(cat, desc)) {
+                latestSalaryConfig = { val: val, cat: cat, desc: desc, setYear: year, setMonth: month };
+            }
+        });
+
+        // 2. Importa Gastos
+        (m.gastos || []).forEach(g => {
+            var val = typeof g.valor === 'number' ? g.valor : window.parseMoney(g.valor);
+            if(!val) return;
+
+            var catId = mapExpenseCategory(g.categoria || g.cat);
+            var itemLabel = g.item || g.descricao || g.label || 'Outros';
+            var payMethod = g.metodo || g.pay || '';
+            var gDate = g.data ? new Date(g.data).toISOString() : new Date(year, month, 1, 12, 0, 0).toISOString();
+
+            if(!h.gastos[catId]) h.gastos[catId] = [];
+
+            var rows = h.gastos[catId];
+            var targetRow = rows.find(r => r.label.trim().toLowerCase() === itemLabel.trim().toLowerCase());
+
+            if(targetRow) {
+                targetRow.val = (strategy === 'merge') ? targetRow.val + val : val;
+                if(payMethod) targetRow.pay = payMethod;
+                targetRow.date = gDate;
+            } else {
+                rows.push({
+                    id: catId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    label: itemLabel,
+                    val: val,
+                    pay: payMethod,
+                    date: gDate
+                });
+            }
+        });
+
+        // 3. Recalcula totais do mês importado
+        var tr = (h.renda || []).reduce((s, r) => s + (r.val || 0), 0);
+        var td = 0;
+        var aplic = 0;
+        var hCats = h.expenseCatsSnapshot || expenseCats;
+        hCats.forEach(c => {
+            (h.gastos && h.gastos[c.id] || []).forEach(r => {
+                if(isAplicacoesFinanceiras(c.id, r.label)) {
+                    aplic += r.val;
+                } else {
+                    td += r.val;
+                }
+            });
+        });
+
+        h.totalRenda = tr;
+        h.totalDesp = td;
+        h.aplicacoesTotal = aplic;
+        h.saldo = tr - td - aplic;
+
+        importedCount++;
+    });
+
+    window.closeImportCviewModal();
+    window.renderHistorico();
+    
+    var curK = monthKey();
+    if(historico[curK]) {
+        loadMonthData();
+    } else {
+        updateFlow();
+    }
+    
+    window._saveAllData();
+
+    alert(`Importação concluída com sucesso!\n\n• Meses importados/atualizados: ${importedCount}\n• Meses ignorados (modo pular): ${skippedCount}`);
 };
 
 function monthKey(){return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;}
