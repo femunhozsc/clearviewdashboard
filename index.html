@@ -618,16 +618,11 @@
     <div class="modal-content">
         <div class="modal-title">Adicionar Renda</div>
         <input type="tel" class="modal-input-lg" id="rendaValor" placeholder="R$ 0,00" oninput="maskInput(this)">
-        <select id="rendaCat" class="modal-select">
+        <select id="rendaCat" class="modal-select" onchange="handleRendaCatChange(this)">
             <option value="" disabled selected>Categoria</option>
-            <option value="Salario">Salário</option>
-            <option value="Serviço">Serviço</option>
-            <option value="Aluguel">Aluguel</option>
-            <option value="Dividendos">Dividendos</option>
-            <option value="Bonus">Bônus</option>
-            <option value="Venda">Venda</option>
         </select>
-        <input type="text" class="modal-input-desc" id="rendaDesc" placeholder="Descricao (opcional)">
+        <input type="text" id="newRendaCatInput" class="modal-input-desc" placeholder="Nome da Nova Categoria" style="display:none;margin-top:8px">
+        <input type="text" class="modal-input-desc" id="rendaDesc" placeholder="Descrição (ex: Salário Empresa X, Pensão, etc.)">
         <button class="btn-confirm-add" onclick="addRenda()">Confirmar</button>
         <button class="btn-close-modal" onclick="closeRendaModal()">Cancelar</button>
     </div>
@@ -656,9 +651,10 @@
         <select id="quickCat" class="modal-select" onchange="updateSubcats()">
             <option value="" disabled selected>Categoria</option>
         </select>
-        <select id="quickSub" class="modal-select" disabled>
+        <select id="quickSub" class="modal-select" disabled onchange="handleSubcatChange(this)">
             <option value="" disabled selected>Item</option>
         </select>
+        <input type="text" id="quickCustomItemInput" class="modal-input-desc" placeholder="Nome do Novo Item" style="display:none;margin-top:8px">
         <select id="quickPay" class="modal-select" onchange="handlePaymentMethodChange(this)">
             <option value="" disabled selected>Método de Pagamento</option>
             <option value="Débito em conta">Débito em conta</option>
@@ -1192,7 +1188,10 @@ window.saveAssetCatName = function(catId,name){if(window._saveAssetCatName)windo
 window.openRendaModal = function(){
     document.getElementById('rendaModal').style.display='flex';
     document.getElementById('rendaValor').value='';
+    if(window._updateRendaCatSelect) window._updateRendaCatSelect();
     document.getElementById('rendaCat').value='';
+    var nInp = document.getElementById('newRendaCatInput');
+    if(nInp) { nInp.style.display = 'none'; nInp.value = ''; }
     document.getElementById('rendaDesc').value='';
     setTimeout(function(){document.getElementById('rendaValor').focus();},120);
     window.setModalState(true);
@@ -1286,6 +1285,8 @@ window.openAddModal = function(){
     document.getElementById('quickCat').value='';
     document.getElementById('quickSub').innerHTML='<option value="" disabled selected>Item</option>';
     document.getElementById('quickSub').disabled=true;
+    var customInput = document.getElementById('quickCustomItemInput');
+    if(customInput) { customInput.style.display = 'none'; customInput.value = ''; }
     var qPay = document.getElementById('quickPay');
     if(qPay) { qPay.value=''; delete qPay.dataset.payMeta; }
     currentCreditConfig = { mode: 'vista', installments: 1 };
@@ -2244,7 +2245,7 @@ function renderGastos(){
         hdr.className='cat-header';hdr.id='cat-hdr-'+key;
         hdr.style.setProperty('--i', index);
         hdr.dataset.catKey = key; // Para drag
-        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button><button class="btn-cat-action btn-meta-cat" onclick="event.stopPropagation();window.showCategoryMetaModal('${key}')" title="Meta do Consultor"><i class="fa-solid fa-bullseye" style="font-size:0.75rem;color:var(--accent)"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}" onclick="event.stopPropagation();window.showCategoryMetaModal('${key}')" style="cursor:pointer" title="Clique para ver a meta do consultor">${window.escapeHTML(label)}</span></span><span class="cat-total" id="tot-${key}" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
+        hdr.innerHTML=`<div class="cat-drag-handle" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()"><i class="fa-solid fa-bars"></i></div><div class="cat-header-content"><span class="cat-title"><div style="display:flex"><button class="btn-cat-action btn-del-cat" onclick="event.stopPropagation();deleteGastoCategory('${key}')">&times;</button><button class="btn-cat-action btn-rename-cat" onclick="event.stopPropagation();startRenameGastoCat('${key}')"><i class="fa-solid fa-pencil" style="font-size:0.7rem"></i></button></div><span class="arrow" style="margin-right:8px">&#9660;</span> <span id="lbl-cat-${key}" style="cursor:pointer">${window.escapeHTML(label)}</span></span><span class="cat-total" id="tot-${key}" style="color:${valColor};font-weight:${valWeight}">${window.formatBRL(ct)}</span></div>`;
         hdr.onclick=function(){window.toggleCatEl(key);};
         
         var cont=document.createElement('div');
@@ -2509,7 +2510,8 @@ function renderGastosHist(){
     if(!w)return;
     if(!gastosRemovidos || !gastosRemovidos.length){w.style.display='none';return;}
     w.style.display='block';l.innerHTML='';
-    gastosRemovidos.forEach(function(item){
+    var sortedRemovidos = [...gastosRemovidos].sort((a, b) => new Date(b.deletedAt || b.date || 0) - new Date(a.deletedAt || a.date || 0));
+    sortedRemovidos.forEach(function(item){
         var d=document.createElement('div');d.className='renda-item';d.style.opacity='0.7';
         d.innerHTML='<div class="renda-item-left"><div class="renda-item-cat">'+window.escapeHTML(item.cat)+'</div><div class="renda-item-desc">'+window.escapeHTML(item.label)+' <span style="font-size:0.7em;color:var(--text-muted);margin-left:4px">'+window.formatDateShort(item.date)+'</span></div></div><span class="renda-item-val val-sensitive" style="color:var(--danger)">−'+window.formatBRL(item.val)+'</span>';
         l.appendChild(d);
@@ -2737,22 +2739,58 @@ window._startRenameRendaCat = function(key) {
 
 window._updateRendaCatSelect = function() {
     var s = document.getElementById('rendaCat');
+    if(!s) return;
     var cur = s.value;
     s.innerHTML = '<option value="" disabled selected>Categoria</option>';
-    incomeCats.forEach(function(cat){
+    (incomeCats || []).forEach(function(cat){
         var o = document.createElement('option');
-        o.value = cat.label; // Value is label to match item.cat
+        o.value = cat.label;
         o.textContent = cat.label;
         s.appendChild(o);
     });
+    var newOpt = document.createElement('option');
+    newOpt.value = '__new_cat__';
+    newOpt.textContent = '+ Criar Nova Categoria';
+    s.appendChild(newOpt);
     if(cur) try{s.value=cur;}catch(e){}
+};
+
+window.handleRendaCatChange = function(el) {
+    var customInput = document.getElementById('newRendaCatInput');
+    if(!customInput) return;
+    if(el.value === '__new_cat__') {
+        customInput.style.display = 'block';
+        setTimeout(function(){ customInput.focus(); }, 100);
+    } else {
+        customInput.style.display = 'none';
+    }
 };
 
 /* RENDA */
 window._addRenda=function(){
     var val=window.parseMoney(document.getElementById('rendaValor').value);
-    var cat=document.getElementById('rendaCat').value;
+    var catEl=document.getElementById('rendaCat');
+    var cat=catEl ? catEl.value : '';
+    var newCatInput=document.getElementById('newRendaCatInput');
     var desc=document.getElementById('rendaDesc').value.trim();
+
+    if(cat === '__new_cat__') {
+        var typedCat = newCatInput ? newCatInput.value.trim() : '';
+        if(!typedCat) {
+            alert('Digite o nome da nova categoria de renda.');
+            if(newCatInput) newCatInput.focus();
+            return;
+        }
+        var match = (incomeCats || []).find(c => c.label.trim().toLowerCase() === typedCat.toLowerCase());
+        if(match) {
+            cat = match.label;
+        } else {
+            cat = typedCat;
+            var newIncId = 'inc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            incomeCats.push({ id: newIncId, label: cat });
+        }
+    }
+
     if(!val||!cat){alert('Preencha o valor e a categoria.');return;}
     
     var newItem = {id:Date.now().toString(),val:val,cat:cat,desc:desc,date:getViewDateISO()};
@@ -3396,6 +3434,7 @@ window._renderHistorico=function(){
                 return match;
             });
             if(!rows.length) return;
+            rows.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
             var catTotal = rows.reduce((s,r)=>s+r.val,0);
             
             rHtml += `<div class="hist-cat-group">
@@ -3411,6 +3450,7 @@ window._renderHistorico=function(){
         // Caso haja rendas com categoria diferente das do snapshot
         var orphanRendas = (h.renda||[]).filter(r => r && (!r.id || !processedRendaIds.has(r.id)));
         if(orphanRendas.length > 0) {
+            orphanRendas.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
             var catTotalOrphan = orphanRendas.reduce((s,r)=>s+r.val,0);
             rHtml += `<div class="hist-cat-group">
                 <div class="hist-cat-header" onclick="toggleHistCat(this)">
@@ -3422,11 +3462,12 @@ window._renderHistorico=function(){
             rHtml += `</div></div>`;
         }
 
-        // Gastos (Lista Simples)
+        // Gastos (Lista Simples ordenada por data decrescente)
         var gHtml='';
         hExpCats.forEach(function(cat){
             var rows=(h.gastos&&h.gastos[cat.id]||[]).filter(function(r){return r.val>0;});
             if(!rows.length)return;
+            rows.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
             gHtml+='<div class="hist-section-title">'+window.escapeHTML(cat.label)+'</div>';
             rows.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.label)+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-neg val-sensitive">−'+window.formatBRL(r.val)+'</span></div>';});
         });
@@ -3475,23 +3516,96 @@ window._updateQuickCatSelect=function(){
     if(cur)try{s.value=cur;}catch(e){}
 };
 window._updateSubcats=function(){
-    var key=document.getElementById('quickCat').value,sub=document.getElementById('quickSub');
-    sub.innerHTML='<option value="" disabled selected>Item</option>';
-    (gastosData[key]||[]).forEach(function(row,i){var o=document.createElement('option');o.value=i;o.textContent=row.label||('Item '+(i+1));sub.appendChild(o);});
+    var key=document.getElementById('quickCat').value;
+    var sub=document.getElementById('quickSub');
+    var customInput=document.getElementById('quickCustomItemInput');
+
+    sub.innerHTML='<option value="" disabled selected>Selecione ou crie um Item</option>';
+    if(customInput) { customInput.style.display='none'; customInput.value=''; }
+
+    if(!key) { sub.disabled=true; return; }
+
+    var rows = gastosData[key] || [];
+    rows.forEach(function(row,i){
+        var o=document.createElement('option');
+        o.value=i;
+        o.textContent=row.label||('Item '+(i+1));
+        sub.appendChild(o);
+    });
+
+    var newOpt=document.createElement('option');
+    newOpt.value='__new__';
+    newOpt.textContent='+ Escrever Novo Item';
+    sub.appendChild(newOpt);
+
     sub.disabled=false;
+
+    if(rows.length === 0) {
+        sub.value = '__new__';
+        if(customInput) {
+            customInput.style.display = 'block';
+            setTimeout(function(){ customInput.focus(); }, 100);
+        }
+    }
 };
+
+window.handleSubcatChange = function(el) {
+    var customInput = document.getElementById('quickCustomItemInput');
+    if(!customInput) return;
+    if(el.value === '__new__') {
+        customInput.style.display = 'block';
+        setTimeout(function(){ customInput.focus(); }, 100);
+    } else {
+        customInput.style.display = 'none';
+    }
+};
+
 window._processAddExpense=function(){
     var val=window.parseMoney(document.getElementById('quickValue').value);
     var key=document.getElementById('quickCat').value;
-    var idx=document.getElementById('quickSub').value;
+    var subEl=document.getElementById('quickSub');
+    var idx=subEl ? subEl.value : '';
+    var customInput=document.getElementById('quickCustomItemInput');
     var payEl=document.getElementById('quickPay');
     var payMethod = payEl ? payEl.value : '';
 
-    if(!val||!key||idx===''){alert('Preencha valor, categoria e item.');return;}
-    
-    var row=gastosData[key][parseInt(idx)];
-    var baseLabel = row.label || ('Item ' + (parseInt(idx)+1));
-    
+    if(!val||!key){alert('Preencha valor e categoria.');return;}
+
+    var row = null;
+    var baseLabel = '';
+
+    if(idx === '__new__') {
+        var typedItem = customInput ? customInput.value.trim() : '';
+        if(!typedItem) {
+            alert('Digite o nome do novo item para esta categoria.');
+            if(customInput) customInput.focus();
+            return;
+        }
+
+        if(!gastosData[key]) gastosData[key] = [];
+
+        var existingRow = gastosData[key].find(r => r.label.trim().toLowerCase() === typedItem.toLowerCase());
+        if(existingRow) {
+            row = existingRow;
+        } else {
+            var newId = key + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            row = { id: newId, label: typedItem, val: 0, pay: '', date: getViewDateISO() };
+            gastosData[key].push(row);
+        }
+        baseLabel = row.label;
+    } else if(idx !== '') {
+        var parsedIdx = parseInt(idx, 10);
+        if(gastosData[key] && gastosData[key][parsedIdx]) {
+            row = gastosData[key][parsedIdx];
+            baseLabel = row.label || ('Item ' + (parsedIdx + 1));
+        }
+    }
+
+    if(!row) {
+        alert('Selecione ou crie um item válido.');
+        return;
+    }
+
     var meta = null;
     if(payEl && payEl.dataset && payEl.dataset.payMeta) {
         try { meta = JSON.parse(payEl.dataset.payMeta); } catch(e){}
