@@ -3422,55 +3422,58 @@ window._renderHistorico=function(){
         var comp=h.totalRenda>0?((h.totalDesp/h.totalRenda)*100).toFixed(1)+'%':'—';
         var fr=h.renda?h.renda.length:0;
         
-        // Rendas (Accordion por Categoria)
-        var rHtml='';
-        var hIncCats = (h.incomeCatsSnapshot && h.incomeCatsSnapshot.length) ? h.incomeCatsSnapshot : incomeCats;
-        var processedRendaIds = new Set();
-        (hIncCats || []).forEach(function(cat){
-            var rows = (h.renda||[]).filter(r => {
-                if(!r) return false;
-                var match = r.cat && (r.cat === cat.label || r.cat.trim().toLowerCase() === cat.label.trim().toLowerCase());
-                if(match) processedRendaIds.add(r.id);
-                return match;
-            });
-            if(!rows.length) return;
-            rows.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-            var catTotal = rows.reduce((s,r)=>s+r.val,0);
-            
-            rHtml += `<div class="hist-cat-group">
-                <div class="hist-cat-header" onclick="toggleHistCat(this)">
-                    <span class="hist-item-cat" style="font-size:0.7rem">${window.escapeHTML(cat.label)}</span>
-                    <div style="display:flex;align-items:center;gap:8px"><span class="val-sensitive" style="font-size:0.8rem;font-weight:500;color:var(--success)">+${window.formatBRL(catTotal)}</span><span class="arrow" style="font-size:0.5rem">&#9660;</span></div>
-                </div>
-                <div class="hist-cat-body">`;
-            rows.forEach(function(r){rHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-pos val-sensitive">+'+window.formatBRL(r.val)+'</span></div>';});
-            rHtml += `</div></div>`;
-        });
+        // Rendas (Ordenadas estritamente por Data Decrescente do Lançamento: do último para o primeiro)
+        var rHtml = '';
+        var allIncome = (h.renda || []).filter(r => r && r.val > 0);
+        allIncome.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
-        // Caso haja rendas com categoria diferente das do snapshot
-        var orphanRendas = (h.renda||[]).filter(r => r && (!r.id || !processedRendaIds.has(r.id)));
-        if(orphanRendas.length > 0) {
-            orphanRendas.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-            var catTotalOrphan = orphanRendas.reduce((s,r)=>s+r.val,0);
-            rHtml += `<div class="hist-cat-group">
-                <div class="hist-cat-header" onclick="toggleHistCat(this)">
-                    <span class="hist-item-cat" style="font-size:0.7rem">Outras Rendas</span>
-                    <div style="display:flex;align-items:center;gap:8px"><span class="val-sensitive" style="font-size:0.8rem;font-weight:500;color:var(--success)">+${window.formatBRL(catTotalOrphan)}</span><span class="arrow" style="font-size:0.5rem">&#9660;</span></div>
-                </div>
-                <div class="hist-cat-body">`;
-            orphanRendas.forEach(function(r){rHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc"><strong>['+window.escapeHTML(r.cat||'Renda')+']</strong> '+window.escapeHTML(r.desc||'—')+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-pos val-sensitive">+'+window.formatBRL(r.val)+'</span></div>';});
-            rHtml += `</div></div>`;
+        if(allIncome.length > 0) {
+            allIncome.forEach(function(r){
+                var catTag = r.cat ? `<strong>[${window.escapeHTML(r.cat)}]</strong> ` : '';
+                rHtml += `<div class="hist-item">
+                    <div class="hist-item-left">
+                        <div class="hist-item-desc">${catTag}${window.escapeHTML(r.desc || '—')} <span style="font-size:0.7em;color:var(--text-muted)">${window.formatDateShort(r.date)}</span></div>
+                    </div>
+                    <span class="hist-item-pos val-sensitive">+${window.formatBRL(r.val)}</span>
+                </div>`;
+            });
         }
 
-        // Gastos (Lista Simples ordenada por data decrescente)
-        var gHtml='';
-        hExpCats.forEach(function(cat){
-            var rows=(h.gastos&&h.gastos[cat.id]||[]).filter(function(r){return r.val>0;});
-            if(!rows.length)return;
-            rows.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-            gHtml+='<div class="hist-section-title">'+window.escapeHTML(cat.label)+'</div>';
-            rows.forEach(function(r){gHtml+='<div class="hist-item"><div class="hist-item-left"><div class="hist-item-desc">'+window.escapeHTML(r.label)+' <span style="font-size:0.7em;color:var(--text-muted)">'+window.formatDateShort(r.date)+'</span></div></div><span class="hist-item-neg val-sensitive">−'+window.formatBRL(r.val)+'</span></div>';});
+        // Gastos (Ordenados estritamente por Data Decrescente do Lançamento: do último para o primeiro)
+        var gHtml = '';
+        var allExpenses = [];
+        var hExpCats = (h.expenseCatsSnapshot && h.expenseCatsSnapshot.length) ? h.expenseCatsSnapshot : expenseCats;
+        (hExpCats || []).forEach(function(cat){
+            var rows = (h.gastos && h.gastos[cat.id] || []).filter(r => r && r.val > 0);
+            rows.forEach(r => {
+                allExpenses.push({ ...r, catLabel: cat.label });
+            });
         });
+        if(h.gastos) {
+            Object.keys(h.gastos).forEach(catId => {
+                if(!(hExpCats || []).some(c => c.id === catId)) {
+                    var rows = (h.gastos[catId] || []).filter(r => r && r.val > 0);
+                    rows.forEach(r => {
+                        if(!allExpenses.some(x => x.id === r.id)) {
+                            allExpenses.push({ ...r, catLabel: catId });
+                        }
+                    });
+                }
+            });
+        }
+
+        allExpenses.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+        if(allExpenses.length > 0) {
+            allExpenses.forEach(function(r){
+                gHtml += `<div class="hist-item">
+                    <div class="hist-item-left">
+                        <div class="hist-item-desc"><strong>[${window.escapeHTML(r.catLabel)}]</strong> ${window.escapeHTML(r.label)} <span style="font-size:0.7em;color:var(--text-muted)">${window.formatDateShort(r.date)}</span></div>
+                    </div>
+                    <span class="hist-item-neg val-sensitive">−${window.formatBRL(r.val)}</span>
+                </div>`;
+            });
+        }
         var card=document.createElement('div');card.className='historico-card';
         card.innerHTML=`
           <div class="historico-mes-header" onclick="toggleHistMes('${key}',this)">
