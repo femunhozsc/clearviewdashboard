@@ -230,6 +230,18 @@
 
 <!-- ============================= APP ============================= -->
 <div id="app">
+    <!-- BARRA DO OPERADOR -->
+    <div id="operatorBar" style="display:none;background:linear-gradient(90deg, #111, #1e1e1e);border-bottom:1px solid var(--accent);padding:8px 16px;z-index:99999;position:sticky;top:0;align-items:center;justify-space:between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+            <span style="background:var(--accent);color:#000;font-weight:700;font-size:0.65rem;padding:3px 8px;border-radius:4px;letter-spacing:1px">PAINEL OPERADOR</span>
+            <span id="operatorBarTitle" style="font-size:0.85rem;color:#fff;font-weight:500">Visão Geral do Operador</span>
+        </div>
+        <div style="display:flex;gap:8px">
+            <button class="btn-auth-v2 btn-auth-gold" style="padding:4px 10px;margin:0;font-size:0.75rem" onclick="switchOperatorView('panel')"><i class="fa-solid fa-users" style="margin-right:4px"></i> Carteira Clientes</button>
+            <button class="btn-auth-v2 btn-auth-outline" style="padding:4px 10px;margin:0;font-size:0.75rem" onclick="exitOperatorMode()"><i class="fa-solid fa-xmark"></i> Sair Operador</button>
+        </div>
+    </div>
+
     <nav class="navbar">
         <img src="logo.png" alt="Clearview" class="logo-img" onclick="resetToHome()" style="cursor:pointer">
         <div class="navbar-right">
@@ -246,6 +258,7 @@
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <div class="menu-title">Área Restrita</div>
+        <a href="javascript:void(0)" onclick="openOperatorPanel()" style="color:var(--accent);font-weight:700;"><i class="fa-solid fa-user-shield"></i> Painel Operador</a>
         <a href="javascript:void(0)" onclick="openConsultantPassModal()" style="color:var(--accent);font-weight:600;"><i class="fa-solid fa-user-tie"></i> Painel Consultor</a>
         
         <div class="menu-title" style="margin-top:16px">Atendimento</div>
@@ -602,6 +615,58 @@
                 <button class="btn-auth-v2 btn-auth-gold" onclick="sendConsultantNotification()" style="margin:0;width:100%"><i class="fa-paper-plane fa-solid" style="margin-right:6px"></i> Enviar Notificação</button>
             </div>
         </div>
+
+        <!-- TAB: OPERADOR -->
+        <div id="tab-operator" class="tab-content">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--card-border);border-radius:16px;padding:20px;margin-bottom:20px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+                    <div>
+                        <div style="font-size:1.2rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px">
+                            <i class="fa-solid fa-user-shield" style="color:var(--accent)"></i> Painel do Operador
+                        </div>
+                        <div style="font-size:0.8rem;color:var(--text-sec);margin-top:2px">Visão consolidada de todos os clientes no Clearview</div>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn-auth-v2 btn-auth-gold" style="padding:8px 14px;margin:0;font-size:0.8rem" onclick="refreshOperatorData()">
+                            <i class="fa-solid fa-rotate" style="margin-right:6px"></i> Atualizar Dados
+                        </button>
+                        <button class="btn-auth-v2 btn-auth-outline" style="padding:8px 14px;margin:0;font-size:0.8rem" onclick="openOperatorNotifModal('ALL')">
+                            <i class="fa-regular fa-bell" style="margin-right:6px"></i> Notificar Todos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MÉTRICAS GLOBAIS DO OPERADOR -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;margin-bottom:20px">
+                    <div class="summary-card" style="padding:14px;border-left:3px solid var(--accent)">
+                        <div class="summary-card-label">Total Clientes</div>
+                        <div class="summary-card-value" id="opStatTotalClients" style="font-size:1.2rem;color:#fff">0</div>
+                    </div>
+                    <div class="summary-card" style="padding:14px;border-left:3px solid var(--success)">
+                        <div class="summary-card-label">Patrimônio Sob Gestão</div>
+                        <div class="summary-card-value" id="opStatTotalAssets" style="font-size:1.05rem;color:var(--success)">R$ 0,00</div>
+                    </div>
+                    <div class="summary-card" style="padding:14px;border-left:3px solid #3b82f6">
+                        <div class="summary-card-label">Renda Consolidada</div>
+                        <div class="summary-card-value" id="opStatTotalIncome" style="font-size:1.05rem;color:#3b82f6">R$ 0,00</div>
+                    </div>
+                    <div class="summary-card" style="padding:14px;border-left:3px solid var(--danger)">
+                        <div class="summary-card-label">Gastos Consolidados</div>
+                        <div class="summary-card-value" id="opStatTotalExpenses" style="font-size:1.05rem;color:var(--danger)">R$ 0,00</div>
+                    </div>
+                </div>
+
+                <!-- BUSCA DE CLIENTES -->
+                <div style="margin-bottom:16px">
+                    <input type="text" id="operatorSearchInput" class="modal-input-desc" placeholder="🔍 Pesquisar cliente por nome, e-mail ou telefone..." oninput="filterOperatorClients()" style="width:100%;margin:0">
+                </div>
+
+                <!-- LISTA DE CLIENTES -->
+                <div id="operatorClientsContainer" style="display:flex;flex-direction:column;gap:12px">
+                    <div style="text-align:center;padding:30px;color:var(--text-sec)">Carregando carteira de clientes...</div>
+                </div>
+            </div>
+        </div>
     </div><!-- /content -->
 
     <footer>
@@ -701,6 +766,34 @@
 
         <button class="btn-confirm-add" onclick="confirmCreditConfig()">Confirmar Crédito</button>
         <button class="btn-close-modal" onclick="closeCreditModal()">Cancelar</button>
+    </div>
+<!-- MODAL AUTH OPERADOR -->
+<div id="operatorAuthModal" class="modal-overlay" style="z-index:11500" onclick="if(event.target===this)closeOperatorAuthModal()">
+    <div class="modal-content" style="max-width:380px;text-align:center">
+        <div class="modal-title"><i class="fa-solid fa-user-shield" style="color:var(--accent);margin-right:8px"></i> Painel Operador</div>
+        <p style="font-size:0.82rem;color:var(--text-sec);margin-bottom:14px">Digite a senha de operador para acessar a visão consolidada de todos os clientes.</p>
+        <input type="password" id="operatorPassInput" class="modal-input-lg" placeholder="••••••" style="text-align:center;letter-spacing:4px">
+        <button class="btn-confirm-add" onclick="verifyOperatorPassword()">Acessar Painel</button>
+        <button class="btn-close-modal" onclick="closeOperatorAuthModal()">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL NOTIFICAR OPERADOR -->
+<div id="operatorNotifModal" class="modal-overlay" style="z-index:11500" onclick="if(event.target===this)closeOperatorNotifModal()">
+    <div class="modal-content" style="max-width:440px">
+        <div class="modal-title"><i class="fa-regular fa-paper-plane" style="color:var(--accent);margin-right:8px"></i> Enviar Notificação</div>
+        <input type="hidden" id="operatorNotifTargetUid">
+        <div id="operatorNotifTargetText" style="font-size:0.8rem;color:var(--accent);font-weight:600;margin-bottom:12px"></div>
+        <div class="auth-field" style="margin-bottom:10px">
+            <label class="auth-field-label">Título da Notificação</label>
+            <input type="text" id="operatorNotifTitle" class="modal-input-desc" placeholder="Ex: Atualização do planejamento financeiro" style="margin:0">
+        </div>
+        <div class="auth-field" style="margin-bottom:14px">
+            <label class="auth-field-label">Conteúdo / Mensagem</label>
+            <textarea id="operatorNotifBody" class="modal-input-desc" style="height:90px;resize:none;margin:0;font-family:inherit" placeholder="Escreva a mensagem a ser enviada ao cliente..."></textarea>
+        </div>
+        <button class="btn-auth-v2 btn-auth-gold" id="btnSendOpNotif" onclick="sendOperatorNotification()" style="margin:0;width:100%"><i class="fa-solid fa-paper-plane" style="margin-right:6px"></i> Enviar Notificação</button>
+        <button class="btn-close-modal" onclick="closeOperatorNotifModal()" style="margin-top:8px">Cancelar</button>
     </div>
 </div>
 
@@ -956,8 +1049,361 @@ Retorne EXATAMENTE a estrutura JSON no seguinte formato (sem explicações ou te
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, collectionGroup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+/* ============================================================
+   PAINEL DO OPERADOR (DOMÍNIO: clearviewopera.vercel.app)
+============================================================ */
+let isOperatorAuthenticated = false;
+let operatorClientsCache = [];
+let currentInspectedClientUid = null;
+
+window.isOperatorDomain = function() {
+    var host = window.location.hostname.toLowerCase();
+    var href = window.location.href.toLowerCase();
+    return host.includes('opera') || href.includes('mode=operator') || href.includes('mode=opera');
+};
+
+window.openOperatorPanel = function() {
+    if(!sessionStorage.getItem('clearview_operator_auth') && !isOperatorAuthenticated) {
+        window.openOperatorAuthModal();
+        return;
+    }
+    
+    if(typeof closeNav === 'function') closeNav();
+    var bar = document.getElementById('operatorBar');
+    if(bar) bar.style.display = 'flex';
+    var barTitle = document.getElementById('operatorBarTitle');
+    if(barTitle) barTitle.textContent = 'Visão Geral do Operador';
+
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    var opTab = document.getElementById('tab-operator');
+    if(opTab) opTab.classList.add('active');
+
+    window.refreshOperatorData();
+};
+
+window.openOperatorAuthModal = function() {
+    var modal = document.getElementById('operatorAuthModal');
+    if(!modal) return;
+    modal.style.display = 'flex';
+    var inp = document.getElementById('operatorPassInput');
+    if(inp) { inp.value = ''; setTimeout(function(){ inp.focus(); }, 120); }
+    window.setModalState(true);
+};
+
+window.closeOperatorAuthModal = function() {
+    var modal = document.getElementById('operatorAuthModal');
+    if(!modal) return;
+    var mc = modal.querySelector('.modal-content');
+    if(mc) mc.style.animation = 'slideDownModal 0.3s forwards';
+    setTimeout(function(){
+        modal.style.display = 'none';
+        if(mc) mc.style.animation = '';
+    }, 300);
+    window.setModalState(false);
+};
+
+window.verifyOperatorPassword = function() {
+    var pass = document.getElementById('operatorPassInput').value.trim();
+    if(pass === '102366') {
+        isOperatorAuthenticated = true;
+        sessionStorage.setItem('clearview_operator_auth', 'true');
+        window.closeOperatorAuthModal();
+        window.openOperatorPanel();
+    } else {
+        alert('Senha incorreta.');
+        var inp = document.getElementById('operatorPassInput');
+        if(inp) { inp.value = ''; inp.focus(); }
+    }
+};
+
+window.refreshOperatorData = async function() {
+    var container = document.getElementById('operatorClientsContainer');
+    if(container) container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-sec)"><i class="fa-solid fa-spinner fa-spin" style="margin-right:8px"></i> Carregando carteira de clientes do Firestore...</div>';
+
+    operatorClientsCache = await window.loadAllOperatorClients();
+    window.renderOperatorClients(operatorClientsCache);
+};
+
+window.loadAllOperatorClients = async function() {
+    var clientsList = [];
+    var profilesMap = {};
+    var dashboardMap = {};
+
+    try {
+        var perfilSnap = await getDocs(collectionGroup(db, 'perfil'));
+        perfilSnap.forEach(docSnap => {
+            var pathParts = docSnap.ref.path.split('/');
+            if(pathParts[0] === 'clientes' && pathParts[1]) {
+                profilesMap[pathParts[1]] = docSnap.data();
+            }
+        });
+    } catch(e) {
+        console.warn("collectionGroup perfil:", e);
+    }
+
+    try {
+        var dadosSnap = await getDocs(collectionGroup(db, 'dados'));
+        dadosSnap.forEach(docSnap => {
+            var pathParts = docSnap.ref.path.split('/');
+            if(pathParts[0] === 'clientes' && pathParts[1]) {
+                dashboardMap[pathParts[1]] = docSnap.data();
+            }
+        });
+    } catch(e) {
+        console.warn("collectionGroup dados:", e);
+    }
+
+    var uids = new Set([...Object.keys(profilesMap), ...Object.keys(dashboardMap)]);
+    uids.forEach(uid => {
+        var perf = profilesMap[uid] || {};
+        var dash = dashboardMap[uid] || {};
+        
+        var totalAssets = 0;
+        if(dash.ativos) {
+            if(dash.ativos.categories) {
+                dash.ativos.categories.forEach(c => {
+                    (c.entries || []).forEach(e => totalAssets += (e.val || 0));
+                });
+            } else {
+                ['rf','reserva','rv','imoveis','cripto','internacional','outros_ativos'].forEach(k => {
+                    totalAssets += (dash.ativos[k] || 0);
+                });
+            }
+        }
+
+        var curK = (dash.currentYear || currentYear) + '-' + String((dash.currentMonth !== undefined ? dash.currentMonth : currentMonth) + 1).padStart(2, '0');
+        var curH = (dash.historico && dash.historico[curK]) || {};
+        var tr = curH.totalRenda || 0;
+        var td = curH.totalDesp || 0;
+        var aplic = curH.aplicacoesTotal || 0;
+        var saldo = curH.saldo !== undefined ? curH.saldo : (tr - td - aplic);
+
+        clientsList.push({
+            uid: uid,
+            nome: ((perf.nome || 'Cliente') + ' ' + (perf.sobrenome || '')).trim() || 'Cliente sem nome',
+            email: perf.email || '—',
+            telefone: perf.telefone || '—',
+            totalAssets: totalAssets,
+            totalRenda: tr,
+            totalDesp: td,
+            saldo: saldo,
+            dashboard: dash,
+            perfil: perf
+        });
+    });
+
+    return clientsList;
+};
+
+window.renderOperatorClients = function(list) {
+    var totClients = list.length;
+    var totAssets = list.reduce((s, c) => s + c.totalAssets, 0);
+    var totIncome = list.reduce((s, c) => s + c.totalRenda, 0);
+    var totExpenses = list.reduce((s, c) => s + c.totalDesp, 0);
+
+    var elC = document.getElementById('opStatTotalClients'); if(elC) elC.textContent = totClients;
+    var elA = document.getElementById('opStatTotalAssets'); if(elA) elA.textContent = window.formatBRL(totAssets);
+    var elI = document.getElementById('opStatTotalIncome'); if(elI) elI.textContent = window.formatBRL(totIncome);
+    var elE = document.getElementById('opStatTotalExpenses'); if(elE) elE.textContent = window.formatBRL(totExpenses);
+
+    var container = document.getElementById('operatorClientsContainer');
+    if(!container) return;
+    container.innerHTML = '';
+
+    if(!list.length) {
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-sec)">Nenhum cliente encontrado.</div>';
+        return;
+    }
+
+    list.forEach(c => {
+        var card = document.createElement('div');
+        card.className = 'card';
+        card.style.background = 'linear-gradient(145deg, rgba(25,25,25,0.9), rgba(15,15,15,0.95))';
+        card.style.border = '1px solid var(--card-border)';
+        card.style.marginBottom = '12px';
+        card.style.padding = '16px';
+
+        card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+                <div>
+                    <div style="font-size:1.05rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px">
+                        <i class="fa-solid fa-user" style="color:var(--accent);font-size:0.85rem"></i> ${window.escapeHTML(c.nome)}
+                    </div>
+                    <div style="font-size:0.78rem;color:var(--text-sec);margin-top:2px">
+                        <i class="fa-regular fa-envelope" style="margin-right:4px"></i>${window.escapeHTML(c.email)} 
+                        ${c.telefone && c.telefone !== '—' ? ' • <i class="fa-solid fa-phone" style="margin-right:4px;margin-left:4px"></i>' + window.escapeHTML(c.telefone) : ''}
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <button class="btn-auth-v2 btn-auth-gold" style="padding:6px 12px;margin:0;font-size:0.75rem" onclick="inspectClientDashboard('${c.uid}')"><i class="fa-regular fa-eye" style="margin-right:4px"></i> Ver Dashboard</button>
+                    <button class="btn-auth-v2 btn-auth-outline" style="padding:6px 12px;margin:0;font-size:0.75rem" onclick="openOperatorNotifModal('${c.uid}')"><i class="fa-regular fa-bell" style="margin-right:4px"></i> Notificar</button>
+                    <button class="btn-auth-v2 btn-auth-outline" style="padding:6px 12px;margin:0;font-size:0.75rem" onclick="openOperatorGoalsModal('${c.uid}')"><i class="fa-solid fa-bullseye" style="margin-right:4px"></i> Metas</button>
+                </div>
+            </div>
+            <div class="stats-grid" style="grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:8px;background:rgba(0,0,0,0.3);padding:10px;border-radius:10px">
+                <div><span style="font-size:0.65rem;color:var(--text-sec);display:block">Patrimônio</span><span style="font-size:0.85rem;font-weight:600;color:#fff">${window.formatBRL(c.totalAssets)}</span></div>
+                <div><span style="font-size:0.65rem;color:var(--text-sec);display:block">Renda Mês</span><span style="font-size:0.85rem;font-weight:600;color:var(--success)">+${window.formatBRL(c.totalRenda)}</span></div>
+                <div><span style="font-size:0.65rem;color:var(--text-sec);display:block">Gastos Mês</span><span style="font-size:0.85rem;font-weight:600;color:var(--danger)">−${window.formatBRL(c.totalDesp)}</span></div>
+                <div><span style="font-size:0.65rem;color:var(--text-sec);display:block">Sobra</span><span style="font-size:0.85rem;font-weight:600;color:${c.saldo>=0?'var(--success)':'var(--danger)'}">${window.formatBRL(c.saldo)}</span></div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+};
+
+window.filterOperatorClients = function() {
+    var q = document.getElementById('operatorSearchInput').value.trim().toLowerCase();
+    if(!q) {
+        window.renderOperatorClients(operatorClientsCache);
+        return;
+    }
+    var filtered = operatorClientsCache.filter(c => {
+        return c.nome.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.telefone.toLowerCase().includes(q);
+    });
+    window.renderOperatorClients(filtered);
+};
+
+window.inspectClientDashboard = function(uid) {
+    var c = operatorClientsCache.find(x => x.uid === uid);
+    if(!c) return;
+
+    currentInspectedClientUid = uid;
+    CLIENT_ID = uid;
+
+    var dash = c.dashboard || {};
+    historico = dash.historico || {};
+    gastosRemovidos = dash.gastosRemovidos || [];
+    consultantGoals = dash.consultantGoals || { monthlyIncome: 0, assetGoals: {}, categoryPercents: {} };
+    notifications = dash.notifications || [];
+    lastWeeklyNotifDate = dash.lastWeeklyNotifDate || null;
+    latestSalaryConfig = dash.latestSalaryConfig || null;
+    if(dash.incomeCats && dash.incomeCats.length) incomeCats = dash.incomeCats;
+    if(dash.expenseCats && dash.expenseCats.length) expenseCats = dash.expenseCats;
+
+    var av = dash.ativos || {};
+    if(av.categories && av.categories.length > 0) {
+        assetsData = av;
+    } else {
+        assetsData = { categories: [], meta: av.metaVal || 0 };
+    }
+
+    loadMonthData();
+    if(typeof window._updateAssets === 'function') window._updateAssets();
+
+    var barTitle = document.getElementById('operatorBarTitle');
+    if(barTitle) barTitle.textContent = '👁️ Inspecionando: ' + c.nome + ' (' + c.email + ')';
+
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    var fTab = document.getElementById('tab-fluxo');
+    if(fTab) fTab.classList.add('active');
+};
+
+window.switchOperatorView = function(mode) {
+    if(mode === 'panel') {
+        currentInspectedClientUid = null;
+        var barTitle = document.getElementById('operatorBarTitle');
+        if(barTitle) barTitle.textContent = 'Visão Geral do Operador';
+
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        var opTab = document.getElementById('tab-operator');
+        if(opTab) opTab.classList.add('active');
+    }
+};
+
+window.exitOperatorMode = function() {
+    sessionStorage.removeItem('clearview_operator_auth');
+    document.body.classList.remove('operator-mode-active');
+    var bar = document.getElementById('operatorBar');
+    if(bar) bar.style.display = 'none';
+    window.location.href = window.location.origin;
+};
+
+window.openOperatorNotifModal = function(targetUid) {
+    var inpTarget = document.getElementById('operatorNotifTargetUid');
+    if(inpTarget) inpTarget.value = targetUid || 'ALL';
+    var targetText = document.getElementById('operatorNotifTargetText');
+    if(targetText) {
+        if(targetUid === 'ALL' || !targetUid) {
+            targetText.textContent = 'Destinatário: TODOS os clientes (' + operatorClientsCache.length + ')';
+        } else {
+            var c = operatorClientsCache.find(x => x.uid === targetUid);
+            targetText.textContent = 'Destinatário: ' + (c ? c.nome + ' (' + c.email + ')' : targetUid);
+        }
+    }
+    document.getElementById('operatorNotifTitle').value = '';
+    document.getElementById('operatorNotifBody').value = '';
+    document.getElementById('operatorNotifModal').style.display = 'flex';
+    window.setModalState(true);
+};
+
+window.openOperatorNotifModalAll = function() {
+    window.openOperatorNotifModal('ALL');
+};
+
+window.closeOperatorNotifModal = function() {
+    var modal = document.getElementById('operatorNotifModal');
+    if(modal) modal.style.display = 'none';
+    window.setModalState(false);
+};
+
+window.sendOperatorNotification = async function() {
+    var targetUid = document.getElementById('operatorNotifTargetUid').value;
+    var title = document.getElementById('operatorNotifTitle').value.trim();
+    var body = document.getElementById('operatorNotifBody').value.trim();
+
+    if(!title || !body) { alert('Preencha título e mensagem.'); return; }
+
+    var btn = document.getElementById('btnSendOpNotif');
+    if(btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+    try {
+        var notifObj = {
+            id: 'notif_' + Date.now(),
+            title: title,
+            content: body,
+            date: new Date().toISOString(),
+            read: false
+        };
+
+        if(targetUid === 'ALL') {
+            for(var c of operatorClientsCache) {
+                var cDash = c.dashboard || {};
+                var cNotifs = cDash.notifications || [];
+                cNotifs.unshift(notifObj);
+                cDash.notifications = cNotifs;
+                cDash.updatedAt = new Date().toISOString();
+                await setDoc(doc(db, 'clientes', c.uid, 'dados', 'dashboard'), cDash, { merge: true });
+            }
+            alert('Notificação enviada com sucesso para TODOS os clientes!');
+        } else {
+            var c = operatorClientsCache.find(x => x.uid === targetUid);
+            var cDash = c ? (c.dashboard || {}) : {};
+            var cNotifs = cDash.notifications || [];
+            cNotifs.unshift(notifObj);
+            cDash.notifications = cNotifs;
+            cDash.updatedAt = new Date().toISOString();
+            await setDoc(doc(db, 'clientes', targetUid, 'dados', 'dashboard'), cDash, { merge: true });
+            alert('Notificação enviada com sucesso para ' + (c ? c.nome : 'o cliente') + '!');
+        }
+        window.closeOperatorNotifModal();
+        window.refreshOperatorData();
+    } catch(err) {
+        console.error("Erro ao enviar notificação do operador:", err);
+        alert("Erro ao enviar notificação: " + err.message);
+    } finally {
+        if(btn) { btn.disabled = false; btn.textContent = 'Enviar Notificação'; }
+    }
+};
+
+window.openOperatorGoalsModal = function(uid) {
+    window.inspectClientDashboard(uid);
+    setTimeout(function(){
+        window.openConsultantPassModal();
+    }, 200);
+};
 
 /* ============================================================
    FUNÇÕES DE INTERFACE (UI)
@@ -4746,6 +5192,16 @@ async function runSplashSequence(skipIntro) {
 
 /* INIT */
 window.addEventListener('load', function(){
+    if (window.isOperatorDomain && window.isOperatorDomain()) {
+        var splash = document.getElementById('splash');
+        if(splash) splash.style.display = 'none';
+        var authSc = document.getElementById('auth-screen');
+        if(authSc) authSc.style.display = 'none';
+        var appEl = document.getElementById('app');
+        if(appEl) appEl.classList.add('visible');
+        window.openOperatorPanel();
+        return;
+    }
     onAuthStateChanged(auth, (user) => {
         if (user) {
             startApp(user);
