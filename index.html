@@ -21,49 +21,34 @@
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         z-index: 999999;
-        background: #08090d;
+        background: #000000;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 20px;
     }
     .opera-login-card {
-        background: rgba(18, 20, 28, 0.95);
-        border: 1px solid rgba(212, 175, 55, 0.25);
-        border-radius: 20px;
-        padding: 40px;
+        background: #0c0c0c;
+        border: 1px solid #222222;
+        border-radius: 12px;
+        padding: 36px 32px;
         width: 100%;
-        max-width: 420px;
+        max-width: 380px;
         text-align: center;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.7);
-        backdrop-filter: blur(12px);
     }
     .opera-login-logo {
-        height: 48px;
-        margin-bottom: 16px;
-    }
-    .opera-login-badge {
-        display: inline-block;
-        background: rgba(212, 175, 55, 0.15);
-        color: var(--accent, #d4af37);
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 4px 12px;
-        border-radius: 20px;
-        letter-spacing: 1.5px;
-        margin-bottom: 16px;
-        text-transform: uppercase;
+        height: 42px;
+        margin-bottom: 20px;
     }
     .opera-login-title {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         font-weight: 700;
-        color: #fff;
+        color: #ffffff;
         margin-bottom: 6px;
     }
     .opera-login-sub {
-        font-size: 0.85rem;
-        color: #8e8e93;
+        font-size: 0.8rem;
+        color: #71717a;
         margin-bottom: 24px;
         line-height: 1.4;
     }
@@ -72,8 +57,8 @@
     .op-workspace-container {
         display: flex;
         min-height: 100vh;
-        background: #08090c;
-        color: #e2e8f0;
+        background: #000000;
+        color: #e4e4e7;
         font-family: 'DM Sans', sans-serif;
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
@@ -81,112 +66,76 @@
         overflow: hidden;
     }
     .op-sidebar {
-        width: 280px;
-        background: #11131b;
-        border-right: 1px solid rgba(255,255,255,0.07);
+        width: 68px;
+        background: #09090b;
+        border-right: 1px solid #18181b;
         display: flex;
         flex-direction: column;
-        padding: 24px 18px;
+        align-items: center;
+        padding: 16px 0;
         flex-shrink: 0;
     }
     .op-brand {
+        margin-bottom: 28px;
         display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
+        justify-content: center;
+        width: 100%;
     }
     .op-logo {
-        height: 36px;
-    }
-    .op-brand-text {
-        display: flex;
-        flex-direction: column;
-    }
-    .op-title {
-        font-weight: 700;
-        font-size: 1.15rem;
-        color: #fff;
-        line-height: 1.1;
-    }
-    .op-subtitle {
-        font-size: 0.65rem;
-        color: var(--accent, #d4af37);
-        font-weight: 700;
-        letter-spacing: 1.5px;
-    }
-    .op-status-badge {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.75rem;
-        color: #10b981;
-        background: rgba(16, 185, 129, 0.1);
-        padding: 6px 12px;
-        border-radius: 8px;
-        margin-bottom: 24px;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-        font-weight: 500;
-    }
-    .op-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #10b981;
-        box-shadow: 0 0 8px #10b981;
+        height: 30px;
+        width: auto;
     }
     .op-nav {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
+        width: 100%;
         flex: 1;
     }
     .op-nav-item {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 12px 14px;
-        border-radius: 10px;
-        color: #94a3b8;
+        justify-content: center;
+        height: 50px;
+        width: 100%;
+        color: #71717a;
         text-decoration: none;
-        font-size: 0.88rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
+        font-size: 1.25rem;
+        transition: all 0.15s ease;
+        border-left: 3px solid transparent;
     }
     .op-nav-item:hover {
-        background: rgba(255,255,255,0.04);
-        color: #fff;
+        background: rgba(255,255,255,0.03);
+        color: #ffffff;
     }
     .op-nav-item.active {
-        background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.05));
-        color: var(--accent, #d4af37);
-        border-left: 3px solid var(--accent, #d4af37);
-        font-weight: 600;
+        background: rgba(234, 179, 8, 0.08);
+        color: #eab308;
+        border-left-color: #eab308;
     }
     .op-sidebar-footer {
         margin-top: auto;
-        padding-top: 16px;
-        border-top: 1px solid rgba(255,255,255,0.06);
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding-top: 12px;
+        border-top: 1px solid #18181b;
     }
     .op-logout-btn {
-        width: 100%;
-        background: rgba(239, 68, 68, 0.1);
+        background: none;
+        border: none;
         color: #ef4444;
-        border: 1px solid rgba(239, 68, 68, 0.2);
-        padding: 10px;
-        border-radius: 10px;
-        font-size: 0.82rem;
-        font-weight: 600;
+        font-size: 1.15rem;
         cursor: pointer;
-        transition: background 0.2s ease;
+        height: 44px;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        transition: color 0.15s ease;
     }
     .op-logout-btn:hover {
-        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
     }
 
     .op-main-content {
@@ -194,30 +143,56 @@
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        background: #08090c;
-        padding: 28px 36px;
+        background: #000000;
+        padding: 20px 24px;
     }
     .op-topbar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #18181b;
     }
     .op-topbar-left h2 {
-        font-size: 1.35rem;
+        font-size: 1.25rem;
         font-weight: 700;
-        color: #fff;
-        margin: 0 0 4px 0;
+        color: #ffffff;
+        margin: 0 0 2px 0;
     }
     .op-view-sub {
-        font-size: 0.8rem;
-        color: #64748b;
+        font-size: 0.78rem;
+        color: #71717a;
     }
     .op-topbar-right {
         display: flex;
-        gap: 10px;
+        gap: 8px;
+    }
+
+    .op-btn {
+        background: #121212;
+        border: 1px solid #27272a;
+        color: #f4f4f5;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.15s ease;
+    }
+    .op-btn:hover {
+        background: #18181b;
+    }
+    .op-btn-gold {
+        background: rgba(234, 179, 8, 0.12);
+        border: 1px solid rgba(234, 179, 8, 0.4);
+        color: #eab308;
+    }
+    .op-btn-gold:hover {
+        background: rgba(234, 179, 8, 0.2);
     }
 
     .op-view-section {
@@ -229,59 +204,28 @@
 
     .op-stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
     }
     .op-stat-card {
-        background: #11131b;
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 14px;
-        padding: 20px;
+        background: #09090b;
+        border: 1px solid #18181b;
+        border-radius: 8px;
+        padding: 16px 18px;
     }
-    .op-stat-card.border-accent { border-left: 4px solid var(--accent, #d4af37); }
-    .op-stat-card.border-success { border-left: 4px solid #10b981; }
-    .op-stat-card.border-blue { border-left: 4px solid #3b82f6; }
-    .op-stat-card.border-danger { border-left: 4px solid #ef4444; }
-
     .op-stat-label {
-        font-size: 0.78rem;
-        color: #94a3b8;
+        font-size: 0.75rem;
+        color: #71717a;
         margin-bottom: 6px;
-        font-weight: 500;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     .op-stat-value {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
         font-weight: 700;
-        color: #fff;
-        margin-bottom: 4px;
-    }
-    .op-stat-sub {
-        font-size: 0.72rem;
-        color: #64748b;
-    }
-
-    .op-overview-banner {
-        background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(30,30,40,0.8));
-        border: 1px solid rgba(212,175,55,0.25);
-        border-radius: 16px;
-        padding: 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 16px;
-        margin-top: 12px;
-    }
-    .op-overview-banner h3 {
-        margin: 0 0 6px 0;
-        color: #fff;
-        font-size: 1.1rem;
-    }
-    .op-overview-banner p {
-        margin: 0;
-        color: #94a3b8;
-        font-size: 0.85rem;
+        color: #ffffff;
     }
 
     /* CLIENT TABLE TOOLBAR */
@@ -290,56 +234,56 @@
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 16px;
-        margin-bottom: 20px;
+        gap: 12px;
+        margin-bottom: 14px;
     }
     .op-search-box {
         position: relative;
         flex: 1;
-        min-width: 280px;
+        min-width: 260px;
     }
     .op-search-box input {
         width: 100%;
-        background: #11131b;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 10px;
-        padding: 10px 14px 10px 38px;
-        color: #fff;
-        font-size: 0.88rem;
+        background: #09090b;
+        border: 1px solid #27272a;
+        border-radius: 6px;
+        padding: 8px 12px 8px 36px;
+        color: #ffffff;
+        font-size: 0.85rem;
         outline: none;
-        transition: border 0.2s ease;
     }
     .op-search-box input:focus {
-        border-color: var(--accent, #d4af37);
+        border-color: #eab308;
     }
     .op-search-box .search-icon {
         position: absolute;
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: #64748b;
-        font-size: 0.85rem;
+        color: #71717a;
+        font-size: 0.8rem;
     }
     .op-sort-box {
         display: flex;
         align-items: center;
+        gap: 8px;
     }
     .op-select {
-        background: #11131b;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 10px;
-        padding: 10px 14px;
-        color: #fff;
-        font-size: 0.85rem;
+        background: #09090b;
+        border: 1px solid #27272a;
+        border-radius: 6px;
+        padding: 8px 12px;
+        color: #ffffff;
+        font-size: 0.82rem;
         outline: none;
         cursor: pointer;
     }
 
     /* TABLE STYLING */
     .op-table-card {
-        background: #11131b;
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 16px;
+        background: #09090b;
+        border: 1px solid #18181b;
+        border-radius: 8px;
         overflow: hidden;
     }
     .table-responsive {
@@ -349,45 +293,40 @@
         width: 100%;
         border-collapse: collapse;
         text-align: left;
-        font-size: 0.88rem;
+        font-size: 0.85rem;
     }
     .op-table th {
-        background: rgba(255,255,255,0.03);
-        color: #94a3b8;
+        background: #121215;
+        color: #a1a1aa;
         font-weight: 600;
-        padding: 14px 18px;
-        border-bottom: 1px solid rgba(255,255,255,0.07);
-        font-size: 0.78rem;
+        padding: 12px 16px;
+        border-bottom: 1px solid #18181b;
+        font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
     .op-table td {
-        padding: 16px 18px;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-        color: #cbd5e1;
+        padding: 14px 16px;
+        border-bottom: 1px solid #18181b;
+        color: #e4e4e7;
         vertical-align: middle;
     }
+    .op-tr {
+        cursor: pointer;
+        transition: background 0.12s ease;
+    }
     .op-tr:hover {
-        background: rgba(255,255,255,0.025);
+        background: #18181b !important;
     }
     .op-client-name {
         font-weight: 600;
-        color: #fff;
-        font-size: 0.92rem;
+        color: #ffffff;
+        font-size: 0.9rem;
     }
-    .op-client-email {
-        font-size: 0.76rem;
-        color: #64748b;
+    .op-client-sub {
+        font-size: 0.75rem;
+        color: #71717a;
         margin-top: 2px;
-    }
-    .op-phone {
-        font-size: 0.8rem;
-        color: #94a3b8;
-    }
-    .op-btn-sm {
-        padding: 5px 10px !important;
-        font-size: 0.74rem !important;
-        margin: 0 !important;
     }
 
     /* INSPECT BANNER */
@@ -395,20 +334,21 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: linear-gradient(90deg, rgba(212,175,55,0.15), rgba(18,20,28,0.9));
-        border: 1px solid var(--accent, #d4af37);
-        padding: 14px 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
+        background: #09090b;
+        border: 1px solid #27272a;
+        border-left: 4px solid #eab308;
+        padding: 12px 18px;
+        border-radius: 8px;
+        margin-bottom: 16px;
     }
     .op-inspect-title {
-        font-weight: 700;
-        color: #fff;
-        font-size: 0.95rem;
+        font-weight: 600;
+        color: #ffffff;
+        font-size: 0.92rem;
     }
 
     /* RESPONSIVE FOR MOBILE OPERATOR */
-    @media (max-width: 900px) {
+    @media (max-width: 768px) {
         .op-workspace-container {
             flex-direction: column;
             position: relative;
@@ -416,9 +356,38 @@
         }
         .op-sidebar {
             width: 100%;
+            height: 60px;
+            flex-direction: row;
             border-right: none;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            padding: 16px;
+            border-bottom: 1px solid #18181b;
+            padding: 0 16px;
+            justify-content: space-between;
+        }
+        .op-brand {
+            margin-bottom: 0;
+            width: auto;
+        }
+        .op-nav {
+            flex-direction: row;
+            width: auto;
+        }
+        .op-nav-item {
+            width: 50px;
+            height: 100%;
+            border-left: none;
+            border-bottom: 3px solid transparent;
+        }
+        .op-nav-item.active {
+            border-left-color: transparent;
+            border-bottom-color: #eab308;
+        }
+        .op-sidebar-footer {
+            width: auto;
+            border-top: none;
+            padding-top: 0;
+        }
+        .op-logout-btn {
+            width: 50px;
         }
         .op-main-content {
             padding: 16px;
@@ -432,19 +401,18 @@
 <div id="opera-login-screen" style="display:none">
     <div class="opera-login-card">
         <img src="logo.png" alt="Clearview Logo" class="opera-login-logo">
-        <div class="opera-login-badge"><i class="fa-solid fa-user-shield" style="margin-right:4px"></i> CLEARVIEW OPERA</div>
         <div class="opera-login-title">Painel do Operador</div>
-        <div class="opera-login-sub">Acesso administrativo exclusivo para gestão consolidada da carteira de clientes.</div>
+        <div class="opera-login-sub">Acesso administrativo para gestão da carteira de clientes.</div>
         
         <div style="margin-bottom:16px;text-align:left">
-            <label style="font-size:0.75rem;color:#94a3b8;font-weight:600;display:block;margin-bottom:6px">SENHA DO OPERADOR</label>
-            <input type="password" id="operaPasswordInput" class="modal-input-lg" placeholder="••••••" style="width:100%;text-align:center;letter-spacing:6px;font-size:1.2rem;background:#0d0e14;border:1px solid rgba(255,255,255,0.15)" onkeydown="if(event.key==='Enter')submitOperaLogin()">
+            <label style="font-size:0.72rem;color:#71717a;font-weight:600;display:block;margin-bottom:6px">SENHA DO OPERADOR</label>
+            <input type="password" id="operaPasswordInput" class="modal-input-lg" placeholder="••••••" style="width:100%;text-align:center;letter-spacing:6px;font-size:1.1rem;background:#000;border:1px solid #27272a" onkeydown="if(event.key==='Enter')submitOperaLogin()">
         </div>
 
-        <div id="operaLoginError" style="display:none;color:#ef4444;font-size:0.8rem;margin-bottom:14px;font-weight:500"><i class="fa-solid fa-circle-exclamation" style="margin-right:4px"></i> Senha incorreta. Tente novamente.</div>
+        <div id="operaLoginError" style="display:none;color:#ef4444;font-size:0.78rem;margin-bottom:14px;font-weight:500">Senha incorreta. Tente novamente.</div>
 
-        <button class="btn-auth-v2 btn-auth-gold" onclick="submitOperaLogin()" style="width:100%;padding:12px;margin:0;font-size:0.92rem;font-weight:700">
-            Acessar Painel <i class="fa-solid fa-arrow-right" style="margin-left:6px"></i>
+        <button class="op-btn op-btn-gold" onclick="submitOperaLogin()" style="width:100%;padding:10px;justify-content:center;font-weight:600">
+            Acessar Painel <i class="fa-solid fa-arrow-right"></i>
         </button>
     </div>
 </div>
@@ -455,31 +423,23 @@
     <aside class="op-sidebar">
         <div class="op-brand">
             <img src="logo.png" alt="Clearview" class="op-logo">
-            <div class="op-brand-text">
-                <span class="op-title">Clearview</span>
-                <span class="op-subtitle">OPERA PANEL</span>
-            </div>
-        </div>
-
-        <div class="op-status-badge">
-            <span class="op-dot"></span> Operador Conectado
         </div>
 
         <nav class="op-nav">
-            <a href="javascript:void(0)" class="op-nav-item active" id="opTabBtn-overview" onclick="setOperatorTab('overview')">
-                <i class="fa-solid fa-chart-pie"></i> Visão Geral & Métricas
+            <a href="javascript:void(0)" class="op-nav-item active" id="opTabBtn-overview" onclick="setOperatorTab('overview')" title="Visão Geral">
+                <i class="fa-solid fa-chart-pie"></i>
             </a>
-            <a href="javascript:void(0)" class="op-nav-item" id="opTabBtn-clients" onclick="setOperatorTab('clients')">
-                <i class="fa-solid fa-users"></i> Carteira de Clientes
+            <a href="javascript:void(0)" class="op-nav-item" id="opTabBtn-clients" onclick="setOperatorTab('clients')" title="Carteira de Clientes">
+                <i class="fa-solid fa-users"></i>
             </a>
-            <a href="javascript:void(0)" class="op-nav-item" onclick="openOperatorNotifModal('ALL')">
-                <i class="fa-regular fa-paper-plane"></i> Notificação em Massa
+            <a href="javascript:void(0)" class="op-nav-item" onclick="openOperatorNotifModal('ALL')" title="Notificação em Massa">
+                <i class="fa-solid fa-paper-plane"></i>
             </a>
         </nav>
 
         <div class="op-sidebar-footer">
-            <button class="op-logout-btn" onclick="exitOperatorMode()">
-                <i class="fa-solid fa-right-from-bracket"></i> Encerrar Sessão
+            <button class="op-logout-btn" onclick="exitOperatorMode()" title="Encerrar Sessão">
+                <i class="fa-solid fa-right-from-bracket"></i>
             </button>
         </div>
     </aside>
@@ -490,14 +450,14 @@
         <header class="op-topbar">
             <div class="op-topbar-left">
                 <h2 id="opCurrentViewTitle">Visão Geral da Carteira</h2>
-                <span id="opCurrentViewSub" class="op-view-sub">Métricas consolidadas em tempo real</span>
+                <span id="opCurrentViewSub" class="op-view-sub">Métricas consolidadas da carteira de clientes</span>
             </div>
             <div class="op-topbar-right">
-                <button class="btn-auth-v2 btn-auth-outline" style="padding:6px 12px;font-size:0.8rem;margin:0" onclick="refreshOperatorData()">
+                <button class="op-btn" onclick="refreshOperatorData()">
                     <i class="fa-solid fa-rotate"></i> Atualizar Dados
                 </button>
-                <button class="btn-auth-v2 btn-auth-gold" style="padding:6px 12px;font-size:0.8rem;margin:0" onclick="openOperatorNotifModal('ALL')">
-                    <i class="fa-regular fa-bell"></i> Notificar Todos
+                <button class="op-btn op-btn-gold" onclick="openOperatorNotifModal('ALL')">
+                    <i class="fa-solid fa-paper-plane"></i> Notificar Todos
                 </button>
             </div>
         </header>
@@ -505,35 +465,31 @@
         <!-- VIEW 1: OVERVIEW -->
         <section id="opView-overview" class="op-view-section active">
             <div class="op-stats-grid">
-                <div class="op-stat-card border-accent">
-                    <div class="op-stat-label">Total de Clientes</div>
-                    <div class="op-stat-value" id="opStatTotalClients">0</div>
-                    <div class="op-stat-sub">Clientes cadastrados</div>
+                <div class="op-stat-card">
+                    <div class="op-stat-label">Patrimônio</div>
+                    <div class="op-stat-value" id="opStatTotalAssets" style="color:#ffffff">R$ 0,00</div>
                 </div>
-                <div class="op-stat-card border-success">
-                    <div class="op-stat-label">Patrimônio Sob Gestão</div>
-                    <div class="op-stat-value text-success" id="opStatTotalAssets">R$ 0,00</div>
-                    <div class="op-stat-sub">Total acumulado</div>
+                <div class="op-stat-card">
+                    <div class="op-stat-label">Renda Mês</div>
+                    <div class="op-stat-value" id="opStatTotalIncome" style="color:#10b981">R$ 0,00</div>
                 </div>
-                <div class="op-stat-card border-blue">
-                    <div class="op-stat-label">Renda Mês Consolidada</div>
-                    <div class="op-stat-value text-blue" id="opStatTotalIncome">R$ 0,00</div>
-                    <div class="op-stat-sub">Entradas globais</div>
+                <div class="op-stat-card">
+                    <div class="op-stat-label">Gastos Mês</div>
+                    <div class="op-stat-value" id="opStatTotalExpenses" style="color:#ef4444">R$ 0,00</div>
                 </div>
-                <div class="op-stat-card border-danger">
-                    <div class="op-stat-label">Gastos Mês Consolidados</div>
-                    <div class="op-stat-value text-danger" id="opStatTotalExpenses">R$ 0,00</div>
-                    <div class="op-stat-sub">Saídas globais</div>
+                <div class="op-stat-card">
+                    <div class="op-stat-label">Caixa</div>
+                    <div class="op-stat-value" id="opStatTotalSaldo" style="color:#eab308">R$ 0,00</div>
                 </div>
             </div>
 
-            <div class="op-overview-banner">
+            <div style="background:#09090b;border:1px solid #18181b;border-radius:8px;padding:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-top:16px">
                 <div>
-                    <h3>Gestão da Carteira Clearview Opera</h3>
-                    <p>Acesse a lista completa de clientes para ordenar por Patrimônio, Renda/Salário, Gastos ou Sobra de Caixa em ordem alfabética.</p>
+                    <h3 style="margin:0 0 4px 0;color:#fff;font-size:1rem">Gestão da Carteira</h3>
+                    <p style="margin:0;color:#71717a;font-size:0.82rem">Acesse a lista completa de clientes para ordenar por Patrimônio, Renda Mês, Gastos Mês ou Caixa.</p>
                 </div>
-                <button class="btn-auth-v2 btn-auth-gold" onclick="setOperatorTab('clients')" style="margin:0">
-                    Ver Tabela Completa de Clientes <i class="fa-solid fa-arrow-right" style="margin-left:4px"></i>
+                <button class="op-btn op-btn-gold" onclick="setOperatorTab('clients')">
+                    Ver Carteira de Clientes <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
         </section>
@@ -546,14 +502,14 @@
                     <input type="text" id="operatorSearchInput" placeholder="Pesquisar cliente por nome, e-mail ou telefone..." oninput="sortAndRenderOperatorClients()">
                 </div>
                 <div class="op-sort-box">
-                    <label style="font-size:0.8rem;color:var(--text-sec);margin-right:8px;font-weight:600">Ordenar por:</label>
+                    <label style="font-size:0.78rem;color:#71717a;font-weight:600">Ordenar por:</label>
                     <select id="operatorSortSelect" class="op-select" onchange="sortAndRenderOperatorClients()">
-                        <option value="name_asc">🔤 Nome (A - Z)</option>
-                        <option value="name_desc">🔤 Nome (Z - A)</option>
-                        <option value="assets_desc">💰 Patrimônio (Maior → Menor)</option>
-                        <option value="income_desc">💵 Salário / Renda Mês (Maior → Menor)</option>
-                        <option value="expenses_desc">📉 Gastos Mês (Maior → Menor)</option>
-                        <option value="saldo_desc">⚖️ Sobra de Caixa (Maior → Menor)</option>
+                        <option value="name_asc">Nome (A - Z)</option>
+                        <option value="name_desc">Nome (Z - A)</option>
+                        <option value="assets_desc">Patrimônio (Maior → Menor)</option>
+                        <option value="income_desc">Renda Mês (Maior → Menor)</option>
+                        <option value="expenses_desc">Gastos Mês (Maior → Menor)</option>
+                        <option value="saldo_desc">Caixa (Maior → Menor)</option>
                     </select>
                 </div>
             </div>
@@ -565,16 +521,14 @@
                         <thead>
                             <tr>
                                 <th>Cliente</th>
-                                <th>Telefone</th>
-                                <th>Patrimônio Total</th>
-                                <th>Salário / Renda Mês</th>
+                                <th>Patrimônio</th>
+                                <th>Renda Mês</th>
                                 <th>Gastos Mês</th>
-                                <th>Sobra de Caixa</th>
-                                <th style="text-align:right">Ações</th>
+                                <th>Caixa</th>
                             </tr>
                         </thead>
                         <tbody id="opClientTableBody">
-                            <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-sec)"><i class="fa-solid fa-spinner fa-spin"></i> Carregando carteira de clientes...</td></tr>
+                            <tr><td colspan="5" style="text-align:center;padding:30px;color:#71717a"><i class="fa-solid fa-spinner fa-spin"></i> Carregando carteira de clientes...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -584,9 +538,9 @@
         <!-- VIEW 3: INSPECT DASHBOARD -->
         <section id="opView-inspect" class="op-view-section">
             <div class="op-inspect-header">
-                <div id="opInspectBannerText" class="op-inspect-title">👁️ Inspecionando Dashboard do Cliente</div>
-                <button class="btn-auth-v2 btn-auth-outline" onclick="setOperatorTab('clients')" style="margin:0;padding:6px 14px;font-size:0.8rem">
-                    <i class="fa-solid fa-arrow-left" style="margin-right:6px"></i> Voltar à Lista de Clientes
+                <div id="opInspectBannerText" class="op-inspect-title">Inspecionando Dashboard do Cliente</div>
+                <button class="op-btn" onclick="setOperatorTab('clients')">
+                    <i class="fa-solid fa-arrow-left"></i> Voltar para Lista
                 </button>
             </div>
 
@@ -1700,21 +1654,28 @@ window.setOperatorTab = function(tabName) {
     }
 };
 
+window.formatFirstAndLastName = function(fullName) {
+    if (!fullName) return 'Cliente';
+    var parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    return parts[0] + ' ' + parts[parts.length - 1];
+};
+
 window.refreshOperatorData = async function() {
     var tbody = document.getElementById('opClientTableBody');
-    if(tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-sec)"><i class="fa-solid fa-spinner fa-spin" style="margin-right:8px"></i> Carregando carteira de clientes do Firestore...</td></tr>';
+    if(tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#71717a"><i class="fa-solid fa-spinner fa-spin"></i> Carregando carteira de clientes do Firestore...</td></tr>';
 
     operatorClientsCache = await window.loadAllOperatorClients();
 
-    var totClients = operatorClientsCache.length;
     var totAssets = operatorClientsCache.reduce((s, c) => s + c.totalAssets, 0);
     var totIncome = operatorClientsCache.reduce((s, c) => s + c.totalRenda, 0);
     var totExpenses = operatorClientsCache.reduce((s, c) => s + c.totalDesp, 0);
+    var totSaldo = operatorClientsCache.reduce((s, c) => s + c.saldo, 0);
 
-    var elC = document.getElementById('opStatTotalClients'); if(elC) elC.textContent = totClients;
     var elA = document.getElementById('opStatTotalAssets'); if(elA) elA.textContent = window.formatBRL(totAssets);
     var elI = document.getElementById('opStatTotalIncome'); if(elI) elI.textContent = window.formatBRL(totIncome);
     var elE = document.getElementById('opStatTotalExpenses'); if(elE) elE.textContent = window.formatBRL(totExpenses);
+    var elS = document.getElementById('opStatTotalSaldo'); if(elS) elS.textContent = window.formatBRL(totSaldo);
 
     window.sortAndRenderOperatorClients();
 };
@@ -1831,34 +1792,28 @@ window.renderOperatorClientTable = function(list) {
     tbody.innerHTML = '';
 
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-sec)">Nenhum cliente encontrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#71717a">Nenhum cliente encontrado.</td></tr>';
         return;
     }
 
     list.forEach(c => {
         var tr = document.createElement('tr');
         tr.className = 'op-tr';
-        
-        var saldoColor = c.saldo >= 0 ? 'var(--success)' : 'var(--danger)';
+        tr.onclick = function() { window.inspectClientDashboard(c.uid); };
+
+        var abrevName = window.formatFirstAndLastName(c.nome);
+        var saldoColor = c.saldo >= 0 ? '#10b981' : '#ef4444';
         var saldoSign = c.saldo >= 0 ? '+' : '';
 
         tr.innerHTML = `
             <td>
-                <div class="op-client-name"><i class="fa-solid fa-user-circle" style="color:var(--accent);margin-right:6px"></i> ${window.escapeHTML(c.nome)}</div>
-                <div class="op-client-email">${window.escapeHTML(c.email)}</div>
+                <div class="op-client-name">${window.escapeHTML(abrevName)}</div>
+                <div class="op-client-sub">${window.escapeHTML(c.email)}${c.telefone && c.telefone !== '—' ? ' • ' + window.escapeHTML(c.telefone) : ''}</div>
             </td>
-            <td><span class="op-phone">${window.escapeHTML(c.telefone)}</span></td>
-            <td><strong style="color:#fff">${window.formatBRL(c.totalAssets)}</strong></td>
-            <td><span class="text-success" style="font-weight:600">+${window.formatBRL(c.totalRenda)}</span></td>
-            <td><span class="text-danger" style="font-weight:600">−${window.formatBRL(c.totalDesp)}</span></td>
+            <td><strong style="color:#ffffff">${window.formatBRL(c.totalAssets)}</strong></td>
+            <td><span style="color:#10b981;font-weight:600">+${window.formatBRL(c.totalRenda)}</span></td>
+            <td><span style="color:#ef4444;font-weight:600">−${window.formatBRL(c.totalDesp)}</span></td>
             <td><span style="font-weight:700;color:${saldoColor}">${saldoSign}${window.formatBRL(c.saldo)}</span></td>
-            <td style="text-align:right">
-                <div style="display:inline-flex;gap:6px">
-                    <button class="btn-auth-v2 btn-auth-gold op-btn-sm" onclick="inspectClientDashboard('${c.uid}')" title="Inspecionar Dashboard"><i class="fa-regular fa-eye"></i> Inspecionar</button>
-                    <button class="btn-auth-v2 btn-auth-outline op-btn-sm" onclick="openOperatorNotifModal('${c.uid}')" title="Enviar Notificação"><i class="fa-regular fa-bell"></i></button>
-                    <button class="btn-auth-v2 btn-auth-outline op-btn-sm" onclick="openOperatorGoalsModal('${c.uid}')" title="Metas"><i class="fa-solid fa-bullseye"></i></button>
-                </div>
-            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -1896,7 +1851,7 @@ window.inspectClientDashboard = function(uid) {
     if(typeof window._updateAssets === 'function') window._updateAssets();
 
     var bannerText = document.getElementById('opInspectBannerText');
-    if(bannerText) bannerText.innerHTML = '👁️ Inspecionando: <strong>' + window.escapeHTML(c.nome) + '</strong> (' + window.escapeHTML(c.email) + ')';
+    if(bannerText) bannerText.innerHTML = 'Inspecionando: <strong>' + window.escapeHTML(c.nome) + '</strong> (' + window.escapeHTML(c.email) + ')';
 
     var container = document.getElementById('opInspectContainer');
     if(container) {
@@ -1964,23 +1919,30 @@ window.sendOperatorNotification = async function() {
         };
 
         if(targetUid === 'ALL') {
+            var sentCount = 0;
             for(var c of operatorClientsCache) {
-                var cDash = c.dashboard || {};
+                var docRef = doc(db, 'clientes', c.uid, 'dados', 'dashboard');
+                var docSnap = await getDoc(docRef);
+                var cDash = docSnap.exists() ? docSnap.data() : (c.dashboard || {});
                 var cNotifs = cDash.notifications || [];
                 cNotifs.unshift(notifObj);
                 cDash.notifications = cNotifs;
                 cDash.updatedAt = new Date().toISOString();
-                await setDoc(doc(db, 'clientes', c.uid, 'dados', 'dashboard'), cDash, { merge: true });
+                await setDoc(docRef, cDash, { merge: true });
+                sentCount++;
             }
-            alert('Notificação enviada com sucesso para TODOS os clientes!');
+            alert('Notificação enviada com sucesso para TODOS os ' + sentCount + ' clientes!');
         } else {
-            var c = operatorClientsCache.find(x => x.uid === targetUid);
-            var cDash = c ? (c.dashboard || {}) : {};
+            var docRef = doc(db, 'clientes', targetUid, 'dados', 'dashboard');
+            var docSnap = await getDoc(docRef);
+            var cDash = docSnap.exists() ? docSnap.data() : {};
             var cNotifs = cDash.notifications || [];
             cNotifs.unshift(notifObj);
             cDash.notifications = cNotifs;
             cDash.updatedAt = new Date().toISOString();
-            await setDoc(doc(db, 'clientes', targetUid, 'dados', 'dashboard'), cDash, { merge: true });
+            await setDoc(docRef, cDash, { merge: true });
+
+            var c = operatorClientsCache.find(x => x.uid === targetUid);
             alert('Notificação enviada com sucesso para ' + (c ? c.nome : 'o cliente') + '!');
         }
         window.closeOperatorNotifModal();
