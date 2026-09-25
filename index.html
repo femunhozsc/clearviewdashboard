@@ -1701,7 +1701,7 @@
 </div>
 
 <!-- MODAL EDITAR PERFIL -->
-<div id="editProfileModal" class="modal-overlay" style="display:none;z-index:11000" onclick="if(event.target===this)closeEditProfileModal()">
+<div id="editProfileModal" class="modal-overlay" onclick="if(event.target===this)closeEditProfileModal()">
     <div class="modal-content" style="max-width:420px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <div class="modal-title" id="editProfileModalTitle" style="margin:0">Editar Perfil</div>
@@ -1721,7 +1721,7 @@
 </div>
 
 <!-- MODAL ALTERAR SENHA -->
-<div id="changePasswordModal" class="modal-overlay" style="display:none;z-index:11000" onclick="if(event.target===this)closeChangePasswordModal()">
+<div id="changePasswordModal" class="modal-overlay" onclick="if(event.target===this)closeChangePasswordModal()">
     <div class="modal-content" style="max-width:420px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <div class="modal-title" style="margin:0"><i class="fa-solid fa-lock" style="color:var(--accent);margin-right:8px"></i> Alterar Senha</div>
@@ -1752,7 +1752,7 @@
 </div>
 
 <!-- MODAL OPEN FINANCE INFORMAÇÕES -->
-<div id="openFinanceModal" class="modal-overlay" style="display:none;z-index:11000" onclick="if(event.target===this)closeOpenFinanceInfoModal()">
+<div id="openFinanceModal" class="modal-overlay" onclick="if(event.target===this)closeOpenFinanceInfoModal()">
     <div class="modal-content" style="max-width:440px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <div style="display:flex;align-items:center;gap:10px">
@@ -2437,8 +2437,16 @@ window.switchTab = function(tab,btn,dir){
         swipeHint.style.opacity='1';
     }
     
+    var startedInProfile = false;
+
     document.addEventListener('touchstart',function(e){
-        if(e.target.closest('#auth-screen,#mySidenav,.modal-overlay')) return;
+        if(document.body.classList.contains('modal-open')) { swipeActive=false; return; }
+        if(e.target.closest('#auth-screen,#mySidenav,.modal-overlay')) { swipeActive=false; return; }
+        
+        var profileScreen = document.getElementById('profile-screen');
+        var isProfileOpen = profileScreen && profileScreen.classList.contains('open');
+        startedInProfile = isProfileOpen || !!e.target.closest('#profile-screen');
+
         sx=e.changedTouches[0].clientX;
         sy=e.changedTouches[0].clientY;
         stime=Date.now();
@@ -2446,17 +2454,20 @@ window.switchTab = function(tab,btn,dir){
     },{passive:true});
     
     document.addEventListener('touchmove',function(e){
-        if(!swipeActive) return;
+        if(!swipeActive || document.body.classList.contains('modal-open')) return;
         var dx=e.changedTouches[0].clientX-sx;
         var dy=e.changedTouches[0].clientY-sy;
         if(Math.abs(dy)>Math.abs(dx)*1.2){swipeActive=false;return;}
+        
         var profileScreen = document.getElementById('profile-screen');
         var isProfileOpen = profileScreen && profileScreen.classList.contains('open');
-        if(!isProfileOpen && Math.abs(dx)>20) showSwipeHint(dx<0?'left':'right');
+        if(!isProfileOpen && !startedInProfile && Math.abs(dx)>20) {
+            showSwipeHint(dx<0?'left':'right');
+        }
     },{passive:true});
     
     document.addEventListener('touchend',function(e){
-        if(!swipeActive){swipeActive=false;return;}
+        if(!swipeActive || document.body.classList.contains('modal-open')){swipeActive=false;return;}
         swipeActive=false;
         if(swipeHint) swipeHint.style.opacity='0';
         var dx=e.changedTouches[0].clientX-sx;
@@ -2469,47 +2480,28 @@ window.switchTab = function(tab,btn,dir){
         var profileScreen = document.getElementById('profile-screen');
         var isProfileOpen = profileScreen && profileScreen.classList.contains('open');
 
-        // Arrastar da direita para a esquerda para voltar para o Fluxo
-        if (isProfileOpen && dx < -30) {
-            window.closeProfileScreen();
-            return;
+        // Gesto dentro do perfil: arrastar da direita para a esquerda fecha o perfil e garante retorno para Fluxo
+        if (startedInProfile || isProfileOpen) {
+            if (dx < -30) {
+                window.closeProfileScreen();
+                window.switchTab('fluxo');
+            }
+            return; // Interrompe totalmente para NÃO avançar de aba!
         }
 
-        // Arrastar da esquerda para a direita para abrir o Perfil
-        if (!isProfileOpen && dx > 40 && (curTabIdx === 0 || sx < 60)) {
+        // Arrastar da esquerda para a direita na aba Fluxo para abrir o Perfil
+        if (dx > 40 && (curTabIdx === 0 || sx < 60)) {
             window.openProfileScreen();
             return;
         }
 
-        if (isProfileOpen) return;
-
+        // Navegação padrão entre abas (Fluxo, Ativos, Histórico, Projeção)
         var next=dx<0?Math.min(curTabIdx+1,TAB_ORDER.length-1):Math.max(curTabIdx-1,0);
         if(next===curTabIdx) return;
         var direction=dx<0?'left':'right';
         var b=document.querySelectorAll('.tab-btn')[next];
         window.switchTab(TAB_ORDER[next],b,direction);
     },{passive:true});
-
-    // Touch listener direto no painel de perfil para garantir 100% de resposta ao gesto de arrastar
-    var profileEl = document.getElementById('profile-screen');
-    if (profileEl) {
-        var psx = 0, psy = 0, pstime = 0;
-        profileEl.addEventListener('touchstart', function(e){
-            if(e.target.closest('.modal-overlay, input, button, select, label')) return;
-            psx = e.changedTouches[0].clientX;
-            psy = e.changedTouches[0].clientY;
-            pstime = Date.now();
-        }, {passive:true});
-        profileEl.addEventListener('touchend', function(e){
-            var pdx = e.changedTouches[0].clientX - psx;
-            var pdy = e.changedTouches[0].clientY - psy;
-            var pdt = Date.now() - pstime;
-            if(Math.abs(pdy) > Math.abs(pdx) * 0.9) return;
-            if(pdx < -30 && (pdt < 500 || Math.abs(pdx) > 40)) {
-                window.closeProfileScreen();
-            }
-        }, {passive:true});
-    }
 })();
 
 /* ============================================================

@@ -590,12 +590,8 @@ body.privacy-active .val-sensitive * { filter: none; }
 .stat-lbl { font-size:0.54rem; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; font-weight:500; }
 .calc-info { font-size:0.68rem; color:var(--text-sec); text-align:center; margin-top:12px; }
 
-/* MODAIS */
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:300; display:none; justify-content:center; align-items:flex-end; backdrop-filter:blur(4px); }
-.modal-content { background:#111111; width:100%; max-width:520px; border-radius:22px 22px 0 0; padding:26px 22px 32px; border-top:1px solid var(--card-border); animation:slideUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards; }
-@keyframes slideUp { from{transform:translateY(100%);}to{transform:translateY(0);} }
-@keyframes slideDownModal { from{transform:translateY(0);}to{transform:translateY(100%);} }
-.modal-title { color:var(--text-main); font-size:0.95rem; font-weight:600; margin-bottom:18px; }
+/* MODAIS BASE */
+.modal-title { color:var(--text-main); font-size:1.02rem; font-weight:600; margin-bottom:18px; display:flex; align-items:center; }
 .modal-input-lg { width:100%; background:transparent; border:none; border-bottom:2px solid var(--accent); color:var(--text-main); font-size:2rem; text-align:center; font-weight:600; margin-bottom:16px; padding-bottom:8px; font-family:'DM Sans',sans-serif; }
 .modal-input-lg::placeholder { color:var(--text-muted); }
 .modal-input-desc { width:100%; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); color:var(--text-main); padding:12px 14px; border-radius:10px; font-size:0.88rem; margin-bottom:10px; transition:0.2s; font-family:'DM Sans',sans-serif; }
@@ -1073,35 +1069,64 @@ body.privacy-active .saldo-val { filter: blur(4px); }
     animation-delay: calc(var(--i, 0) * 0.05s);
 }
 
-/* MODAL OPEN & OVERLAYS */
+/* ============================================================
+   MODAL OVERLAYS & DIALOGS (GLOBAL SYSTEM)
+============================================================ */
 body.modal-open { 
-    overflow: hidden; 
+    overflow: hidden !important; 
 }
 .modal-overlay {
     position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.78) !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.82) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 12000 !important;
+    z-index: 999999 !important;
     display: none;
     justify-content: center;
     align-items: flex-end;
     pointer-events: auto !important;
+    touch-action: auto !important;
 }
 .modal-content {
     background: #111111 !important;
     width: 100%;
-    max-width: 520px;
-    border-radius: 22px 22px 0 0;
-    padding: 26px 22px 32px;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    max-width: 500px;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px 32px;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-bottom: none !important;
-    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.9) !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.95) !important;
     position: relative;
-    z-index: 12001 !important;
+    z-index: 1000000 !important;
     pointer-events: auto !important;
-    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: modalPopUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@media (min-width: 540px) {
+    .modal-overlay {
+        align-items: center !important;
+        padding: 20px;
+    }
+    .modal-content {
+        border-radius: 20px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        animation: modalScaleIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+}
+@keyframes modalPopUp {
+    0%   { transform: translateY(40px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes modalScaleIn {
+    0%   { transform: scale(0.92); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 /* ============================================================
