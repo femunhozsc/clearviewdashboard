@@ -1,6 +1,6 @@
 {
-  "name": "Clearview Dashboard",
-  "short_name": "Clearview",
+  "name": "Clearview Atlas",
+  "short_name": "Atlas",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#050505",

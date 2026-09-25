@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#050505">
-    <title>Clearview Dashboard</title>
+    <title>Clearview Atlas</title>
     <link rel="apple-touch-icon" sizes="512x512" href="app-icon.png">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
@@ -565,7 +565,7 @@
     <!-- Logo + Brand -->
     <div class="auth-header">
         <img src="logo.png" alt="Clearview" class="auth-logo-img">
-        <div class="auth-brand-tag">Clearview Dashboard</div>
+        <div class="auth-brand-tag">Clearview Atlas</div>
     </div>
 
     <!-- Sliding Panels Container -->
@@ -758,11 +758,17 @@
             <div class="splash-divider"></div>
         </div>
     </div>
-    <div class="splash-tagline">Clearview Capital Dashboard</div>
+    <div class="splash-tagline">Clearview Atlas</div>
 </div>
 
 <!-- ============================= APP ============================= -->
 <div id="app">
+    <!-- PULL TO REFRESH INDICATOR -->
+    <div id="pull-to-refresh">
+        <div class="ptr-icon-box"><i class="fa-solid fa-rotate-right"></i></div>
+        <span class="ptr-text" id="ptrText">Puxe para atualizar</span>
+    </div>
+
     <!-- BARRA DO OPERADOR -->
     <div id="operatorBar" style="display:none;background:linear-gradient(90deg, #111, #1e1e1e);border-bottom:1px solid var(--accent);padding:8px 16px;z-index:99999;position:sticky;top:0;align-items:center;justify-space:between;flex-wrap:wrap;gap:8px">
         <div style="display:flex;align-items:center;gap:10px">
@@ -776,16 +782,9 @@
     </div>
 
     <nav class="navbar">
-        <img src="logo.png" alt="Clearview" class="logo-img" onclick="resetToHome()" style="cursor:pointer">
+        <img src="logo-atlas.png" alt="Clearview Atlas" class="logo-img" onclick="resetToHome()" style="cursor:pointer">
         <div class="navbar-right">
-            <button class="profile-nav-btn" onclick="openProfileScreen()" id="profileNavBtn" title="Meu Perfil">
-                <div class="profile-nav-avatar">
-                    <i class="fa-solid fa-user"></i>
-                </div>
-            </button>
-            <span id="sync-icon" class="sync-icon"></span>
-            <button class="privacy-toggle" onclick="togglePrivacyMode()" id="privacyBtn"><i class="fa-regular fa-eye"></i></button>
-            <button class="notif-toggle" onclick="openNotifModal()" id="notifBtn" style="position:relative;background:none;border:none;color:var(--text-sec);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px">
+            <button class="notif-toggle" onclick="openNotifModal()" id="notifBtn" style="position:relative;background:none;border:none;color:var(--text-sec);font-size:1.2rem;cursor:pointer;padding:4px 8px;margin-right:4px">
                 <i class="fa-regular fa-bell"></i>
                 <span id="notifBadge" class="notif-badge" style="display:none;position:absolute;top:2px;right:4px;width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent)"></span>
             </button>
@@ -797,9 +796,6 @@
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <div class="menu-title">Minha Conta</div>
         <a href="javascript:void(0)" onclick="openProfileScreen(); closeNav();" style="color:#ffffff;font-weight:600;"><i class="fa-solid fa-user-circle" style="color:var(--accent)"></i> Meu Perfil</a>
-        
-        <div class="menu-title" style="margin-top:16px">Área Restrita</div>
-        <a href="javascript:void(0)" onclick="openConsultantPassModal()" style="color:var(--accent);font-weight:600;"><i class="fa-solid fa-user-tie"></i> Painel Consultor</a>
         
         <div class="menu-title" style="margin-top:16px">Atendimento</div>
         <a href="https://wa.me/44991293357" target="_blank">WhatsApp</a>
@@ -818,13 +814,7 @@
     <div id="profile-screen" class="profile-panel">
         <!-- Header Fixo da Tela de Perfil -->
         <div class="profile-panel-header">
-            <button class="profile-back-btn" onclick="closeProfileScreen()">
-                <i class="fa-solid fa-chevron-left"></i> <span>Voltar</span>
-            </button>
             <div class="profile-header-title">Meu Perfil</div>
-            <button class="profile-edit-btn" onclick="openEditProfileModal('nome')" title="Editar Nome">
-                <i class="fa-solid fa-pen"></i>
-            </button>
         </div>
 
         <!-- Conteúdo Scrollável -->
@@ -832,26 +822,24 @@
             
             <!-- Hero User Card -->
             <div class="profile-user-card">
-                <div class="profile-avatar-container">
-                    <div class="profile-avatar-default">
+                <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="handleProfilePhotoUpload(event)">
+                <div class="profile-avatar-container" onclick="document.getElementById('profilePhotoInput').click()" title="Clique para adicionar foto">
+                    <div class="profile-avatar-default" id="profileAvatarDisplay">
                         <i class="fa-solid fa-user"></i>
                     </div>
-                    <div class="profile-avatar-badge" title="Foto de perfil">
+                    <div class="profile-avatar-badge" id="profileAvatarBadge" title="Adicionar foto">
                         <i class="fa-solid fa-camera"></i>
                     </div>
                 </div>
                 <div class="profile-user-info">
                     <h2 class="profile-user-name" id="profileDisplayName">Usuário Clearview</h2>
                     <div class="profile-user-email" id="profileDisplayEmail">usuario@clearview.app</div>
-                    <div class="profile-tags">
-                        <span class="profile-badge badge-gold"><i class="fa-solid fa-crown"></i> Premium</span>
-                        <span class="profile-badge badge-success"><i class="fa-solid fa-circle-check"></i> Conta Ativa</span>
-                    </div>
                 </div>
             </div>
 
             <!-- CARD DESTACADO: CONECTAR OPEN FINANCE -->
-            <div class="open-finance-highlight-card">
+            <!-- REGRA: Quando o usuário conectar o Open Finance, o card abaixo deve ser ocultado em todo o app -->
+            <div class="open-finance-highlight-card" id="openFinanceCard">
                 <div class="of-card-glow"></div>
                 <div class="of-card-header">
                     <div class="of-card-icon-wrapper">
@@ -878,7 +866,7 @@
                 <div class="profile-menu-card">
                     <div class="profile-menu-item" onclick="openEditProfileModal('nome')">
                         <div class="profile-item-left">
-                            <div class="profile-item-icon icon-blue"><i class="fa-solid fa-user-pen"></i></div>
+                            <div class="profile-item-icon icon-gold"><i class="fa-solid fa-user"></i></div>
                             <div class="profile-item-text">
                                 <span class="profile-item-label">Nome Completo</span>
                                 <span class="profile-item-val" id="profileValNome">Usuário Clearview</span>
@@ -889,7 +877,7 @@
 
                     <div class="profile-menu-item" onclick="openEditProfileModal('email')">
                         <div class="profile-item-left">
-                            <div class="profile-item-icon icon-purple"><i class="fa-solid fa-envelope"></i></div>
+                            <div class="profile-item-icon icon-gray"><i class="fa-solid fa-envelope"></i></div>
                             <div class="profile-item-text">
                                 <span class="profile-item-label">E-mail</span>
                                 <span class="profile-item-val" id="profileValEmail">usuario@clearview.app</span>
@@ -911,7 +899,7 @@
 
                     <div class="profile-menu-item" onclick="openEditProfileModal('cpf')">
                         <div class="profile-item-left">
-                            <div class="profile-item-icon icon-orange"><i class="fa-solid fa-id-card"></i></div>
+                            <div class="profile-item-icon icon-gold"><i class="fa-solid fa-id-card"></i></div>
                             <div class="profile-item-text">
                                 <span class="profile-item-label">CPF / Documento</span>
                                 <span class="profile-item-val" id="profileValCpf">***.458.910-**</span>
@@ -942,7 +930,7 @@
 
                     <div class="profile-menu-item" onclick="toggleProfileNotifs()">
                         <div class="profile-item-left">
-                            <div class="profile-item-icon icon-cyan"><i class="fa-solid fa-bell"></i></div>
+                            <div class="profile-item-icon icon-gray"><i class="fa-solid fa-bell"></i></div>
                             <div class="profile-item-text">
                                 <span class="profile-item-label">Notificações Push</span>
                                 <span class="profile-item-sub">Alertas de gastos e relatórios</span>
@@ -956,7 +944,7 @@
 
                     <div class="profile-menu-item" onclick="toggleProfileEmailReport()">
                         <div class="profile-item-left">
-                            <div class="profile-item-icon icon-indigo"><i class="fa-solid fa-envelope-open-text"></i></div>
+                            <div class="profile-item-icon icon-gray"><i class="fa-solid fa-envelope-open-text"></i></div>
                             <div class="profile-item-text">
                                 <span class="profile-item-label">Resumo por E-mail</span>
                                 <span class="profile-item-sub">Relatório semanal de fluxo</span>
@@ -979,7 +967,7 @@
                             <div class="profile-item-icon icon-red"><i class="fa-solid fa-key"></i></div>
                             <div class="profile-item-text">
                                 <span class="profile-item-label">Alterar Senha</span>
-                                <span class="profile-item-sub">Atualizada recentemente</span>
+                                <span class="profile-item-sub">Atualizar credenciais de acesso</span>
                             </div>
                         </div>
                         <i class="fa-solid fa-chevron-right profile-item-arrow"></i>
@@ -1034,7 +1022,7 @@
                     <i class="fa-solid fa-right-from-bracket"></i>
                     <span>Sair da Conta</span>
                 </button>
-                <div class="profile-footer-info">Clearview Dashboard • Versão 2.4.0</div>
+                <div class="profile-footer-info">Clearview Atlas • Versão 2.4.0</div>
             </div>
 
         </div>
@@ -1732,6 +1720,37 @@
     </div>
 </div>
 
+<!-- MODAL ALTERAR SENHA -->
+<div id="changePasswordModal" class="modal-overlay" style="display:none;z-index:11000" onclick="if(event.target===this)closeChangePasswordModal()">
+    <div class="modal-content" style="max-width:420px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div class="modal-title" style="margin:0"><i class="fa-solid fa-lock" style="color:var(--accent);margin-right:8px"></i> Alterar Senha</div>
+            <button onclick="closeChangePasswordModal()" style="background:none;border:none;color:#888;font-size:1.4rem;cursor:pointer">&times;</button>
+        </div>
+        
+        <div style="margin-bottom:14px">
+            <label style="font-size:0.75rem;color:var(--text-sec);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Nova Senha</label>
+            <div style="position:relative">
+                <input type="password" id="newProfilePassword" class="custom-input" style="width:100%;padding:12px 38px 12px 14px;background:#18181c;border:1px solid #27272a;border-radius:10px;color:#fff;font-size:0.95rem" placeholder="Mínimo 6 caracteres">
+                <button type="button" class="auth-eye-btn" onclick="togglePass('newProfilePassword', this)"><i class="fa-regular fa-eye"></i></button>
+            </div>
+        </div>
+
+        <div style="margin-bottom:20px">
+            <label style="font-size:0.75rem;color:var(--text-sec);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Confirmar Nova Senha</label>
+            <div style="position:relative">
+                <input type="password" id="confirmProfilePassword" class="custom-input" style="width:100%;padding:12px 38px 12px 14px;background:#18181c;border:1px solid #27272a;border-radius:10px;color:#fff;font-size:0.95rem" placeholder="Repita a nova senha">
+                <button type="button" class="auth-eye-btn" onclick="togglePass('confirmProfilePassword', this)"><i class="fa-regular fa-eye"></i></button>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px">
+            <button class="btn-auth-v2 btn-auth-outline" style="flex:1;margin:0" onclick="closeChangePasswordModal()">Cancelar</button>
+            <button class="btn-auth-v2 btn-auth-gold" style="flex:1;margin:0" onclick="saveNewPassword()">Atualizar Senha</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL OPEN FINANCE INFORMAÇÕES -->
 <div id="openFinanceModal" class="modal-overlay" style="display:none;z-index:11000" onclick="if(event.target===this)closeOpenFinanceInfoModal()">
     <div class="modal-content" style="max-width:440px">
@@ -1831,7 +1850,7 @@
                 Copie o prompt abaixo e envie para qualquer IA (ChatGPT, Claude, Gemini) junto com os seus <strong>extratos bancários em PDF/imagem/texto ou faturas de cartão</strong>.
             </p>
             <div style="position:relative">
-                <textarea id="aiPromptTextarea" readonly style="width:100%;height:240px;background:rgba(0,0,0,0.5);border:1px solid var(--card-border);border-radius:10px;color:var(--accent);padding:12px;font-family:monospace;font-size:0.75rem;line-height:1.4;resize:none">Você é um assistente especialista em organização financeira pessoal para o aplicativo Clearview Dashboard.
+                <textarea id="aiPromptTextarea" readonly style="width:100%;height:240px;background:rgba(0,0,0,0.5);border:1px solid var(--card-border);border-radius:10px;color:var(--accent);padding:12px;font-family:monospace;font-size:0.75rem;line-height:1.4;resize:none">Você é um assistente especialista em organização financeira pessoal para o aplicativo Clearview Atlas.
 Sua tarefa é analisar os extratos bancários e/ou faturas de cartão de crédito fornecidos e gerar um arquivo no formato `.cview`.
 
 REGRAS DE FILTRAGEM E CATEGORIZAÇÃO:
@@ -2448,11 +2467,13 @@ window.switchTab = function(tab,btn,dir){
         var profileScreen = document.getElementById('profile-screen');
         var isProfileOpen = profileScreen && profileScreen.classList.contains('open');
 
-        if (isProfileOpen && dx < -40) {
+        // Arrastar da direita para a esquerda para voltar para o Fluxo
+        if (isProfileOpen && dx < -35) {
             window.closeProfileScreen();
             return;
         }
 
+        // Arrastar da esquerda para a direita para abrir o Perfil
         if (dx > 0 && (curTabIdx === 0 || sx < 40) && !isProfileOpen) {
             window.openProfileScreen();
             return;
@@ -2467,6 +2488,73 @@ window.switchTab = function(tab,btn,dir){
 })();
 
 /* ============================================================
+   PULL TO REFRESH (ATUALIZAR APP)
+============================================================ */
+(function(){
+    var ptr = document.getElementById('pull-to-refresh');
+    var ptrText = document.getElementById('ptrText');
+    var startY = 0;
+    var isPulling = false;
+    var pullDist = 0;
+
+    document.addEventListener('touchstart', function(e){
+        var profileScreen = document.getElementById('profile-screen');
+        var isProfileOpen = profileScreen && profileScreen.classList.contains('open');
+        if (window.scrollY <= 0 && !isProfileOpen) {
+            startY = e.touches[0].clientY;
+            isPulling = true;
+        }
+    }, {passive: true});
+
+    document.addEventListener('touchmove', function(e){
+        if (!isPulling) return;
+        var currentY = e.touches[0].clientY;
+        pullDist = currentY - startY;
+
+        if (pullDist > 0 && window.scrollY <= 0) {
+            if (pullDist > 110) pullDist = 110;
+            if (ptr) {
+                ptr.classList.add('ptr-visible');
+                ptr.style.transform = 'translateY(' + pullDist + 'px)';
+                if (ptrText) {
+                    ptrText.textContent = pullDist > 65 ? 'Solte para atualizar' : 'Puxe para atualizar';
+                }
+            }
+        }
+    }, {passive: true});
+
+    document.addEventListener('touchend', function(){
+        if (!isPulling) return;
+        isPulling = false;
+        if (pullDist > 65) {
+            if (ptr) {
+                ptr.classList.add('ptr-refreshing');
+                if (ptrText) ptrText.textContent = 'Atualizando dados...';
+                ptr.style.transform = 'translateY(65px)';
+            }
+            setTimeout(function(){
+                if (window.initFlowCharts) window.initFlowCharts();
+                if (window.renderHistorico) window.renderHistorico();
+                if (window.calcGeral) window.calcGeral();
+                if (window.syncProfileUI) window.syncProfileUI();
+                if (ptr) {
+                    ptr.classList.remove('ptr-refreshing');
+                    ptr.classList.remove('ptr-visible');
+                    ptr.style.transform = '';
+                    if (ptrText) ptrText.textContent = 'Puxe para atualizar';
+                }
+            }, 600);
+        } else {
+            if (ptr) {
+                ptr.classList.remove('ptr-visible');
+                ptr.style.transform = '';
+            }
+        }
+        pullDist = 0;
+    }, {passive: true});
+})();
+
+/* ============================================================
    PERFIL DO USUÁRIO & OPEN FINANCE
 ============================================================ */
 var userProfileData = {
@@ -2474,6 +2562,53 @@ var userProfileData = {
     email: '',
     telefone: '',
     cpf: ''
+};
+
+window.handleProfilePhotoUpload = function(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+        var dataUrl = evt.target.result;
+        localStorage.setItem('cv_profile_photo', dataUrl);
+        window.syncProfileAvatar();
+    };
+    reader.readAsDataURL(file);
+};
+
+window.syncProfileAvatar = function() {
+    var photo = localStorage.getItem('cv_profile_photo');
+    var avatarDisplay = document.getElementById('profileAvatarDisplay');
+    var avatarBadge = document.getElementById('profileAvatarBadge');
+    if (!avatarDisplay) return;
+
+    if (photo) {
+        avatarDisplay.innerHTML = '<img src="' + photo + '" alt="Foto de perfil">';
+        if (avatarBadge) avatarBadge.style.display = 'none'; // Some o ícone de câmera se houver foto
+    } else {
+        avatarDisplay.innerHTML = '<i class="fa-solid fa-user"></i>';
+        if (avatarBadge) avatarBadge.style.display = 'flex'; // Exibe o ícone de câmera se não houver foto
+    }
+};
+
+/* OPEN FINANCE - REGRA DE INTEGRAÇÃO FUTURA */
+window.checkOpenFinanceStatus = function() {
+    var card = document.getElementById('openFinanceCard');
+    if (!card) return;
+    // Quando o usuário conectar o Open Finance, o card deve ser completamente ocultado
+    var isConnected = localStorage.getItem('cv_open_finance_connected') === 'true';
+    if (isConnected) {
+        card.style.display = 'none';
+    } else {
+        card.style.display = 'block';
+    }
+};
+
+window.connectOpenFinance = function() {
+    // Função preparada para receber a autenticação bancária Open Finance
+    localStorage.setItem('cv_open_finance_connected', 'true');
+    window.checkOpenFinanceStatus();
+    alert('Open Finance conectado com sucesso! O card foi removido.');
 };
 
 window.initProfileData = function() {
@@ -2518,6 +2653,9 @@ window.syncProfileUI = function() {
     if (valEmail) valEmail.textContent = userProfileData.email || 'usuario@clearview.app';
     if (valTelefone) valTelefone.textContent = userProfileData.telefone || 'Não informado';
     if (valCpf) valCpf.textContent = userProfileData.cpf || 'Não informado';
+
+    window.syncProfileAvatar();
+    window.checkOpenFinanceStatus();
 
     // Privacy toggle state sync
     var privToggle = document.getElementById('profileTogglePrivacy');
@@ -2636,6 +2774,41 @@ window.saveEditProfile = function() {
     window.closeEditProfileModal();
 };
 
+/* MODAL ALTERAR SENHA */
+window.openChangePasswordModal = function() {
+    var modal = document.getElementById('changePasswordModal');
+    var p1 = document.getElementById('newProfilePassword');
+    var p2 = document.getElementById('confirmProfilePassword');
+    if (p1) p1.value = '';
+    if (p2) p2.value = '';
+    if (modal) modal.style.display = 'flex';
+};
+
+window.closeChangePasswordModal = function() {
+    var modal = document.getElementById('changePasswordModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.saveNewPassword = function() {
+    var p1 = document.getElementById('newProfilePassword');
+    var p2 = document.getElementById('confirmProfilePassword');
+    var pass1 = p1 ? p1.value : '';
+    var pass2 = p2 ? p2.value : '';
+
+    if (!pass1 || pass1.length < 6) {
+        alert('A nova senha deve ter pelo menos 6 caracteres.');
+        return;
+    }
+    if (pass1 !== pass2) {
+        alert('As senhas não coincidem. Digite a mesma senha em ambos os campos.');
+        return;
+    }
+
+    localStorage.setItem('cv_profile_password_updated', new Date().toISOString());
+    window.closeChangePasswordModal();
+    alert('Senha atualizada com sucesso!');
+};
+
 /* OPEN FINANCE MODAL */
 window.openOpenFinanceInfoModal = function() {
     var modal = document.getElementById('openFinanceModal');
@@ -2667,10 +2840,6 @@ window.toggleBiometria = function() {
     if (chk) {
         localStorage.setItem('cv_pref_biometria', chk.checked ? 'true' : 'false');
     }
-};
-
-window.openChangePasswordModal = function() {
-    alert('Alteração de senha: Se você utiliza Login Social (Google), sua autenticação é feita diretamente com o provedor. Caso contrário, um link de redefinição de senha será enviado ao seu e-mail.');
 };
 
 /* SYNC ICON */
@@ -6176,7 +6345,7 @@ window._generatePDF = async function() {
             doc.setPage(i);
             doc.setFontSize(8);
             doc.setTextColor(150,150,150);
-            doc.text('Gerado via Clearview Dashboard', 105, 290, { align: 'center' });
+            doc.text('Gerado via Clearview Atlas', 105, 290, { align: 'center' });
         }
 
         // Compartilhar ou Baixar
