@@ -1902,7 +1902,7 @@ Retorne EXATAMENTE a estrutura JSON no seguinte formato (sem explicações ou te
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, collectionGroup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, updateEmail, updatePassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ============================================================
    PAINEL DO OPERADOR (DOMÍNIO: clearviewopera.vercel.app)
@@ -2438,7 +2438,7 @@ window.switchTab = function(tab,btn,dir){
     }
     
     document.addEventListener('touchstart',function(e){
-        if(e.target.closest('#auth-screen,#mySidenav,#profile-screen,.modal-overlay')) return;
+        if(e.target.closest('#auth-screen,#mySidenav,.modal-overlay')) return;
         sx=e.changedTouches[0].clientX;
         sy=e.changedTouches[0].clientY;
         stime=Date.now();
@@ -2450,7 +2450,9 @@ window.switchTab = function(tab,btn,dir){
         var dx=e.changedTouches[0].clientX-sx;
         var dy=e.changedTouches[0].clientY-sy;
         if(Math.abs(dy)>Math.abs(dx)*1.2){swipeActive=false;return;}
-        if(Math.abs(dx)>20) showSwipeHint(dx<0?'left':'right');
+        var profileScreen = document.getElementById('profile-screen');
+        var isProfileOpen = profileScreen && profileScreen.classList.contains('open');
+        if(!isProfileOpen && Math.abs(dx)>20) showSwipeHint(dx<0?'left':'right');
     },{passive:true});
     
     document.addEventListener('touchend',function(e){
@@ -2460,24 +2462,26 @@ window.switchTab = function(tab,btn,dir){
         var dx=e.changedTouches[0].clientX-sx;
         var dy=e.changedTouches[0].clientY-sy;
         var dt=Date.now()-stime;
-        var isFlick=Math.abs(dx)>30&&dt<350;
-        if(!isFlick&&Math.abs(dx)<60) return;
-        if(Math.abs(dy)>Math.abs(dx)*0.75) return;
+        var isFlick=Math.abs(dx)>25&&dt<400;
+        if(!isFlick&&Math.abs(dx)<45) return;
+        if(Math.abs(dy)>Math.abs(dx)*0.85) return;
 
         var profileScreen = document.getElementById('profile-screen');
         var isProfileOpen = profileScreen && profileScreen.classList.contains('open');
 
         // Arrastar da direita para a esquerda para voltar para o Fluxo
-        if (isProfileOpen && dx < -35) {
+        if (isProfileOpen && dx < -30) {
             window.closeProfileScreen();
             return;
         }
 
         // Arrastar da esquerda para a direita para abrir o Perfil
-        if (dx > 0 && (curTabIdx === 0 || sx < 40) && !isProfileOpen) {
+        if (!isProfileOpen && dx > 40 && (curTabIdx === 0 || sx < 60)) {
             window.openProfileScreen();
             return;
         }
+
+        if (isProfileOpen) return;
 
         var next=dx<0?Math.min(curTabIdx+1,TAB_ORDER.length-1):Math.max(curTabIdx-1,0);
         if(next===curTabIdx) return;
@@ -2485,6 +2489,27 @@ window.switchTab = function(tab,btn,dir){
         var b=document.querySelectorAll('.tab-btn')[next];
         window.switchTab(TAB_ORDER[next],b,direction);
     },{passive:true});
+
+    // Touch listener direto no painel de perfil para garantir 100% de resposta ao gesto de arrastar
+    var profileEl = document.getElementById('profile-screen');
+    if (profileEl) {
+        var psx = 0, psy = 0, pstime = 0;
+        profileEl.addEventListener('touchstart', function(e){
+            if(e.target.closest('.modal-overlay, input, button, select, label')) return;
+            psx = e.changedTouches[0].clientX;
+            psy = e.changedTouches[0].clientY;
+            pstime = Date.now();
+        }, {passive:true});
+        profileEl.addEventListener('touchend', function(e){
+            var pdx = e.changedTouches[0].clientX - psx;
+            var pdy = e.changedTouches[0].clientY - psy;
+            var pdt = Date.now() - pstime;
+            if(Math.abs(pdy) > Math.abs(pdx) * 0.9) return;
+            if(pdx < -30 && (pdt < 500 || Math.abs(pdx) > 40)) {
+                window.closeProfileScreen();
+            }
+        }, {passive:true});
+    }
 })();
 
 /* ============================================================
@@ -2611,15 +2636,30 @@ window.connectOpenFinance = function() {
     alert('Open Finance conectado com sucesso! O card foi removido.');
 };
 
-window.initProfileData = function() {
+window.initProfileData = async function() {
     var savedNome = localStorage.getItem('cv_profile_nome');
     var savedEmail = localStorage.getItem('cv_profile_email');
     var savedTelefone = localStorage.getItem('cv_profile_telefone');
     var savedCpf = localStorage.getItem('cv_profile_cpf');
 
+    if (CLIENT_ID) {
+        try {
+            var docSnap = await getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
+            if (docSnap.exists()) {
+                var pData = docSnap.data();
+                if (pData.nome) savedNome = pData.sobrenome ? (pData.nome + ' ' + pData.sobrenome) : pData.nome;
+                if (pData.email) savedEmail = pData.email;
+                if (pData.telefone) savedTelefone = pData.telefone;
+                if (pData.cpf) savedCpf = pData.cpf;
+            }
+        } catch(e) {
+            console.log("Erro ao carregar dados do perfil no Firestore:", e);
+        }
+    }
+
     if (!savedNome) {
         var splashNameEl = document.getElementById('splashName');
-        savedNome = (splashNameEl && splashNameEl.textContent !== 'Usuario') ? splashNameEl.textContent : 'Usuário Clearview';
+        savedNome = (splashNameEl && splashNameEl.textContent !== 'Usuario') ? splashNameEl.textContent : (window.currentUser && window.currentUser.displayName ? window.currentUser.displayName : 'Usuário Clearview');
     }
     if (!savedEmail) {
         savedEmail = (window.currentUser && window.currentUser.email) ? window.currentUser.email : 'usuario@clearview.app';
@@ -2737,15 +2777,17 @@ window.openEditProfileModal = function(field) {
     }
 
     modal.style.display = 'flex';
+    window.setModalState(true);
     setTimeout(function(){ input.focus(); }, 150);
 };
 
 window.closeEditProfileModal = function() {
     var modal = document.getElementById('editProfileModal');
     if (modal) modal.style.display = 'none';
+    window.setModalState(false);
 };
 
-window.saveEditProfile = function() {
+window.saveEditProfile = async function() {
     var input = document.getElementById('editProfileInput');
     var val = input ? input.value.trim() : '';
 
@@ -2754,24 +2796,108 @@ window.saveEditProfile = function() {
         return;
     }
 
-    if (currentEditField === 'nome' || currentEditField === 'geral') {
-        userProfileData.nome = val;
-        localStorage.setItem('cv_profile_nome', val);
-        var splashNameEl = document.getElementById('splashName');
-        if (splashNameEl) splashNameEl.textContent = val;
-    } else if (currentEditField === 'email') {
-        userProfileData.email = val;
-        localStorage.setItem('cv_profile_email', val);
-    } else if (currentEditField === 'telefone') {
-        userProfileData.telefone = val;
-        localStorage.setItem('cv_profile_telefone', val);
-    } else if (currentEditField === 'cpf') {
-        userProfileData.cpf = val;
-        localStorage.setItem('cv_profile_cpf', val);
-    }
+    var saveBtn = document.querySelector('#editProfileModal .btn-auth-gold');
+    var origText = saveBtn ? saveBtn.innerHTML : 'Salvar';
+    if (saveBtn) { saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...'; saveBtn.disabled = true; }
 
-    window.syncProfileUI();
-    window.closeEditProfileModal();
+    try {
+        if (currentEditField === 'nome' || currentEditField === 'geral') {
+            userProfileData.nome = val;
+            localStorage.setItem('cv_profile_nome', val);
+            var splashNameEl = document.getElementById('splashName');
+            if (splashNameEl) splashNameEl.textContent = val;
+
+            if (auth.currentUser) {
+                try {
+                    await updateProfile(auth.currentUser, { displayName: val });
+                } catch(e) { console.log('Erro updateProfile auth:', e); }
+            }
+            if (CLIENT_ID) {
+                var parts = val.split(' ');
+                var firstName = parts[0] || val;
+                var lastName = parts.slice(1).join(' ') || '';
+                await setDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'), {
+                    nome: firstName,
+                    sobrenome: lastName,
+                    nomeCompleto: val,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+            }
+        } else if (currentEditField === 'email') {
+            userProfileData.email = val;
+            localStorage.setItem('cv_profile_email', val);
+
+            if (auth.currentUser && auth.currentUser.email !== val) {
+                try {
+                    await updateEmail(auth.currentUser, val);
+                } catch(e) {
+                    console.log('Aviso ao atualizar email no Auth:', e);
+                    if (e.code === 'auth/requires-recent-login') {
+                        alert('Para atualizar o e-mail no login do Google/Firebase é necessário ter feito login recentemente. O e-mail foi atualizado no seu perfil.');
+                    }
+                }
+            }
+            if (CLIENT_ID) {
+                await setDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'), {
+                    email: val,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+            }
+        } else if (currentEditField === 'telefone') {
+            userProfileData.telefone = val;
+            localStorage.setItem('cv_profile_telefone', val);
+
+            if (CLIENT_ID) {
+                var cleanPhone = val.replace(/\D/g, '');
+                await setDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'), {
+                    telefone: val,
+                    telefoneLimpo: cleanPhone,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+
+                if (cleanPhone && userProfileData.email) {
+                    try {
+                        await setDoc(doc(db, 'phones', cleanPhone), {
+                            email: userProfileData.email,
+                            uid: CLIENT_ID,
+                            updatedAt: new Date().toISOString()
+                        }, { merge: true });
+                    } catch(pe) { console.log('phones collection update error:', pe); }
+                }
+            }
+        } else if (currentEditField === 'cpf') {
+            userProfileData.cpf = val;
+            localStorage.setItem('cv_profile_cpf', val);
+
+            if (CLIENT_ID) {
+                var cleanCpf = val.replace(/\D/g, '');
+                await setDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'), {
+                    cpf: val,
+                    cpfLimpo: cleanCpf,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+
+                if (cleanCpf && userProfileData.email) {
+                    try {
+                        await setDoc(doc(db, 'cpfs', cleanCpf), {
+                            email: userProfileData.email,
+                            uid: CLIENT_ID,
+                            updatedAt: new Date().toISOString()
+                        }, { merge: true });
+                    } catch(ce) { console.log('cpfs collection update error:', ce); }
+                }
+            }
+        }
+
+        window.syncProfileUI();
+        window.closeEditProfileModal();
+        alert('Dados atualizados com sucesso!');
+    } catch(err) {
+        console.error("Erro ao salvar perfil:", err);
+        alert("Erro ao salvar alterações: " + err.message);
+    } finally {
+        if (saveBtn) { saveBtn.innerHTML = origText; saveBtn.disabled = false; }
+    }
 };
 
 /* MODAL ALTERAR SENHA */
@@ -2782,14 +2908,16 @@ window.openChangePasswordModal = function() {
     if (p1) p1.value = '';
     if (p2) p2.value = '';
     if (modal) modal.style.display = 'flex';
+    window.setModalState(true);
 };
 
 window.closeChangePasswordModal = function() {
     var modal = document.getElementById('changePasswordModal');
     if (modal) modal.style.display = 'none';
+    window.setModalState(false);
 };
 
-window.saveNewPassword = function() {
+window.saveNewPassword = async function() {
     var p1 = document.getElementById('newProfilePassword');
     var p2 = document.getElementById('confirmProfilePassword');
     var pass1 = p1 ? p1.value : '';
@@ -2804,20 +2932,53 @@ window.saveNewPassword = function() {
         return;
     }
 
-    localStorage.setItem('cv_profile_password_updated', new Date().toISOString());
-    window.closeChangePasswordModal();
-    alert('Senha atualizada com sucesso!');
+    var btn = document.querySelector('#changePasswordModal .btn-auth-gold');
+    var origText = btn ? btn.innerHTML : 'Atualizar Senha';
+    if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Atualizando...'; btn.disabled = true; }
+
+    try {
+        if (auth.currentUser) {
+            try {
+                await updatePassword(auth.currentUser, pass1);
+                localStorage.setItem('cv_profile_password_updated', new Date().toISOString());
+                window.closeChangePasswordModal();
+                alert('Senha atualizada com sucesso no Firebase!');
+            } catch(e) {
+                console.error("Erro updatePassword:", e);
+                if (e.code === 'auth/requires-recent-login') {
+                    if (confirm('Por segurança, a troca direta de senha exige login recente. Deseja receber um e-mail de redefinição de senha em ' + (auth.currentUser.email || 'seu e-mail') + '?')) {
+                        await sendPasswordResetEmail(auth, auth.currentUser.email);
+                        window.closeChangePasswordModal();
+                        alert('E-mail de redefinição de senha enviado com sucesso!');
+                    }
+                } else {
+                    alert('Erro ao atualizar senha: ' + getFriendlyError(e));
+                }
+            }
+        } else {
+            localStorage.setItem('cv_profile_password_updated', new Date().toISOString());
+            window.closeChangePasswordModal();
+            alert('Senha atualizada com sucesso!');
+        }
+    } catch(err) {
+        console.error("Erro geral saveNewPassword:", err);
+        alert('Erro ao atualizar senha: ' + err.message);
+    } finally {
+        if (btn) { btn.innerHTML = origText; btn.disabled = false; }
+    }
 };
 
 /* OPEN FINANCE MODAL */
 window.openOpenFinanceInfoModal = function() {
     var modal = document.getElementById('openFinanceModal');
     if (modal) modal.style.display = 'flex';
+    window.setModalState(true);
 };
 
 window.closeOpenFinanceInfoModal = function() {
     var modal = document.getElementById('openFinanceModal');
     if (modal) modal.style.display = 'none';
+    window.setModalState(false);
 };
 
 /* PREFERENCES & TOGGLES */
@@ -2877,7 +3038,9 @@ window.openNewCatModal = function(){document.getElementById('newCatModal').style
 window.closeNewCatModal = function(){document.getElementById('newCatModal').style.display='none';window.setModalState(false);};
 window.addNewCategory = function(){if(window._addNewCategory)window._addNewCategory();};
 window.openTermos = function(){var m=document.getElementById('termosModal');if(m){m.style.display='flex';window.setModalState(true);}};
-window.closeTermos = function(){var m=document.getElementById('termosModal');if(m){m.style.display='none';window.setModalState(false);}}
+window.closeTermos = function(){var m=document.getElementById('termosModal');if(m){m.style.display='none';window.setModalState(false);}};
+window.openTermosModal = window.openTermos;
+window.closeTermosModal = window.closeTermos;
 window.toggleAssetCat = function(id){if(window._toggleAssetCat)window._toggleAssetCat(id);};
 window.deleteAssetEntry = function(catId, entryId){if(window._deleteAssetEntry)window._deleteAssetEntry(catId, entryId);};
 window.deleteAssetCategory = function(catId){if(window._deleteAssetCategory)window._deleteAssetCategory(catId);};

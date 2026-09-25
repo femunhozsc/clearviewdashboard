@@ -135,12 +135,13 @@ body::-webkit-scrollbar { display: none; } /* Chrome, Safari e Opera */
 /* NAVBAR */
 .navbar {
     position:fixed; top:0; left:0; right:0;
-    background:rgba(5,5,5,0.98); backdrop-filter:blur(18px);
-    padding:16px 22px;
+    background:rgba(5,5,5,0.95); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    padding:10px 20px;
+    height:68px;
     display:flex; justify-content:space-between; align-items:center;
     border-bottom:1px solid var(--card-border); z-index:100;
 }
-.logo-img { height:36px; display:block; }
+.logo-img { height:46px; max-height:48px; object-fit:contain; display:block; }
 .navbar-right { display:flex; align-items:center; gap:10px; }
 .sync-icon { display:flex; align-items:center; width:16px; height:16px; }
 .sync-icon svg { display:block; }
@@ -190,7 +191,7 @@ body.privacy-active .val-sensitive * { filter: none; }
 .dropdown-active { transform:rotate(180deg); }
 
 /* CONTENT */
-.content { padding:20px; padding-top:84px; padding-bottom:80px; max-width:580px; margin:0 auto; }
+.content { padding:20px; padding-top:92px; padding-bottom:80px; max-width:580px; margin:0 auto; }
 
 /* MONTH HEADER */
 .month-header { display:flex; justify-content:center; align-items:center; margin-bottom:20px; margin-top:4px; position: relative; }
@@ -1072,21 +1073,35 @@ body.privacy-active .saldo-val { filter: blur(4px); }
     animation-delay: calc(var(--i, 0) * 0.05s);
 }
 
-/* EFEITO DE ESCALA DO APP (MODAL OPEN) */
-#app {
-    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), border-radius 0.4s ease, filter 0.4s ease;
-    transform-origin: center 15vh;
-}
-body.modal-open { overflow: hidden; }
-body.modal-open #app {
-    transform: scale(0.92) translateY(10px);
-    border-radius: 24px;
-    filter: brightness(0.6);
-    pointer-events: none;
+/* MODAL OPEN & OVERLAYS */
+body.modal-open { 
+    overflow: hidden; 
 }
 .modal-overlay {
-    backdrop-filter: none !important; /* Remove blur do overlay para focar no app escurecido */
-    background: rgba(0,0,0,0.4);
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.78) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 12000 !important;
+    display: none;
+    justify-content: center;
+    align-items: flex-end;
+    pointer-events: auto !important;
+}
+.modal-content {
+    background: #111111 !important;
+    width: 100%;
+    max-width: 520px;
+    border-radius: 22px 22px 0 0;
+    padding: 26px 22px 32px;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: none !important;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.9) !important;
+    position: relative;
+    z-index: 12001 !important;
+    pointer-events: auto !important;
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ============================================================
