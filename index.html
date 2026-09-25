@@ -778,6 +778,11 @@
     <nav class="navbar">
         <img src="logo.png" alt="Clearview" class="logo-img" onclick="resetToHome()" style="cursor:pointer">
         <div class="navbar-right">
+            <button class="profile-nav-btn" onclick="openProfileScreen()" id="profileNavBtn" title="Meu Perfil">
+                <div class="profile-nav-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            </button>
             <span id="sync-icon" class="sync-icon"></span>
             <button class="privacy-toggle" onclick="togglePrivacyMode()" id="privacyBtn"><i class="fa-regular fa-eye"></i></button>
             <button class="notif-toggle" onclick="openNotifModal()" id="notifBtn" style="position:relative;background:none;border:none;color:var(--text-sec);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px">
@@ -790,12 +795,15 @@
 
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <div class="menu-title">Área Restrita</div>
+        <div class="menu-title">Minha Conta</div>
+        <a href="javascript:void(0)" onclick="openProfileScreen(); closeNav();" style="color:#ffffff;font-weight:600;"><i class="fa-solid fa-user-circle" style="color:var(--accent)"></i> Meu Perfil</a>
+        
+        <div class="menu-title" style="margin-top:16px">Área Restrita</div>
         <a href="javascript:void(0)" onclick="openConsultantPassModal()" style="color:var(--accent);font-weight:600;"><i class="fa-solid fa-user-tie"></i> Painel Consultor</a>
         
         <div class="menu-title" style="margin-top:16px">Atendimento</div>
         <a href="https://wa.me/44991293357" target="_blank">WhatsApp</a>
-        <a href="/cdn-cgi/l/email-protection#52313d3c2633263d12313e373320243b37253133223b26333e7c313d3f7c3020">E-mail</a>
+        <a href="javascript:void(0)" onclick="openProfileScreen(); closeNav();">E-mail</a>
         <a href="javascript:void(0)" onclick="logoutApp()" style="color:var(--danger)">Sair da Conta</a>
         
         <div class="dropdown-btn" onclick="toggleDropdown()">Calculadoras</div>
@@ -805,6 +813,233 @@
         </div>
     </div>
     <div id="overlay" class="overlay-bg" onclick="closeNav()"></div>
+
+    <!-- ============================= TELA DE PERFIL ============================= -->
+    <div id="profile-screen" class="profile-panel">
+        <!-- Header Fixo da Tela de Perfil -->
+        <div class="profile-panel-header">
+            <button class="profile-back-btn" onclick="closeProfileScreen()">
+                <i class="fa-solid fa-chevron-left"></i> <span>Voltar</span>
+            </button>
+            <div class="profile-header-title">Meu Perfil</div>
+            <button class="profile-edit-btn" onclick="openEditProfileModal('nome')" title="Editar Nome">
+                <i class="fa-solid fa-pen"></i>
+            </button>
+        </div>
+
+        <!-- Conteúdo Scrollável -->
+        <div class="profile-panel-body">
+            
+            <!-- Hero User Card -->
+            <div class="profile-user-card">
+                <div class="profile-avatar-container">
+                    <div class="profile-avatar-default">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="profile-avatar-badge" title="Foto de perfil">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                </div>
+                <div class="profile-user-info">
+                    <h2 class="profile-user-name" id="profileDisplayName">Usuário Clearview</h2>
+                    <div class="profile-user-email" id="profileDisplayEmail">usuario@clearview.app</div>
+                    <div class="profile-tags">
+                        <span class="profile-badge badge-gold"><i class="fa-solid fa-crown"></i> Premium</span>
+                        <span class="profile-badge badge-success"><i class="fa-solid fa-circle-check"></i> Conta Ativa</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD DESTACADO: CONECTAR OPEN FINANCE -->
+            <div class="open-finance-highlight-card">
+                <div class="of-card-glow"></div>
+                <div class="of-card-header">
+                    <div class="of-card-icon-wrapper">
+                        <i class="fa-solid fa-building-columns"></i>
+                    </div>
+                    <div class="of-card-titles">
+                        <span class="of-badge">NOVIDADE</span>
+                        <h3 class="of-title">Conectar Open Finance</h3>
+                    </div>
+                </div>
+                <p class="of-description">
+                    Sincronize automaticamente seus bancos, contas e cartões em tempo real com segurança regulada pelo Banco Central.
+                </p>
+                <button class="btn-open-finance-action" onclick="openOpenFinanceInfoModal()">
+                    <i class="fa-solid fa-link"></i>
+                    <span>Conectar Open Finance</span>
+                    <i class="fa-solid fa-arrow-right of-arrow"></i>
+                </button>
+            </div>
+
+            <!-- SEÇÃO 1: DADOS PESSOAIS -->
+            <div class="profile-section">
+                <div class="profile-section-title">Dados Pessoais</div>
+                <div class="profile-menu-card">
+                    <div class="profile-menu-item" onclick="openEditProfileModal('nome')">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-blue"><i class="fa-solid fa-user-pen"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">Nome Completo</span>
+                                <span class="profile-item-val" id="profileValNome">Usuário Clearview</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right profile-item-arrow"></i>
+                    </div>
+
+                    <div class="profile-menu-item" onclick="openEditProfileModal('email')">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-purple"><i class="fa-solid fa-envelope"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">E-mail</span>
+                                <span class="profile-item-val" id="profileValEmail">usuario@clearview.app</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right profile-item-arrow"></i>
+                    </div>
+
+                    <div class="profile-menu-item" onclick="openEditProfileModal('telefone')">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-green"><i class="fa-solid fa-phone"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">Número de Telefone</span>
+                                <span class="profile-item-val" id="profileValTelefone">(44) 99129-3357</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right profile-item-arrow"></i>
+                    </div>
+
+                    <div class="profile-menu-item" onclick="openEditProfileModal('cpf')">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-orange"><i class="fa-solid fa-id-card"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">CPF / Documento</span>
+                                <span class="profile-item-val" id="profileValCpf">***.458.910-**</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right profile-item-arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 2: PREFERÊNCIAS DO APP -->
+            <div class="profile-section">
+                <div class="profile-section-title">Preferências do App</div>
+                <div class="profile-menu-card">
+                    <div class="profile-menu-item" onclick="togglePrivacyMode()">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-gold"><i class="fa-solid fa-eye-slash"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">Modo Privacidade</span>
+                                <span class="profile-item-sub">Oculta saldos na tela principal</span>
+                            </div>
+                        </div>
+                        <label class="profile-switch" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="profileTogglePrivacy" onchange="togglePrivacyMode()">
+                            <span class="profile-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="profile-menu-item" onclick="toggleProfileNotifs()">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-cyan"><i class="fa-solid fa-bell"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">Notificações Push</span>
+                                <span class="profile-item-sub">Alertas de gastos e relatórios</span>
+                            </div>
+                        </div>
+                        <label class="profile-switch" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="profileToggleNotif" checked onchange="toggleProfileNotifs()">
+                            <span class="profile-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="profile-menu-item" onclick="toggleProfileEmailReport()">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-indigo"><i class="fa-solid fa-envelope-open-text"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">Resumo por E-mail</span>
+                                <span class="profile-item-sub">Relatório semanal de fluxo</span>
+                            </div>
+                        </div>
+                        <label class="profile-switch" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="profileToggleEmailReport" checked onchange="toggleProfileEmailReport()">
+                            <span class="profile-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 3: SEGURANÇA -->
+            <div class="profile-section">
+                <div class="profile-section-title">Segurança e Acesso</div>
+                <div class="profile-menu-card">
+                    <div class="profile-menu-item" onclick="openChangePasswordModal()">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-red"><i class="fa-solid fa-key"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">Alterar Senha</span>
+                                <span class="profile-item-sub">Atualizada recentemente</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right profile-item-arrow"></i>
+                    </div>
+
+                    <div class="profile-menu-item" onclick="toggleBiometria()">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-gold"><i class="fa-solid fa-fingerprint"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">Biometria / Touch ID</span>
+                                <span class="profile-item-sub">Autenticação rápida no app</span>
+                            </div>
+                        </div>
+                        <label class="profile-switch" onclick="event.stopPropagation()">
+                            <input type="checkbox" id="profileToggleBiometria" onchange="toggleBiometria()">
+                            <span class="profile-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 4: SUPORTE & SOBRE -->
+            <div class="profile-section">
+                <div class="profile-section-title">Suporte e Termos</div>
+                <div class="profile-menu-card">
+                    <a href="https://wa.me/44991293357" target="_blank" class="profile-menu-item">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-green"><i class="fa-brands fa-whatsapp"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">Atendimento WhatsApp</span>
+                                <span class="profile-item-sub">Fale diretamente conosco</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right profile-item-arrow"></i>
+                    </a>
+
+                    <div class="profile-menu-item" onclick="openTermosModal()">
+                        <div class="profile-item-left">
+                            <div class="profile-item-icon icon-gray"><i class="fa-solid fa-file-contract"></i></div>
+                            <div class="profile-item-text">
+                                <span class="profile-item-label">Termos de Uso e Privacidade</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right profile-item-arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SAIR DA CONTA -->
+            <div class="profile-logout-box">
+                <button class="btn-profile-logout" onclick="logoutApp()">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Sair da Conta</span>
+                </button>
+                <div class="profile-footer-info">Clearview Dashboard • Versão 2.4.0</div>
+            </div>
+
+        </div>
+    </div>
+    <div id="profile-overlay" class="profile-overlay-bg" onclick="closeProfileScreen()"></div>
 
     <div class="content">
         <!-- Header do Mês -->
@@ -1477,6 +1712,72 @@
     </div>
 </div>
 
+<!-- MODAL EDITAR PERFIL -->
+<div id="editProfileModal" class="modal-overlay" style="display:none;z-index:11000" onclick="if(event.target===this)closeEditProfileModal()">
+    <div class="modal-content" style="max-width:420px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div class="modal-title" id="editProfileModalTitle" style="margin:0">Editar Perfil</div>
+            <button onclick="closeEditProfileModal()" style="background:none;border:none;color:#888;font-size:1.4rem;cursor:pointer">&times;</button>
+        </div>
+        
+        <div style="margin-bottom:20px">
+            <label id="editProfileLabel" style="font-size:0.75rem;color:var(--text-sec);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Campo</label>
+            <input type="text" id="editProfileInput" class="custom-input" style="width:100%;padding:12px 14px;background:#18181c;border:1px solid #27272a;border-radius:10px;color:#fff;font-size:0.95rem">
+        </div>
+
+        <div style="display:flex;gap:10px">
+            <button class="btn-auth-v2 btn-auth-outline" style="flex:1;margin:0" onclick="closeEditProfileModal()">Cancelar</button>
+            <button class="btn-auth-v2 btn-auth-gold" style="flex:1;margin:0" onclick="saveEditProfile()">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL OPEN FINANCE INFORMAÇÕES -->
+<div id="openFinanceModal" class="modal-overlay" style="display:none;z-index:11000" onclick="if(event.target===this)closeOpenFinanceInfoModal()">
+    <div class="modal-content" style="max-width:440px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,204,0,0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.1rem">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div>
+                    <div class="modal-title" style="margin:0;font-size:1.05rem">Open Finance</div>
+                    <div style="font-size:0.7rem;color:var(--accent);font-weight:600;letter-spacing:1px">CONEXÃO BANCÁRIA</div>
+                </div>
+            </div>
+            <button onclick="closeOpenFinanceInfoModal()" style="background:none;border:none;color:#888;font-size:1.4rem;cursor:pointer">&times;</button>
+        </div>
+        
+        <div style="background:#16161a;border:1px solid #27272a;border-radius:14px;padding:16px;margin-bottom:18px">
+            <div style="font-size:0.85rem;color:#fff;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+                <i class="fa-solid fa-shield-halved" style="color:var(--success)"></i> Segurança e Controle
+            </div>
+            <p style="font-size:0.8rem;color:#a1a1aa;line-height:1.5;margin:0">
+                O Open Finance permite conectar com segurança suas contas de mais de 800 bancos e corretoras regulados pelo Banco Central para sincronização automática de saldos e transações.
+            </p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+            <div style="display:flex;align-items:center;gap:12px;font-size:0.82rem;color:#e4e4e7">
+                <i class="fa-solid fa-circle-check" style="color:var(--accent)"></i> Sincronização automática diária
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;font-size:0.82rem;color:#e4e4e7">
+                <i class="fa-solid fa-circle-check" style="color:var(--accent)"></i> Criptografia ponta a ponta
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;font-size:0.82rem;color:#e4e4e7">
+                <i class="fa-solid fa-circle-check" style="color:var(--accent)"></i> Sem movimentação ou senhas salvas
+            </div>
+        </div>
+
+        <div style="background:rgba(255,204,0,0.06);border:1px dashed rgba(255,204,0,0.25);border-radius:10px;padding:12px;text-align:center;margin-bottom:18px">
+            <span style="font-size:0.75rem;color:var(--accent);font-weight:600;display:block;margin-bottom:2px">EM DESENVOLVIMENTO</span>
+            <span style="font-size:0.75rem;color:#a1a1aa">Estamos finalizando a integração. Você será notificado assim que estiver liberada!</span>
+        </div>
+
+        <button class="btn-auth-v2 btn-auth-gold" style="width:100%;margin:0" onclick="closeOpenFinanceInfoModal()">Entendido</button>
+    </div>
+</div>
+
 <!-- MODAL META DA CATEGORIA -->
 <div id="metaCategoryModal" class="modal-overlay" onclick="if(event.target===this)closeMetaCategoryModal()">
     <div class="modal-content" style="max-width:380px">
@@ -2105,6 +2406,11 @@ window.switchTab = function(tab,btn,dir){
     
     function showSwipeHint(dir){
         createSwipeHint();
+        if (curTabIdx === 0 && dir === 'right') {
+            swipeHint.innerHTML = '<span>Meu Perfil</span> &#8594;';
+            swipeHint.style.opacity = '1';
+            return;
+        }
         var labels=TAB_ORDER.map(function(t){return ({fluxo:'Fluxo',ativos:'Ativos',historico:'Histórico',projecao:'Projeção'})[t]||t;});
         var nextIdx=dir==='left'?Math.min(curTabIdx+1,TAB_ORDER.length-1):Math.max(curTabIdx-1,0);
         if(nextIdx===curTabIdx){swipeHint.style.opacity='0';return;}
@@ -2113,7 +2419,7 @@ window.switchTab = function(tab,btn,dir){
     }
     
     document.addEventListener('touchstart',function(e){
-        if(e.target.closest('#auth-screen,#mySidenav,.modal-overlay')) return;
+        if(e.target.closest('#auth-screen,#mySidenav,#profile-screen,.modal-overlay')) return;
         sx=e.changedTouches[0].clientX;
         sy=e.changedTouches[0].clientY;
         stime=Date.now();
@@ -2138,6 +2444,20 @@ window.switchTab = function(tab,btn,dir){
         var isFlick=Math.abs(dx)>30&&dt<350;
         if(!isFlick&&Math.abs(dx)<60) return;
         if(Math.abs(dy)>Math.abs(dx)*0.75) return;
+
+        var profileScreen = document.getElementById('profile-screen');
+        var isProfileOpen = profileScreen && profileScreen.classList.contains('open');
+
+        if (isProfileOpen && dx < -40) {
+            window.closeProfileScreen();
+            return;
+        }
+
+        if (dx > 0 && (curTabIdx === 0 || sx < 40) && !isProfileOpen) {
+            window.openProfileScreen();
+            return;
+        }
+
         var next=dx<0?Math.min(curTabIdx+1,TAB_ORDER.length-1):Math.max(curTabIdx-1,0);
         if(next===curTabIdx) return;
         var direction=dx<0?'left':'right';
@@ -2145,6 +2465,213 @@ window.switchTab = function(tab,btn,dir){
         window.switchTab(TAB_ORDER[next],b,direction);
     },{passive:true});
 })();
+
+/* ============================================================
+   PERFIL DO USUÁRIO & OPEN FINANCE
+============================================================ */
+var userProfileData = {
+    nome: '',
+    email: '',
+    telefone: '',
+    cpf: ''
+};
+
+window.initProfileData = function() {
+    var savedNome = localStorage.getItem('cv_profile_nome');
+    var savedEmail = localStorage.getItem('cv_profile_email');
+    var savedTelefone = localStorage.getItem('cv_profile_telefone');
+    var savedCpf = localStorage.getItem('cv_profile_cpf');
+
+    if (!savedNome) {
+        var splashNameEl = document.getElementById('splashName');
+        savedNome = (splashNameEl && splashNameEl.textContent !== 'Usuario') ? splashNameEl.textContent : 'Usuário Clearview';
+    }
+    if (!savedEmail) {
+        savedEmail = (window.currentUser && window.currentUser.email) ? window.currentUser.email : 'usuario@clearview.app';
+    }
+    if (!savedTelefone) {
+        savedTelefone = '(44) 99129-3357';
+    }
+    if (!savedCpf) {
+        savedCpf = '***.458.910-**';
+    }
+
+    userProfileData.nome = savedNome;
+    userProfileData.email = savedEmail;
+    userProfileData.telefone = savedTelefone;
+    userProfileData.cpf = savedCpf;
+
+    window.syncProfileUI();
+};
+
+window.syncProfileUI = function() {
+    var nameEl = document.getElementById('profileDisplayName');
+    var emailEl = document.getElementById('profileDisplayEmail');
+    var valNome = document.getElementById('profileValNome');
+    var valEmail = document.getElementById('profileValEmail');
+    var valTelefone = document.getElementById('profileValTelefone');
+    var valCpf = document.getElementById('profileValCpf');
+
+    if (nameEl) nameEl.textContent = userProfileData.nome || 'Usuário Clearview';
+    if (emailEl) emailEl.textContent = userProfileData.email || 'usuario@clearview.app';
+    if (valNome) valNome.textContent = userProfileData.nome || 'Usuário Clearview';
+    if (valEmail) valEmail.textContent = userProfileData.email || 'usuario@clearview.app';
+    if (valTelefone) valTelefone.textContent = userProfileData.telefone || 'Não informado';
+    if (valCpf) valCpf.textContent = userProfileData.cpf || 'Não informado';
+
+    // Privacy toggle state sync
+    var privToggle = document.getElementById('profileTogglePrivacy');
+    if (privToggle) {
+        privToggle.checked = document.body.classList.contains('privacy-active');
+    }
+
+    // Notif toggle sync
+    var notifToggle = document.getElementById('profileToggleNotif');
+    if (notifToggle) {
+        var notifSaved = localStorage.getItem('cv_pref_notif');
+        if (notifSaved !== null) notifToggle.checked = notifSaved === 'true';
+    }
+
+    // Email report sync
+    var emailToggle = document.getElementById('profileToggleEmailReport');
+    if (emailToggle) {
+        var emailSaved = localStorage.getItem('cv_pref_email_report');
+        if (emailSaved !== null) emailToggle.checked = emailSaved === 'true';
+    }
+
+    // Biometria sync
+    var bioToggle = document.getElementById('profileToggleBiometria');
+    if (bioToggle) {
+        var bioSaved = localStorage.getItem('cv_pref_biometria');
+        if (bioSaved !== null) bioToggle.checked = bioSaved === 'true';
+    }
+};
+
+window.openProfileScreen = function() {
+    window.initProfileData();
+    var panel = document.getElementById('profile-screen');
+    var overlay = document.getElementById('profile-overlay');
+    if (panel) panel.classList.add('open');
+    if (overlay) overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+};
+
+window.closeProfileScreen = function() {
+    var panel = document.getElementById('profile-screen');
+    var overlay = document.getElementById('profile-overlay');
+    if (panel) panel.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+    document.body.style.overflow = '';
+};
+
+/* MODAL DE EDIÇÃO DE DADOS */
+var currentEditField = null;
+
+window.openEditProfileModal = function(field) {
+    currentEditField = field;
+    var modal = document.getElementById('editProfileModal');
+    var title = document.getElementById('editProfileModalTitle');
+    var input = document.getElementById('editProfileInput');
+    var label = document.getElementById('editProfileLabel');
+
+    if (!modal || !input) return;
+
+    if (field === 'nome' || field === 'geral') {
+        title.textContent = 'Editar Nome Completo';
+        label.textContent = 'Nome Completo';
+        input.value = userProfileData.nome;
+        input.type = 'text';
+    } else if (field === 'email') {
+        title.textContent = 'Editar E-mail';
+        label.textContent = 'Endereço de E-mail';
+        input.value = userProfileData.email;
+        input.type = 'email';
+    } else if (field === 'telefone') {
+        title.textContent = 'Editar Número de Telefone';
+        label.textContent = 'Telefone Celular';
+        input.value = userProfileData.telefone;
+        input.type = 'tel';
+    } else if (field === 'cpf') {
+        title.textContent = 'Editar CPF / Documento';
+        label.textContent = 'CPF ou Documento';
+        input.value = userProfileData.cpf;
+        input.type = 'text';
+    }
+
+    modal.style.display = 'flex';
+    setTimeout(function(){ input.focus(); }, 150);
+};
+
+window.closeEditProfileModal = function() {
+    var modal = document.getElementById('editProfileModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.saveEditProfile = function() {
+    var input = document.getElementById('editProfileInput');
+    var val = input ? input.value.trim() : '';
+
+    if (!val) {
+        alert('Por favor, informe um valor válido.');
+        return;
+    }
+
+    if (currentEditField === 'nome' || currentEditField === 'geral') {
+        userProfileData.nome = val;
+        localStorage.setItem('cv_profile_nome', val);
+        var splashNameEl = document.getElementById('splashName');
+        if (splashNameEl) splashNameEl.textContent = val;
+    } else if (currentEditField === 'email') {
+        userProfileData.email = val;
+        localStorage.setItem('cv_profile_email', val);
+    } else if (currentEditField === 'telefone') {
+        userProfileData.telefone = val;
+        localStorage.setItem('cv_profile_telefone', val);
+    } else if (currentEditField === 'cpf') {
+        userProfileData.cpf = val;
+        localStorage.setItem('cv_profile_cpf', val);
+    }
+
+    window.syncProfileUI();
+    window.closeEditProfileModal();
+};
+
+/* OPEN FINANCE MODAL */
+window.openOpenFinanceInfoModal = function() {
+    var modal = document.getElementById('openFinanceModal');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.closeOpenFinanceInfoModal = function() {
+    var modal = document.getElementById('openFinanceModal');
+    if (modal) modal.style.display = 'none';
+};
+
+/* PREFERENCES & TOGGLES */
+window.toggleProfileNotifs = function() {
+    var chk = document.getElementById('profileToggleNotif');
+    if (chk) {
+        localStorage.setItem('cv_pref_notif', chk.checked ? 'true' : 'false');
+    }
+};
+
+window.toggleProfileEmailReport = function() {
+    var chk = document.getElementById('profileToggleEmailReport');
+    if (chk) {
+        localStorage.setItem('cv_pref_email_report', chk.checked ? 'true' : 'false');
+    }
+};
+
+window.toggleBiometria = function() {
+    var chk = document.getElementById('profileToggleBiometria');
+    if (chk) {
+        localStorage.setItem('cv_pref_biometria', chk.checked ? 'true' : 'false');
+    }
+};
+
+window.openChangePasswordModal = function() {
+    alert('Alteração de senha: Se você utiliza Login Social (Google), sua autenticação é feita diretamente com o provedor. Caso contrário, um link de redefinição de senha será enviado ao seu e-mail.');
+};
 
 /* SYNC ICON */
 window.setStatus = function(type){
@@ -5124,6 +5651,7 @@ function formatName(name) {
 
 async function startApp(user) {
     CLIENT_ID = user.uid; // Define ID único do usuário
+    window.currentUser = user;
     
     // Tenta buscar nome do perfil no Firestore
     var nameToDisplay = "Usuário";
@@ -5140,6 +5668,7 @@ async function startApp(user) {
     }
     
     document.getElementById('splashName').textContent = formatName(nameToDisplay);
+    if(window.initProfileData) window.initProfileData();
 
     // Define saudação (Novo usuário vs Recorrente) - Lógica melhorada
     // Se a conta foi criada há menos de 1 minuto, consideramos novo usuário.
