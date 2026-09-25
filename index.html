@@ -4264,6 +4264,19 @@ function setupGastoCatDrag(handle, catEl) {
 }
 
 /* GERENCIAMENTO DE CATEGORIAS DE GASTOS */
+window._exitGastosEditMode = function() {
+    var c = document.getElementById('gastos-container');
+    if (c && c.classList.contains('edit-mode')) {
+        c.classList.remove('edit-mode');
+        var btn = document.getElementById('btnEditGastos');
+        var btnNew = document.getElementById('btnNewGastoCat');
+        if (btn) btn.textContent = 'Editar';
+        if (btnNew) btnNew.style.display = 'none';
+        renderGastos();
+    }
+};
+window.exitGastosEditMode = window._exitGastosEditMode;
+
 window._toggleGastosEditMode = function() {
     var c = document.getElementById('gastos-container'); // Container da lista
     var btn = document.getElementById('btnEditGastos');
@@ -4279,7 +4292,7 @@ window._toggleGastosEditMode = function() {
         btn.textContent = 'Concluir';
         btnNew.style.display = 'block';
     } else {
-        btn.textContent = 'Editar Categoria';
+        btn.textContent = 'Editar';
         btnNew.style.display = 'none';
     }
 };
@@ -4291,6 +4304,7 @@ window._addNewGastoCategory = function() {
     expenseCats.push({ id: id, label: name });
     gastosData[id] = [];
     rowCounters[id] = 0;
+    window._exitGastosEditMode();
     renderGastos();
     window._saveAllData();
     window.closeNewGastoCatModal();
@@ -4304,6 +4318,7 @@ window._deleteGastoCategory = function(key) {
     
     expenseCats = expenseCats.filter(c => c.id !== key);
     delete gastosData[key];
+    window._exitGastosEditMode();
     renderGastos();
     window._saveAllData();
 };
@@ -4322,6 +4337,7 @@ window._startRenameGastoCat = function(key) {
                 h.expenseCatsSnapshot.forEach(c => { if(c.id === key) c.label = newName; });
             }
         });
+        window._exitGastosEditMode();
         renderGastos(); window._saveAllData();
     }
 };
@@ -4359,6 +4375,7 @@ window._removeRow=function(key,rowId){
     gastosData[key]=gastosData[key].filter(function(r){return r.id!==rowId;});
     updateFlow();
     window._saveAllData();
+    window._exitGastosEditMode();
 };
 
 function renderGastosHist(){
@@ -4540,6 +4557,19 @@ function setupRendaCatDrag(handle, catEl) {
     handle.addEventListener('mousedown', start); document.addEventListener('mousemove', move); document.addEventListener('mouseup', end);
 }
 
+window._exitRendaEditMode = function() {
+    var c = document.getElementById('renda-container');
+    if (c && c.classList.contains('edit-mode')) {
+        c.classList.remove('edit-mode');
+        var btn = document.getElementById('btnEditRenda');
+        var btnNew = document.getElementById('btnNewRendaCat');
+        if (btn) btn.textContent = 'Editar Categoria';
+        if (btnNew) btnNew.style.display = 'none';
+        renderRenda();
+    }
+};
+window.exitRendaEditMode = window._exitRendaEditMode;
+
 window._toggleRendaEditMode = function() {
     var c = document.getElementById('renda-container'); // Container da lista
     var btn = document.getElementById('btnEditRenda');
@@ -4559,6 +4589,7 @@ window._addNewRendaCategory = function() {
     var name = document.getElementById('newRendaCatName').value.trim();
     if(!name) return;
     incomeCats.push({ id: 'inc_'+Date.now(), label: name });
+    window._exitRendaEditMode();
     renderRenda(); window._saveAllData(); window.closeNewRendaCatModal();
 };
 
@@ -4569,6 +4600,7 @@ window._deleteRendaCategory = function(key) {
     if(hasItems) return alert('Esta categoria tem itens. Remova os itens antes de excluir.');
     if(!confirm('Excluir categoria?')) return;
     incomeCats = incomeCats.filter(c => c.id !== key);
+    window._exitRendaEditMode();
     renderRenda(); window._saveAllData();
 };
 
@@ -4590,6 +4622,7 @@ window._startRenameRendaCat = function(key) {
             }
         });
         cat.label = newName;
+        window._exitRendaEditMode();
         renderRenda(); window._saveAllData();
     }
 };
@@ -4673,6 +4706,7 @@ window._removeRenda=function(id){
         propagateSalaryToFutureMonths(newVal, item.cat, item.desc);
     }
 
+    window._exitRendaEditMode();
     renderRenda();updateFlow();window._saveAllData();
 };
 
@@ -4735,6 +4769,7 @@ window._saveEditRenda = function() {
         propagateSalaryToFutureMonths(salVal, salCat, salDesc);
     }
     
+    window._exitRendaEditMode();
     renderRenda();
     updateFlow();
     window._saveAllData();
@@ -5024,6 +5059,17 @@ window._toggleAssetCat = function(id) {
     el.classList.toggle('open');
 };
 
+window._exitAssetEditMode = function() {
+    var list = document.getElementById('assets-list');
+    if (list && list.classList.contains('edit-mode')) {
+        list.classList.remove('edit-mode');
+        var btn = document.getElementById('btnEditAssets');
+        if (btn) btn.classList.remove('active');
+        renderAssetList();
+    }
+};
+window.exitAssetEditMode = window._exitAssetEditMode;
+
 window._toggleAssetEditMode = function() {
     var list = document.getElementById('assets-list');
     var btn = document.getElementById('btnEditAssets');
@@ -5066,6 +5112,7 @@ window._deleteAssetEntry = function(catId, entryId) {
             if(!confirm('Excluir este aporte?')) return;
             cat.entries = cat.entries.filter(e => e.id !== entryId);
         }
+        window._exitAssetEditMode();
         renderAssetList();
         window._updateAssets(true);
     }
@@ -5078,6 +5125,7 @@ window._addNewCategory = function() {
     // Pick color based on index
     var color = ASSET_COLORS[assetsData.categories.length % ASSET_COLORS.length];
     assetsData.categories.push({ id: id, name: name, color: color, entries: [] });
+    window._exitAssetEditMode();
     renderAssetList();
     window._updateAssets(true);
     window.closeNewCatModal();
@@ -5099,6 +5147,7 @@ window._deleteAssetCategory = function(catId) {
         if (!confirm('Excluir esta categoria permanentemente?')) return;
         assetsData.categories = assetsData.categories.filter(c => c.id !== catId);
     }
+    window._exitAssetEditMode();
     renderAssetList();
     window._updateAssets(true);
 };
@@ -5125,6 +5174,7 @@ window._saveAssetCatName = function(catId, newName) {
     }
     if(nameEl) { nameEl.textContent = newName; nameEl.style.display = ''; }
     if(input) input.style.display = 'none';
+    window._exitAssetEditMode();
 };
 
 function animateValue(obj, start, end, duration) {
