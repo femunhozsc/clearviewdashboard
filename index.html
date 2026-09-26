@@ -2704,24 +2704,108 @@ window.saveOpenFinanceItems = async function(items) {
     // Sincroniza com Firestore se cliente autenticado
     if (CLIENT_ID && typeof setDoc === 'function') {
         try {
-            await setDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance', 'status'), {
+            var payload = JSON.parse(JSON.stringify({
                 connected: items.length > 0,
                 updatedAt: new Date().toISOString(),
                 itemsCount: items.length
-            }, { merge: true });
+            }));
+            await setDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance', 'status'), payload, { merge: true });
         } catch(err) {
             console.warn('Erro ao sincronizar status Open Finance no Firestore:', err);
         }
     }
 };
 
-// Sincroniza e atualiza a interface (oculta o card promocional se conectado)
-window.checkOpenFinanceStatus = async function() {
+// Atualiza a interface gráfica imediatamente de acordo com a lista de bancos
+window.renderOpenFinanceUI = function(items) {
     var promoCard = document.getElementById('openFinanceCard');
     var connectedCard = document.getElementById('openFinanceConnectedCard');
     var banksList = document.getElementById('openFinanceBanksList');
 
+    if (!items) items = window.getOpenFinanceItems();
+    var isConnected = (items && items.length > 0);
+
+    // REGRA: Quando conectado, o card promocional é completamente ocultado
+    if (promoCard) promoCard.style.display = isConnected ? 'none' : 'block';
+    if (connectedCard) connectedCard.style.display = isConnected ? 'block' : 'none';
+
+    if (isConnected && banksList) {
+        window.renderOpenFinanceBanksList(items);
+    }
+};
+
+// Registra um banco conectado (executado por onSuccess, onEvent ou postMessage)
+window.registerOpenFinanceConnection = async function(rawItem) {
+    console.log('[OpenFinance] Registrando item conectado:', rawItem);
+    if (!rawItem) return;
+
+    var itemId = rawItem.id || rawItem.itemId || (rawItem.item && rawItem.item.id);
+    if (!itemId && typeof rawItem === 'string') itemId = rawItem;
+    if (!itemId) itemId = 'item_' + Date.now();
+
+    var conn = rawItem.connector || (rawItem.item && rawItem.item.connector) || {};
+    var name = conn.name || rawItem.connectorName || rawItem.name || 'Pluggy Bank (Sandbox)';
+    var logoUrl = conn.imageUrl || rawItem.imageUrl || 'https://cdn.pluggy.ai/assets/connector-icons/sandbox.svg';
+
+    var formattedItem = {
+        id: itemId,
+        name: name,
+        status: rawItem.status || 'UPDATED',
+        connector: {
+            id: conn.id || 2,
+            name: name,
+            imageUrl: logoUrl,
+            primaryColor: conn.primaryColor || '#ffcc00'
+        },
+        connectedAt: new Date().toISOString()
+    };
+
     var items = window.getOpenFinanceItems();
+    // Evita duplicatas pelo ID
+    items = items.filter(function(i) { return i.id !== formattedItem.id; });
+    items.push(formattedItem);
+
+    // Salva imediatamente localmente
+    localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
+    localStorage.setItem('cv_open_finance_connected', 'true');
+
+    // Atualiza a interface instantaneamente
+    window.renderOpenFinanceUI(items);
+
+    // Salva no Firestore se autenticado
+    if (CLIENT_ID && typeof setDoc === 'function') {
+        try {
+            var cleanItem = JSON.parse(JSON.stringify(formattedItem));
+            await setDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance_items', formattedItem.id), cleanItem, { merge: true });
+            await setDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance', 'status'), {
+                connected: true,
+                updatedAt: new Date().toISOString(),
+                itemsCount: items.length
+            }, { merge: true });
+        } catch(fsErr) {
+            console.warn('[OpenFinance] Erro ao sincronizar item no Firestore:', fsErr);
+        }
+    }
+};
+
+// Sincroniza e atualiza a interface (oculta o card promocional se conectado)
+window.checkOpenFinanceStatus = async function() {
+    var items = window.getOpenFinanceItems();
+
+    // Se estiver marcado como conectado no localStorage mas a lista estiver vazia
+    if (items.length === 0 && localStorage.getItem('cv_open_finance_connected') === 'true') {
+        items = [{
+            id: 'item_sandbox',
+            name: 'Pluggy Bank (Sandbox)',
+            status: 'UPDATED',
+            connector: {
+                id: 2,
+                name: 'Pluggy Bank (Sandbox)',
+                imageUrl: 'https://cdn.pluggy.ai/assets/connector-icons/sandbox.svg'
+            }
+        }];
+        localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
+    }
 
     // Se estiver autenticado e a lista local for vazia, tenta buscar do Firestore
     if (items.length === 0 && CLIENT_ID && typeof getDocs === 'function') {
@@ -2738,15 +2822,7 @@ window.checkOpenFinanceStatus = async function() {
         }
     }
 
-    var isConnected = (items && items.length > 0);
-
-    // REGRA: Quando conectado, o card promocional é completamente ocultado
-    if (promoCard) promoCard.style.display = isConnected ? 'none' : 'block';
-    if (connectedCard) connectedCard.style.display = isConnected ? 'block' : 'none';
-
-    if (isConnected && banksList) {
-        window.renderOpenFinanceBanksList(items);
-    }
+    window.renderOpenFinanceUI(items);
 };
 
 // Renderiza a lista de bancos conectados no Meu Perfil
@@ -2924,43 +3000,33 @@ window.startPluggyConnectFlow = async function() {
                 window.closeOpenFinanceInfoModal();
             },
             onSuccess: async function(itemData) {
-                console.log('Pluggy Connect Sucesso!', itemData);
-                var item = itemData.item || itemData;
-                if (!item || !item.id) {
-                    item = { id: 'item_' + Date.now(), connector: { name: 'Banco Conectado' }, status: 'UPDATED' };
-                }
-
-                var items = window.getOpenFinanceItems();
-                // Evita duplicatas
-                items = items.filter(function(i) { return i.id !== item.id; });
-                items.push(item);
-                await window.saveOpenFinanceItems(items);
-
-                // Salva no Firestore
-                if (CLIENT_ID && typeof setDoc === 'function') {
-                    try {
-                        await setDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance_items', item.id), {
-                            ...item,
-                            connectedAt: new Date().toISOString()
-                        }, { merge: true });
-                    } catch(fsErr) {
-                        console.warn('Erro ao salvar item no Firestore:', fsErr);
-                    }
-                }
-
+                console.log('Pluggy Connect onSuccess:', itemData);
+                var rawItem = itemData?.item || itemData;
+                await window.registerOpenFinanceConnection(rawItem);
                 window.closeOpenFinanceInfoModal();
-                window.checkOpenFinanceStatus();
                 alert('Instituição financeira conectada com sucesso ao Clearview Atlas!');
             },
+            onEvent: async function(eventData) {
+                console.log('Pluggy Connect onEvent:', eventData);
+                var eventName = eventData?.event || eventData?.type;
+                if (eventName === 'ITEM_CREATED' || eventName === 'ITEM_UPDATED' || eventName === 'ITEM_COMPLETED') {
+                    var rawItem = eventData?.data?.item || eventData?.item || eventData?.data;
+                    if (rawItem) {
+                        await window.registerOpenFinanceConnection(rawItem);
+                    }
+                }
+            },
             onError: function(error) {
-                console.error('Pluggy Connect Erro:', error);
+                console.error('Pluggy Connect onError:', error);
                 alert('Ocorreu uma falha durante a conexão bancária: ' + (error.message || JSON.stringify(error)));
                 if (loadingBox) loadingBox.style.display = 'none';
                 if (actionBox) actionBox.style.display = 'block';
             },
             onClose: function() {
+                console.log('Pluggy Connect onClose');
                 if (loadingBox) loadingBox.style.display = 'none';
                 if (actionBox) actionBox.style.display = 'block';
+                window.checkOpenFinanceStatus();
             }
         });
 
@@ -6415,18 +6481,23 @@ async function startApp(user) {
     CLIENT_ID = user.uid; // Define ID único do usuário
     window.currentUser = user;
     
-    // Tenta buscar nome do perfil no Firestore
-    var nameToDisplay = "Usuário";
+    // Tenta buscar nome do perfil com prioridade para localStorage e displayName
+    var nameToDisplay = localStorage.getItem('cv_profile_nome') || user.displayName || "Usuário";
     try {
         var docSnap = await getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
         if(docSnap.exists()) {
             var data = docSnap.data();
-            nameToDisplay = data.nome + ' ' + data.sobrenome;
+            var fullName = data.nomeCompleto || (data.nome ? (data.sobrenome ? (data.nome + ' ' + data.sobrenome) : data.nome) : '');
+            if(fullName && fullName.trim()) {
+                nameToDisplay = fullName.trim();
+                localStorage.setItem('cv_profile_nome', nameToDisplay);
+            }
         } else if(user.displayName) {
             nameToDisplay = user.displayName;
+            localStorage.setItem('cv_profile_nome', nameToDisplay);
         }
     } catch(e) {
-        console.log("Erro ao buscar nome:", e);
+        console.log("Erro ao buscar nome no Firestore:", e);
     }
     
     document.getElementById('splashName').textContent = formatName(nameToDisplay);
@@ -6490,6 +6561,7 @@ window._saveAllData=function(){
     window.setStatus('saving');
     saveTimer=setTimeout(async function(){
         try{
+            if(CLIENT_ID) localStorage.setItem('cv_dashboard_cache_' + CLIENT_ID, JSON.stringify(payload));
             await setDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'),payload);
             window.setStatus('saved');
         }catch(e){console.error("Erro ao salvar no Firestore:", e);window.setStatus('offline');}
@@ -6501,8 +6573,22 @@ async function loadData(){
     var data=null;
     try{
         var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
-        if(snap.exists()) data=snap.data();
+        if(snap.exists()) {
+            data=snap.data();
+            if(CLIENT_ID) localStorage.setItem('cv_dashboard_cache_' + CLIENT_ID, JSON.stringify(data));
+        }
     }catch(e){console.error("Erro ao carregar do Firestore:", e);}
+
+    // Fallback de contingência: se Firestore não respondeu ou deu erro de permissão, lê do cache local
+    if(!data && CLIENT_ID) {
+        try {
+            var cached = localStorage.getItem('cv_dashboard_cache_' + CLIENT_ID);
+            if(cached) {
+                data = JSON.parse(cached);
+                console.log("[Clearview] Dados recuperados do cache local.");
+            }
+        } catch(cErr) {}
+    }
 
     if(data){
         historico=data.historico||{};

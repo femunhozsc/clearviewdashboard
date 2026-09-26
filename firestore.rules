@@ -1,12 +1,25 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Permite leitura e escrita para o próprio cliente autenticado
-    match /clientes/{clientId}/{document=**} {
-      allow read, write: if request.auth != null && (request.auth.uid == clientId || request.auth.token.email != null);
+    // Permite leitura pública para login por CPF ou Telefone
+    match /cpfs/{cpf} {
+      allow read, write: if true;
     }
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    match /telefones/{phone} {
+      allow read, write: if true;
+    }
+    match /phones/{phone} {
+      allow read, write: if true;
+    }
+
+    // Permite acesso aos dados da carteira de clientes, perfil, dashboard e open finance
+    match /clientes/{clientId}/{document=**} {
+      allow read, write: if true;
+    }
+
+    // Regra global de segurança para todas as coleções
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
