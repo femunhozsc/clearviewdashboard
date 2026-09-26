@@ -1427,6 +1427,120 @@ body.modal-open {
     transition: transform 0.2s;
 }
 
+/* OPEN FINANCE CONNECTED INSTITUTIONS CARD */
+.open-finance-connected-card {
+    background: #111111;
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+.of-connected-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.of-connected-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.btn-of-add-bank {
+    background: rgba(255, 204, 0, 0.1);
+    border: 1px solid rgba(255, 204, 0, 0.25);
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.btn-of-add-bank:active {
+    background: rgba(255, 204, 0, 0.2);
+}
+.of-banks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.of-bank-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 12px 14px;
+    transition: 0.2s;
+}
+.of-bank-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.of-bank-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: var(--accent);
+    overflow: hidden;
+}
+.of-bank-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.of-bank-info {
+    display: flex;
+    flex-direction: column;
+}
+.of-bank-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+.of-bank-status {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
+}
+.btn-of-disconnect {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px;
+    font-size: 0.82rem;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+.btn-of-disconnect:hover, .btn-of-disconnect:active {
+    color: var(--danger);
+    background: rgba(233, 59, 59, 0.1);
+}
+
 /* PROFILE SECTIONS & LISTS */
 .profile-section {
     margin-bottom: 22px;

@@ -1,0 +1,18 @@
+# Dependências
+node_modules/
+functions/node_modules/
+
+# Variáveis locais e chaves secretas
+.env
+functions/.env
+functions/.runtimeconfig.json
+
+# Firebase
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# SO
+.DS_Store
+Thumbs.db

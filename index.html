@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- Pluggy Connect Open Finance SDK -->
+    <script src="https://cdn.pluggy.ai/pluggy-connect/v2.11.0/pluggy-connect.js"></script>
     <link rel="stylesheet" href="style.css">
     <style id="opera-desktop-styles">
     /* OPERA LOGIN SCREEN */
@@ -858,6 +860,22 @@
                     <span>Conectar Open Finance</span>
                     <i class="fa-solid fa-arrow-right of-arrow"></i>
                 </button>
+            </div>
+
+            <!-- CARD QUANDO CONECTADO: INSTITUIÇÕES CONECTADAS -->
+            <div class="open-finance-connected-card" id="openFinanceConnectedCard" style="display:none">
+                <div class="of-connected-header">
+                    <div class="of-connected-badge">
+                        <i class="fa-solid fa-circle-check" style="color:var(--success)"></i>
+                        <span>Open Finance Ativo</span>
+                    </div>
+                    <button class="btn-of-add-bank" onclick="startPluggyConnectFlow()">
+                        <i class="fa-solid fa-plus"></i> Conectar outro
+                    </button>
+                </div>
+                <div class="of-banks-list" id="openFinanceBanksList">
+                    <!-- Renderizado dinamicamente via JS -->
+                </div>
             </div>
 
             <!-- SEÇÃO 1: DADOS PESSOAIS -->
@@ -1791,12 +1809,53 @@
             </div>
         </div>
 
-        <div style="background:rgba(255,204,0,0.06);border:1px dashed rgba(255,204,0,0.25);border-radius:10px;padding:12px;text-align:center;margin-bottom:18px">
-            <span style="font-size:0.75rem;color:var(--accent);font-weight:600;display:block;margin-bottom:2px">EM DESENVOLVIMENTO</span>
-            <span style="font-size:0.75rem;color:#a1a1aa">Estamos finalizando a integração. Você será notificado assim que estiver liberada!</span>
+        <div id="ofLoadingBox" style="display:none;background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.25);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size:1.5rem;color:var(--accent);margin-bottom:8px"></i>
+            <div style="font-size:0.88rem;color:#fff;font-weight:600">Abrindo ambiente seguro Pluggy...</div>
+            <div style="font-size:0.75rem;color:#aaa;margin-top:4px">Conectando aos servidores do Banco Central</div>
         </div>
 
-        <button class="btn-auth-v2 btn-auth-gold" style="width:100%;margin:0" onclick="closeOpenFinanceInfoModal()">Entendido</button>
+        <div id="ofActionBox">
+            <button class="btn-auth-v2 btn-auth-gold" id="btnStartOfConnect" style="width:100%;margin-bottom:10px" onclick="startPluggyConnectFlow()">
+                <i class="fa-solid fa-lock" style="margin-right:6px"></i> Iniciar Conexão Segura
+            </button>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+                <button type="button" onclick="openPluggyDevConfigModal()" style="background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;display:flex;align-items:center;gap:4px">
+                    <i class="fa-solid fa-key"></i> Chaves Pluggy (Sandbox)
+                </button>
+                <button type="button" onclick="closeOpenFinanceInfoModal()" style="background:none;border:none;color:var(--text-muted);font-size:0.78rem;cursor:pointer">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CONFIGURAÇÃO DEV/SANDBOX PLUGGY -->
+<div id="pluggyDevModal" class="modal-overlay" onclick="if(event.target===this)closePluggyDevModal()">
+    <div class="modal-content" style="max-width:400px">
+        <div class="modal-title" style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
+            <i class="fa-solid fa-sliders" style="color:var(--accent)"></i> Credenciais Pluggy (Sandbox)
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-sec);margin-bottom:14px;line-height:1.4">
+            Insira suas chaves obtidas no <a href="https://dashboard.pluggy.ai/" target="_blank" style="color:var(--accent);text-decoration:none">dashboard da Pluggy</a> para testar o widget de Open Finance imediatamente no app:
+        </p>
+        <div style="margin-bottom:12px">
+            <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Client ID</label>
+            <input type="text" id="cfgPluggyClientId" class="modal-input-desc" placeholder="ex: 12345678-abcd-..." style="margin-bottom:0">
+        </div>
+        <div style="margin-bottom:14px">
+            <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Client Secret</label>
+            <input type="password" id="cfgPluggyClientSecret" class="modal-input-desc" placeholder="ex: 87654321-dcba-..." style="margin-bottom:0">
+        </div>
+        <div style="margin-bottom:16px">
+            <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">URL da Cloud Function (Opcional)</label>
+            <input type="text" id="cfgPluggyFunctionUrl" class="modal-input-desc" placeholder="https://us-central1-clearview-4a460..." style="margin-bottom:0">
+        </div>
+        <div style="display:flex;gap:8px">
+            <button class="btn-auth-v2 btn-auth-outline" style="flex:1;margin:0" onclick="closePluggyDevModal()">Fechar</button>
+            <button class="btn-auth-v2 btn-auth-gold" style="flex:1;margin:0" onclick="savePluggyDevConfig()">Salvar Chaves</button>
+        </div>
     </div>
 </div>
 
@@ -1904,7 +1963,7 @@ Retorne EXATAMENTE a estrutura JSON no seguinte formato (sem explicações ou te
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, collectionGroup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, collectionGroup, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, updateEmail, updatePassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ============================================================
@@ -2623,24 +2682,310 @@ window.syncProfileAvatar = function() {
     }
 };
 
-/* OPEN FINANCE - REGRA DE INTEGRAÇÃO FUTURA */
-window.checkOpenFinanceStatus = function() {
-    var card = document.getElementById('openFinanceCard');
-    if (!card) return;
-    // Quando o usuário conectar o Open Finance, o card deve ser completamente ocultado
-    var isConnected = localStorage.getItem('cv_open_finance_connected') === 'true';
-    if (isConnected) {
-        card.style.display = 'none';
-    } else {
-        card.style.display = 'block';
+/* ============================================================
+   PLUGGY OPEN FINANCE (FASE 1: CONEXÃO E GERENCIAMENTO DE BANCOS)
+   ============================================================ */
+
+// Retorna itens conectados do localStorage
+window.getOpenFinanceItems = function() {
+    try {
+        var raw = localStorage.getItem('cv_open_finance_items');
+        return raw ? JSON.parse(raw) : [];
+    } catch(e) {
+        return [];
     }
 };
 
-window.connectOpenFinance = function() {
-    // Função preparada para receber a autenticação bancária Open Finance
-    localStorage.setItem('cv_open_finance_connected', 'true');
+// Salva lista de itens conectados
+window.saveOpenFinanceItems = async function(items) {
+    localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
+    localStorage.setItem('cv_open_finance_connected', items.length > 0 ? 'true' : 'false');
+    
+    // Sincroniza com Firestore se cliente autenticado
+    if (CLIENT_ID && typeof setDoc === 'function') {
+        try {
+            await setDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance', 'status'), {
+                connected: items.length > 0,
+                updatedAt: new Date().toISOString(),
+                itemsCount: items.length
+            }, { merge: true });
+        } catch(err) {
+            console.warn('Erro ao sincronizar status Open Finance no Firestore:', err);
+        }
+    }
+};
+
+// Sincroniza e atualiza a interface (oculta o card promocional se conectado)
+window.checkOpenFinanceStatus = async function() {
+    var promoCard = document.getElementById('openFinanceCard');
+    var connectedCard = document.getElementById('openFinanceConnectedCard');
+    var banksList = document.getElementById('openFinanceBanksList');
+
+    var items = window.getOpenFinanceItems();
+
+    // Se estiver autenticado e a lista local for vazia, tenta buscar do Firestore
+    if (items.length === 0 && CLIENT_ID && typeof getDocs === 'function') {
+        try {
+            var snap = await getDocs(collection(db, 'clientes', CLIENT_ID, 'open_finance_items'));
+            if (!snap.empty) {
+                items = [];
+                snap.forEach(function(d) { items.push(d.data()); });
+                localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
+                localStorage.setItem('cv_open_finance_connected', 'true');
+            }
+        } catch(e) {
+            console.log('Open finance items Firestore check:', e);
+        }
+    }
+
+    var isConnected = (items && items.length > 0);
+
+    // REGRA: Quando conectado, o card promocional é completamente ocultado
+    if (promoCard) promoCard.style.display = isConnected ? 'none' : 'block';
+    if (connectedCard) connectedCard.style.display = isConnected ? 'block' : 'none';
+
+    if (isConnected && banksList) {
+        window.renderOpenFinanceBanksList(items);
+    }
+};
+
+// Renderiza a lista de bancos conectados no Meu Perfil
+window.renderOpenFinanceBanksList = function(items) {
+    var banksList = document.getElementById('openFinanceBanksList');
+    if (!banksList) return;
+
+    if (!items || items.length === 0) {
+        banksList.innerHTML = '<div style="font-size:0.78rem;color:var(--text-muted);text-align:center;padding:10px">Nenhuma instituição conectada.</div>';
+        return;
+    }
+
+    var html = '';
+    items.forEach(function(it) {
+        var name = (it.connector && it.connector.name) ? it.connector.name : (it.name || 'Instituição Financeira');
+        var logoUrl = (it.connector && it.connector.imageUrl) ? it.connector.imageUrl : '';
+        var status = it.status || 'UPDATED';
+        var statusColor = (status === 'UPDATED' || status === 'COMPLETED') ? 'var(--success)' : 'var(--accent)';
+        var statusLabel = (status === 'UPDATED' || status === 'COMPLETED') ? 'Sincronizado' : 'Aguardando atualização';
+
+        html += '<div class="of-bank-item">';
+        html += '  <div class="of-bank-left">';
+        html += '    <div class="of-bank-logo">';
+        if (logoUrl) {
+            html += '      <img src="' + logoUrl + '" alt="' + name + '" onerror="this.parentElement.innerHTML=\'<i class=\\\'fa-solid fa-building-columns\\\'></i>\'">';
+        } else {
+            html += '      <i class="fa-solid fa-building-columns"></i>';
+        }
+        html += '    </div>';
+        html += '    <div class="of-bank-info">';
+        html += '      <span class="of-bank-name">' + name + '</span>';
+        html += '      <span class="of-bank-status"><i class="fa-solid fa-circle" style="font-size:0.45rem;color:' + statusColor + '"></i> ' + statusLabel + '</span>';
+        html += '    </div>';
+        html += '  </div>';
+        html += '  <button class="btn-of-disconnect" title="Desconectar banco" onclick="disconnectOpenFinanceItem(\'' + it.id + '\')">';
+        html += '    <i class="fa-solid fa-trash-can"></i>';
+        html += '  </button>';
+        html += '</div>';
+    });
+
+    banksList.innerHTML = html;
+};
+
+// Desconecta um banco
+window.disconnectOpenFinanceItem = async function(itemId) {
+    if (!confirm('Deseja realmente desconectar esta instituição financeira?')) return;
+
+    var items = window.getOpenFinanceItems();
+    items = items.filter(function(i) { return i.id !== itemId; });
+    await window.saveOpenFinanceItems(items);
+
+    if (CLIENT_ID && typeof deleteDoc === 'function') {
+        try {
+            await deleteDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance_items', itemId));
+        } catch(err) {
+            console.warn('Erro ao remover item do Firestore:', err);
+        }
+    }
+
+    // Tenta chamar backend para excluir da Pluggy
+    try {
+        var funcUrl = localStorage.getItem('cv_pluggy_functions_url') || 'https://us-central1-clearview-4a460.cloudfunctions.net/deletePluggyItem';
+        fetch(funcUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ itemId: itemId, clientId: CLIENT_ID })
+        }).catch(function(){});
+    } catch(e) {}
+
     window.checkOpenFinanceStatus();
-    alert('Open Finance conectado com sucesso! O card foi removido.');
+    alert('Instituição desconectada com sucesso.');
+};
+
+// Obtém o Connect Token da Pluggy
+window.fetchPluggyConnectToken = async function() {
+    var functionsUrl = localStorage.getItem('cv_pluggy_functions_url') || 'https://us-central1-clearview-4a460.cloudfunctions.net/createPluggyConnectToken';
+    var devClientId = localStorage.getItem('cv_pluggy_client_id');
+    var devClientSecret = localStorage.getItem('cv_pluggy_client_secret');
+
+    // 1. Tenta via Cloud Function do Firebase
+    try {
+        var headers = { 'Content-Type': 'application/json' };
+        if (devClientId) headers['x-pluggy-client-id'] = devClientId;
+        if (devClientSecret) headers['x-pluggy-client-secret'] = devClientSecret;
+
+        var resp = await fetch(functionsUrl, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ clientUserId: CLIENT_ID || ('user_' + Date.now()) })
+        });
+
+        if (resp.ok) {
+            var data = await resp.json();
+            if (data.accessToken) return data.accessToken;
+        }
+    } catch(cfErr) {
+        console.warn('Cloud Function não respondeu, testando autenticação direta:', cfErr);
+    }
+
+    // 2. Fallback direto (Sandbox / Dev) se o usuário informou as chaves localmente
+    if (devClientId && devClientSecret) {
+        try {
+            // Autentica na Pluggy API
+            var authResp = await fetch('https://api.pluggy.ai/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clientId: devClientId, clientSecret: devClientSecret })
+            });
+            if (!authResp.ok) throw new Error('Falha ao autenticar na Pluggy com as chaves fornecidas.');
+            var authData = await authResp.json();
+            var apiKey = authData.apiKey;
+
+            // Gera connect_token
+            var tokenResp = await fetch('https://api.pluggy.ai/connect_token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey },
+                body: JSON.stringify({ clientUserId: CLIENT_ID || ('user_' + Date.now()) })
+            });
+            if (!tokenResp.ok) throw new Error('Falha ao gerar connect_token da Pluggy.');
+            var tokenData = await tokenResp.json();
+            return tokenData.accessToken;
+        } catch(directErr) {
+            console.error('Erro na autenticação direta Pluggy:', directErr);
+            throw directErr;
+        }
+    }
+
+    throw new Error('MISSING_CREDENTIALS');
+};
+
+// Inicia o fluxo oficial do Pluggy Connect Widget
+window.startPluggyConnectFlow = async function() {
+    var loadingBox = document.getElementById('ofLoadingBox');
+    var actionBox = document.getElementById('ofActionBox');
+
+    if (loadingBox) loadingBox.style.display = 'block';
+    if (actionBox) actionBox.style.display = 'none';
+
+    try {
+        if (typeof window.PluggyConnect !== 'function') {
+            throw new Error('O SDK PluggyConnect não pôde ser carregado. Verifique sua conexão com a internet.');
+        }
+
+        var connectToken;
+        try {
+            connectToken = await window.fetchPluggyConnectToken();
+        } catch(tokenErr) {
+            if (tokenErr.message === 'MISSING_CREDENTIALS') {
+                if (loadingBox) loadingBox.style.display = 'none';
+                if (actionBox) actionBox.style.display = 'block';
+                window.closeOpenFinanceInfoModal();
+                window.openPluggyDevConfigModal();
+                return;
+            }
+            throw tokenErr;
+        }
+
+        // Instancia o Widget oficial da Pluggy
+        var pluggyConnect = new window.PluggyConnect({
+            connectToken: connectToken,
+            includeSandbox: true, // Habilita conectores simulados de teste
+            onSuccess: async function(itemData) {
+                console.log('Pluggy Connect Sucesso!', itemData);
+                var item = itemData.item || itemData;
+                if (!item || !item.id) {
+                    item = { id: 'item_' + Date.now(), connector: { name: 'Banco Conectado' }, status: 'UPDATED' };
+                }
+
+                var items = window.getOpenFinanceItems();
+                // Evita duplicatas
+                items = items.filter(function(i) { return i.id !== item.id; });
+                items.push(item);
+                await window.saveOpenFinanceItems(items);
+
+                // Salva no Firestore
+                if (CLIENT_ID && typeof setDoc === 'function') {
+                    try {
+                        await setDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance_items', item.id), {
+                            ...item,
+                            connectedAt: new Date().toISOString()
+                        }, { merge: true });
+                    } catch(fsErr) {
+                        console.warn('Erro ao salvar item no Firestore:', fsErr);
+                    }
+                }
+
+                window.closeOpenFinanceInfoModal();
+                window.checkOpenFinanceStatus();
+                alert('Instituição financeira conectada com sucesso ao Clearview Atlas!');
+            },
+            onError: function(error) {
+                console.error('Pluggy Connect Erro:', error);
+                alert('Ocorreu uma falha durante a conexão bancária: ' + (error.message || JSON.stringify(error)));
+                if (loadingBox) loadingBox.style.display = 'none';
+                if (actionBox) actionBox.style.display = 'block';
+            },
+            onClose: function() {
+                if (loadingBox) loadingBox.style.display = 'none';
+                if (actionBox) actionBox.style.display = 'block';
+            }
+        });
+
+        pluggyConnect.init();
+    } catch(err) {
+        console.error('Erro startPluggyConnectFlow:', err);
+        alert('Erro ao iniciar Open Finance: ' + (err.message || 'Verifique as configurações.'));
+        if (loadingBox) loadingBox.style.display = 'none';
+        if (actionBox) actionBox.style.display = 'block';
+    }
+};
+
+window.openPluggyDevConfigModal = function() {
+    var modal = document.getElementById('pluggyDevModal');
+    var cidInput = document.getElementById('cfgPluggyClientId');
+    var csecInput = document.getElementById('cfgPluggyClientSecret');
+    var curlInput = document.getElementById('cfgPluggyFunctionUrl');
+    if (cidInput) cidInput.value = localStorage.getItem('cv_pluggy_client_id') || '';
+    if (csecInput) csecInput.value = localStorage.getItem('cv_pluggy_client_secret') || '';
+    if (curlInput) curlInput.value = localStorage.getItem('cv_pluggy_functions_url') || '';
+    if (modal) modal.style.display = 'flex';
+};
+
+window.closePluggyDevModal = function() {
+    var modal = document.getElementById('pluggyDevModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.savePluggyDevConfig = function() {
+    var cid = (document.getElementById('cfgPluggyClientId')?.value || '').trim();
+    var csec = (document.getElementById('cfgPluggyClientSecret')?.value || '').trim();
+    var curl = (document.getElementById('cfgPluggyFunctionUrl')?.value || '').trim();
+    if (cid) localStorage.setItem('cv_pluggy_client_id', cid);
+    else localStorage.removeItem('cv_pluggy_client_id');
+    if (csec) localStorage.setItem('cv_pluggy_client_secret', csec);
+    else localStorage.removeItem('cv_pluggy_client_secret');
+    if (curl) localStorage.setItem('cv_pluggy_functions_url', curl);
+    else localStorage.removeItem('cv_pluggy_functions_url');
+    window.closePluggyDevModal();
+    alert('Credenciais salvas com sucesso!');
 };
 
 window.initProfileData = async function() {
@@ -2978,12 +3323,20 @@ window.saveNewPassword = async function() {
 /* OPEN FINANCE MODAL */
 window.openOpenFinanceInfoModal = function() {
     var modal = document.getElementById('openFinanceModal');
+    var loadingBox = document.getElementById('ofLoadingBox');
+    var actionBox = document.getElementById('ofActionBox');
+    if (loadingBox) loadingBox.style.display = 'none';
+    if (actionBox) actionBox.style.display = 'block';
     if (modal) modal.style.display = 'flex';
     window.setModalState(true);
 };
 
 window.closeOpenFinanceInfoModal = function() {
     var modal = document.getElementById('openFinanceModal');
+    var loadingBox = document.getElementById('ofLoadingBox');
+    var actionBox = document.getElementById('ofActionBox');
+    if (loadingBox) loadingBox.style.display = 'none';
+    if (actionBox) actionBox.style.display = 'block';
     if (modal) modal.style.display = 'none';
     window.setModalState(false);
 };
