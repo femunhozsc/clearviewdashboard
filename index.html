@@ -2876,11 +2876,13 @@ window.checkOpenFinanceStatus = async function() {
         localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
     }
 
-    // Se estiver autenticado e a lista local for vazia, tenta buscar do Firestore
+    // Se estiver autenticado e a lista local for vazia, tenta buscar do Firestore com timeout
     if (items.length === 0 && CLIENT_ID && typeof getDocs === 'function') {
         try {
-            var snap = await getDocs(collection(db, 'clientes', CLIENT_ID, 'open_finance_items'));
-            if (!snap.empty) {
+            var getDocsPromise = getDocs(collection(db, 'clientes', CLIENT_ID, 'open_finance_items'));
+            var getDocsTimeout = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 2000); });
+            var snap = await Promise.race([getDocsPromise, getDocsTimeout]);
+            if (snap && !snap.empty) {
                 items = [];
                 snap.forEach(function(d) { items.push(d.data()); });
                 localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
@@ -4521,13 +4523,14 @@ window.triggerInstall = async function() {
 };
 
 window.skipInstall = function() {
-    document.getElementById('installModal').style.display = 'none';
-    window.setModalState(false);
+    try { sessionStorage.setItem('cv_install_skipped', 'true'); } catch(e){}
+    var modal = document.getElementById('installModal');
+    if(modal) modal.style.display = 'none';
+    if(typeof window.setModalState === 'function') window.setModalState(false);
     // Inicia a sequência de splash que foi pausada
     var splash = document.getElementById('splash');
-    splash.style.display = 'flex';
+    if(splash) splash.style.display = 'flex';
     // Pequeno delay para garantir transição suave
-    // Passamos true para indicar que deve pular a introdução do logo
     setTimeout(function(){ runSplashSequence(true); }, 50);
 };
 
@@ -7361,8 +7364,10 @@ async function startApp(user) {
     // Tenta buscar nome do perfil com prioridade para localStorage e displayName
     var nameToDisplay = localStorage.getItem('cv_profile_nome') || user.displayName || "Usuário";
     try {
-        var docSnap = await getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
-        if(docSnap.exists()) {
+        var profilePromise = getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
+        var profileTimeout = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 1500); });
+        var docSnap = await Promise.race([profilePromise, profileTimeout]);
+        if(docSnap && docSnap.exists && docSnap.exists()) {
             var data = docSnap.data();
             var fullName = data.nomeCompleto || (data.nome ? (data.sobrenome ? (data.nome + ' ' + data.sobrenome) : data.nome) : '');
             if(fullName && fullName.trim()) {
@@ -7374,7 +7379,7 @@ async function startApp(user) {
             localStorage.setItem('cv_profile_nome', nameToDisplay);
         }
     } catch(e) {
-        console.log("Erro ao buscar nome no Firestore:", e);
+        console.log("Perfil carregado do cache ou fallback:", e);
     }
     
     document.getElementById('splashName').textContent = formatName(nameToDisplay);
@@ -7393,13 +7398,10 @@ async function startApp(user) {
     document.getElementById('auth-screen').classList.add('hidden');
 
     // VERIFICAÇÃO DE INSTALAÇÃO (PWA)
-    // Se não estiver em modo standalone (instalado) e não for iOS (que não suporta detecção fácil via JS puro as vezes), mostra modal
-    // navigator.standalone é para iOS legacy. matchMedia é padrão moderno.
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    var installDismissed = sessionStorage.getItem('cv_install_skipped') === 'true';
     
-    if (!isStandalone) {
-        // Mostra modal de instalação e PAUSA o fluxo. 
-        // O fluxo continua apenas quando chamar skipInstall()
+    if (!isStandalone && !installDismissed) {
         document.getElementById('installModal').style.display = 'flex';
         window.setModalState(true);
         return; 
@@ -7449,12 +7451,14 @@ async function loadData(){
     window.setStatus('saving');
     var data=null;
     try{
-        var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
-        if(snap.exists()) {
+        var dashPromise = getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
+        var dashTimeout = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 2500); });
+        var snap = await Promise.race([dashPromise, dashTimeout]);
+        if(snap && snap.exists && snap.exists()) {
             data=snap.data();
             if(CLIENT_ID) localStorage.setItem('cv_dashboard_cache_' + CLIENT_ID, JSON.stringify(data));
         }
-    }catch(e){console.error("Erro ao carregar do Firestore:", e);}
+    }catch(e){console.warn("Firestore demorou ou offline, utilizando cache:", e);}
 
     // Fallback de contingência: se Firestore não respondeu ou deu erro de permissão, lê do cache local
     if(!data && CLIENT_ID) {
@@ -8201,8 +8205,20 @@ async function runSplashSequence(skipIntro) {
     // Fase 4: Tagline aparece (um pouco depois do greeting)
     setTimeout(function(){ splash.classList.add('phase4'); }, phase2Delay + 400);
 
+    // Safety fallback timer: NUNCA deixa o splash preso por mais de 3.2 segundos
+    var splashSafetyTimer = setTimeout(function() {
+        console.warn("[Clearview] Forçando saída da splash screen por segurança.");
+        var a = document.getElementById('app');
+        if (a) a.classList.add('visible');
+        if (splash) {
+            splash.classList.add('exit');
+            setTimeout(function(){ splash.style.display = 'none'; }, 600);
+        }
+    }, 3200);
+
     try {
-        await Promise.all([minWait,loadP]);
+        var maxWait = new Promise(function(r){ setTimeout(r, 2600); });
+        await Promise.race([Promise.all([minWait, loadP]), maxWait]);
         initCharts(); 
         initIncomeData();
         renderMonthLabel();
@@ -8211,8 +8227,10 @@ async function runSplashSequence(skipIntro) {
     } catch(e) {
         console.error("Erro durante o carregamento inicial:", e);
     } finally {
+        clearTimeout(splashSafetyTimer);
         window.scrollTo(0, 0);
-        document.getElementById('app').classList.add('visible');
+        var appEl = document.getElementById('app');
+        if (appEl) appEl.classList.add('visible');
         splash.classList.add('exit');
         setTimeout(function(){
             splash.style.display='none';
