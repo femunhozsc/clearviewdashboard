@@ -144,12 +144,12 @@ body::-webkit-scrollbar { display: none; width: 0; height: 0; } /* Chrome, Safar
 .navbar {
     position:fixed; top:0; left:0; right:0;
     background:rgba(5,5,5,0.95); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
-    padding:10px 20px;
+    padding:10px 14px;
     height:68px;
     display:flex; justify-content:space-between; align-items:center;
     border-bottom:1px solid var(--card-border); z-index:100;
 }
-.logo-img { height:46px; max-height:48px; object-fit:contain; display:block; }
+.logo-img { height:40px; max-height:44px; object-fit:contain; display:block; }
 .navbar-right { display:flex; align-items:center; gap:10px; }
 .sync-icon { display:flex; align-items:center; width:16px; height:16px; }
 .sync-icon svg { display:block; }
