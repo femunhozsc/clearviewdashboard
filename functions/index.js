@@ -70,8 +70,10 @@ exports.createPluggyConnectToken = onRequest({ cors: true }, (req, res) => {
       try {
         const apiKey = await getPluggyApiKey(req.headers["x-pluggy-client-id"], req.headers["x-pluggy-client-secret"]);
         const payload = {};
-        if (req.body?.clientUserId) payload.clientUserId = req.body.clientUserId;
+        const options = {};
+        if (req.body?.clientUserId) options.clientUserId = req.body.clientUserId;
         if (req.body?.itemId) payload.itemId = req.body.itemId;
+        if (Object.keys(options).length > 0) payload.options = options;
 
         const tokenResp = await axios.post(`${PLUGGY_API_URL}/connect_token`, payload, {
           headers: { "X-API-KEY": apiKey },
