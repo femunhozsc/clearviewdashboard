@@ -67,47 +67,126 @@
         z-index: 99990;
         overflow: hidden;
     }
+    .op-sidebar-wrapper {
+        width: 68px;
+        flex-shrink: 0;
+        position: relative;
+    }
     .op-sidebar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
         width: 68px;
         background: #09090b;
         border-right: 1px solid #18181b;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
         padding: 16px 0;
-        flex-shrink: 0;
+        transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+        overflow: hidden;
+        white-space: nowrap;
+        z-index: 1000;
+        box-sizing: border-box;
+    }
+    .op-sidebar:hover,
+    .op-sidebar.is-hovered {
+        width: 220px;
+        box-shadow: 10px 0 32px rgba(0, 0, 0, 0.75);
     }
     .op-brand {
-        margin-bottom: 28px;
+        margin-bottom: 24px;
         display: flex;
-        justify-content: center;
+        align-items: center;
+        height: 38px;
         width: 100%;
+        position: relative;
+        flex-shrink: 0;
     }
-    .op-logo {
-        height: 30px;
+    .op-logo-icon {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+        position: absolute;
+        left: 18px;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        opacity: 1;
+        pointer-events: none;
+    }
+    .op-logo-full {
+        height: 28px;
         width: auto;
+        max-width: 160px;
+        object-fit: contain;
+        position: absolute;
+        left: 20px;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.95);
+    }
+    .op-sidebar:hover .op-logo-icon,
+    .op-sidebar.is-hovered .op-logo-icon {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+    .op-sidebar:hover .op-logo-full,
+    .op-sidebar.is-hovered .op-logo-full {
+        opacity: 1;
+        transform: scale(1);
     }
     .op-nav {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
         width: 100%;
         flex: 1;
     }
     .op-nav-item {
         display: flex;
         align-items: center;
-        justify-content: center;
-        height: 50px;
+        justify-content: flex-start;
+        height: 48px;
         width: 100%;
         color: #71717a;
         text-decoration: none;
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         transition: all 0.15s ease;
         border-left: 3px solid transparent;
+        overflow: hidden;
+    }
+    .op-nav-icon {
+        width: 68px;
+        min-width: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .op-nav-text {
+        font-size: 0.84rem;
+        font-weight: 500;
+        color: #a1a1aa;
+        letter-spacing: 0.2px;
+        opacity: 0;
+        max-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        transform: translateX(-8px);
+        transition: opacity 0.2s ease, transform 0.2s ease, color 0.15s ease;
+    }
+    .op-sidebar:hover .op-nav-text,
+    .op-sidebar.is-hovered .op-nav-text {
+        opacity: 1;
+        max-width: 150px;
+        transform: translateX(0);
     }
     .op-nav-item:hover {
-        background: rgba(255,255,255,0.03);
+        background: rgba(255,255,255,0.04);
+        color: #ffffff;
+    }
+    .op-nav-item:hover .op-nav-text {
         color: #ffffff;
     }
     .op-nav-item.active {
@@ -115,28 +194,41 @@
         color: #eab308;
         border-left-color: #eab308;
     }
+    .op-nav-item.active .op-nav-text {
+        color: #eab308;
+        font-weight: 600;
+    }
     .op-sidebar-footer {
         margin-top: auto;
         width: 100%;
         display: flex;
-        justify-content: center;
         padding-top: 12px;
         border-top: 1px solid #18181b;
+        flex-shrink: 0;
     }
     .op-logout-btn {
         background: none;
         border: none;
         color: #ef4444;
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         cursor: pointer;
-        height: 44px;
+        height: 46px;
         width: 100%;
         display: flex;
         align-items: center;
-        justify-content: center;
-        transition: color 0.15s ease;
+        justify-content: flex-start;
+        transition: background 0.15s ease, color 0.15s ease;
+        padding: 0;
+        overflow: hidden;
+    }
+    .op-logout-btn .op-nav-text {
+        color: #ef4444;
     }
     .op-logout-btn:hover {
+        background: rgba(239, 68, 68, 0.08);
+        color: #f87171;
+    }
+    .op-logout-btn:hover .op-nav-text {
         color: #f87171;
     }
 
@@ -356,18 +448,34 @@
             position: relative;
             overflow-y: auto;
         }
-        .op-sidebar {
+        .op-sidebar-wrapper {
             width: 100%;
+            height: 60px;
+        }
+        .op-sidebar {
+            position: relative;
+            width: 100% !important;
             height: 60px;
             flex-direction: row;
             border-right: none;
             border-bottom: 1px solid #18181b;
             padding: 0 16px;
             justify-content: space-between;
+            box-shadow: none !important;
         }
         .op-brand {
             margin-bottom: 0;
             width: auto;
+            height: auto;
+        }
+        .op-logo-icon {
+            position: static;
+            display: block;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+        .op-logo-full {
+            display: none !important;
         }
         .op-nav {
             flex-direction: row;
@@ -378,6 +486,14 @@
             height: 100%;
             border-left: none;
             border-bottom: 3px solid transparent;
+            justify-content: center;
+        }
+        .op-nav-icon {
+            width: auto;
+            min-width: unset;
+        }
+        .op-nav-text {
+            display: none !important;
         }
         .op-nav-item.active {
             border-left-color: transparent;
@@ -390,6 +506,10 @@
         }
         .op-logout-btn {
             width: 50px;
+            justify-content: center;
+        }
+        .op-logout-btn .op-nav-text {
+            display: none !important;
         }
         .op-main-content {
             padding: 16px;
@@ -422,29 +542,36 @@
 <!-- ============================= OPERATOR DESKTOP WORKSPACE ============================= -->
 <div id="operator-workspace" class="op-workspace-container" style="display:none">
     <!-- LEFT SIDEBAR -->
-    <aside class="op-sidebar">
-        <div class="op-brand">
-            <img src="logo.png" alt="Clearview" class="op-logo">
-        </div>
+    <div class="op-sidebar-wrapper">
+        <aside class="op-sidebar" id="operatorSidebar">
+            <div class="op-brand">
+                <img src="favicon.png" alt="Clearview Icon" class="op-logo op-logo-icon">
+                <img src="logo.png" alt="Clearview" class="op-logo op-logo-full">
+            </div>
 
-        <nav class="op-nav">
-            <a href="javascript:void(0)" class="op-nav-item active" id="opTabBtn-overview" onclick="setOperatorTab('overview')" title="Visão Geral">
-                <i class="fa-solid fa-chart-pie"></i>
-            </a>
-            <a href="javascript:void(0)" class="op-nav-item" id="opTabBtn-clients" onclick="setOperatorTab('clients')" title="Carteira de Clientes">
-                <i class="fa-solid fa-users"></i>
-            </a>
-            <a href="javascript:void(0)" class="op-nav-item" onclick="openOperatorNotifModal('ALL')" title="Notificação em Massa">
-                <i class="fa-solid fa-paper-plane"></i>
-            </a>
-        </nav>
+            <nav class="op-nav">
+                <a href="javascript:void(0)" class="op-nav-item active" id="opTabBtn-overview" onclick="setOperatorTab('overview')" title="Visão Geral">
+                    <span class="op-nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
+                    <span class="op-nav-text">Visão Geral</span>
+                </a>
+                <a href="javascript:void(0)" class="op-nav-item" id="opTabBtn-clients" onclick="setOperatorTab('clients')" title="Carteira de Clientes">
+                    <span class="op-nav-icon"><i class="fa-solid fa-users"></i></span>
+                    <span class="op-nav-text">Carteira de Clientes</span>
+                </a>
+                <a href="javascript:void(0)" class="op-nav-item" onclick="openOperatorNotifModal('ALL')" title="Notificação em Massa">
+                    <span class="op-nav-icon"><i class="fa-solid fa-paper-plane"></i></span>
+                    <span class="op-nav-text">Notificar Todos</span>
+                </a>
+            </nav>
 
-        <div class="op-sidebar-footer">
-            <button class="op-logout-btn" onclick="exitOperatorMode()" title="Encerrar Sessão">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </button>
-        </div>
-    </aside>
+            <div class="op-sidebar-footer">
+                <button class="op-logout-btn" onclick="exitOperatorMode()" title="Encerrar Sessão">
+                    <span class="op-nav-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+                    <span class="op-nav-text">Encerrar Sessão</span>
+                </button>
+            </div>
+        </aside>
+    </div>
 
     <!-- RIGHT MAIN PANEL -->
     <main class="op-main-content">
@@ -876,11 +1003,8 @@
                 <div class="of-banks-list" id="openFinanceBanksList">
                     <!-- Renderizado dinamicamente via JS -->
                 </div>
-                <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:8px">
-                    <button class="btn-auth-v2 btn-auth-gold" style="width:100%;margin:0;font-size:0.78rem;padding:9px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="syncAllOpenFinanceItems(true)">
-                        <i class="fa-solid fa-arrows-rotate"></i> Sincronizar 12 Meses Agora
-                    </button>
-                    <div id="ofLastSyncLabel" style="font-size:0.68rem;color:var(--text-muted);text-align:center">
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);text-align:center">
+                    <div id="ofLastSyncLabel" style="font-size:0.68rem;color:var(--text-muted)">
                         Última sincronização: Nunca sincronizado
                     </div>
                 </div>
@@ -1817,74 +1941,19 @@
             </div>
         </div>
 
-        <div style="background:rgba(255,170,0,0.08);border:1px solid rgba(255,170,0,0.3);border-radius:10px;padding:12px;margin-bottom:16px;font-size:0.78rem;color:#fde047;line-height:1.4">
-            <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px">
-                <i class="fa-solid fa-triangle-exclamation"></i> Ambiente de Testes Pluggy (Trial):
-            </div>
-            Em contas de teste gratuitas, a Pluggy bloqueia bancos reais. Para testar extratos, faturas e investimentos de 12 meses agora, use o botão de demonstração abaixo ou pesquise por <b>Pluggy Bank (Sandbox)</b> no widget.
-        </div>
-
         <div id="ofLoadingBox" style="display:none;background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.25);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
             <i class="fa-solid fa-circle-notch fa-spin" style="font-size:1.5rem;color:var(--accent);margin-bottom:8px"></i>
-            <div style="font-size:0.88rem;color:#fff;font-weight:600">Abrindo ambiente seguro Pluggy...</div>
+            <div style="font-size:0.88rem;color:#fff;font-weight:600">Abrindo ambiente seguro...</div>
             <div style="font-size:0.75rem;color:#aaa;margin-top:4px">Conectando aos servidores do Banco Central</div>
         </div>
 
         <div id="ofActionBox">
-            <button class="btn-auth-v2 btn-auth-gold" id="btnStartOfConnect" style="width:100%;margin-bottom:8px" onclick="startPluggyConnectFlow()">
+            <button class="btn-auth-v2 btn-auth-gold" id="btnStartOfConnect" style="width:100%;margin-bottom:10px" onclick="startPluggyConnectFlow()">
                 <i class="fa-solid fa-lock" style="margin-right:6px"></i> Iniciar Conexão Segura
             </button>
-            <button type="button" class="btn-auth-v2" style="width:100%;margin-bottom:10px;background:rgba(255,204,0,0.12);color:var(--accent);border:1px solid rgba(255,204,0,0.35);font-size:0.8rem;padding:8px 12px;cursor:pointer" onclick="window.connectDemoSandboxBank()">
-                <i class="fa-solid fa-flask" style="margin-right:6px"></i> Testar 12 Meses com Banco Sandbox (Demo)
+            <button type="button" onclick="closeOpenFinanceInfoModal()" style="width:100%;background:none;border:none;color:var(--text-muted);font-size:0.8rem;cursor:pointer;padding:8px">
+                Cancelar
             </button>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-                <button type="button" onclick="openPluggyDevConfigModal()" style="background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;display:flex;align-items:center;gap:4px">
-                    <i class="fa-solid fa-key"></i> Chaves Pluggy (Sandbox)
-                </button>
-                <button type="button" onclick="closeOpenFinanceInfoModal()" style="background:none;border:none;color:var(--text-muted);font-size:0.78rem;cursor:pointer">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL CONFIGURAÇÃO DEV/SANDBOX PLUGGY -->
-<div id="pluggyDevModal" class="modal-overlay" onclick="if(event.target===this)closePluggyDevModal()">
-    <div class="modal-content" style="max-width:400px">
-        <div class="modal-title" style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
-            <i class="fa-solid fa-sliders" style="color:var(--accent)"></i> Credenciais Pluggy (Sandbox)
-        </div>
-        <p style="font-size:0.78rem;color:var(--text-sec);margin-bottom:14px;line-height:1.4">
-            Insira suas chaves obtidas no <a href="https://dashboard.pluggy.ai/" target="_blank" style="color:var(--accent);text-decoration:none">dashboard da Pluggy</a> para testar o widget de Open Finance imediatamente no app:
-        </p>
-        <div style="margin-bottom:12px">
-            <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Client ID</label>
-            <input type="text" id="cfgPluggyClientId" class="modal-input-desc" placeholder="ex: 12345678-abcd-..." style="margin-bottom:0">
-        </div>
-        <div style="margin-bottom:14px">
-            <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Client Secret</label>
-            <input type="password" id="cfgPluggyClientSecret" class="modal-input-desc" placeholder="ex: 87654321-dcba-..." style="margin-bottom:0">
-        </div>
-        <div style="margin-bottom:16px">
-            <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">URL da Cloud Function (Opcional)</label>
-            <input type="text" id="cfgPluggyFunctionUrl" class="modal-input-desc" placeholder="https://us-central1-clearview-4a460..." style="margin-bottom:0">
-        </div>
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);margin-bottom:16px">
-            <label style="display:block;font-size:0.72rem;color:var(--accent);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;font-weight:600">
-                <i class="fa-solid fa-link"></i> Já conectou no Pluggy? Vincular Item ID
-            </label>
-            <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px">
-                Se a sua conta bancária já foi autorizada no dashboard da Pluggy, cole o <strong>Item ID</strong> para sincronizar instantaneamente:
-            </p>
-            <div style="display:flex;gap:6px">
-                <input type="text" id="cfgPluggyDirectItemId" class="modal-input-desc" placeholder="ex: f47ac10b-58cc-4372-a567-0e02b2c3d479" style="margin-bottom:0;font-size:0.8rem">
-                <button type="button" class="btn-auth-v2 btn-auth-gold" style="white-space:nowrap;padding:0 12px;font-size:0.75rem" onclick="syncPluggyItemFromInput()">Vincular</button>
-            </div>
-        </div>
-        <div style="display:flex;gap:8px">
-            <button class="btn-auth-v2 btn-auth-outline" style="flex:1;margin:0" onclick="closePluggyDevModal()">Fechar</button>
-            <button class="btn-auth-v2 btn-auth-gold" style="flex:1;margin:0" onclick="savePluggyDevConfig()">Salvar Chaves</button>
         </div>
     </div>
 </div>
@@ -2077,6 +2146,17 @@ window.openOperatorWorkspace = function() {
     if(authSc) authSc.style.display = 'none';
     var appEl = document.getElementById('app');
     if(appEl) appEl.style.display = 'none';
+
+    var opSb = document.getElementById('operatorSidebar');
+    if (opSb && !opSb._hasHoverEvents) {
+        opSb._hasHoverEvents = true;
+        opSb.addEventListener('mouseenter', function() {
+            opSb.classList.add('is-hovered');
+        });
+        opSb.addEventListener('mouseleave', function() {
+            opSb.classList.remove('is-hovered');
+        });
+    }
 
     window.refreshOperatorData();
     window.setOperatorTab('clients');
@@ -3207,7 +3287,7 @@ window.startPluggyConnectFlow = async function() {
 
                 // 3. Caso o item já exista na Pluggy (cenário onde o usuário já autorizou anteriormente)
                 if (eventName === 'ITEM_USER_ALREADY_EXISTS') {
-                    console.log('Item já existe na Pluggy para este conector:', eventData);
+                    console.log('Item já existe para este conector:', eventData);
                     var existingId = eventData?.data?.items?.[0] || eventData?.item?.id;
                     if (existingId && window.isUuid(existingId)) {
                         var itData = await window.fetchPluggyItemData(existingId);
@@ -3216,7 +3296,7 @@ window.startPluggyConnectFlow = async function() {
                             window._lastPluggyItem = itData;
                             await window.registerOpenFinanceConnection(itData);
                             window.closeOpenFinanceInfoModal();
-                            alert('Sua conta já estava conectada no Pluggy e foi sincronizada com o Clearview!');
+                            alert('Sua conta bancária foi conectada e sincronizada com sucesso!');
                         }
                     }
                 }
@@ -3237,12 +3317,12 @@ window.startPluggyConnectFlow = async function() {
                     }
                 }
                 if (errMsg.includes('TRIAL_CLIENT_ITEM_CREATE_NOT_ALLOWED') || errMsg.includes('Trial clients can only create Sandbox') || errMsg.includes('CONNECTOR_RESTRICTED')) {
-                    alert('⚠️ Limitação da Conta Pluggy (Modo Trial / Teste Grátis):\n\nSua conta na Pluggy está no plano de testes (Trial). A Pluggy bloqueia a criação de conexões com bancos reais (Nubank, Itaú, BB, etc.) em contas gratuitas de teste.\n\n👉 Para testar os 12 meses de extrato, faturas e investimentos agora:\n1. Clique no botão "Testar 12 Meses com Banco Sandbox (Demo)" no modal do Open Finance;\n2. OU no widget, pesquise por "Pluggy Bank (Sandbox)" e use:\n   - Usuário: user-ok\n   - Senha: password-ok\n\nIsso carregará contas correntes, faturas de cartão e investimentos imediatamente no dashboard!');
+                    alert('Aviso: Sua conexão com esta instituição bancária não pôde ser concluída no momento. Tente novamente mais tarde.');
                     if (loadingBox) loadingBox.style.display = 'none';
                     if (actionBox) actionBox.style.display = 'block';
                     return;
                 }
-                alert('Notificação na conexão bancária: ' + errMsg);
+                alert('Aviso na conexão bancária: ' + (errMsg || 'Não foi possível concluir a conexão.'));
                 if (loadingBox) loadingBox.style.display = 'none';
                 if (actionBox) actionBox.style.display = 'block';
             },
@@ -3720,7 +3800,8 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
 
         // 3. Define o período de 12 meses (365 dias)
         var now = new Date();
-        var dateTo = now.toISOString().split('T')[0];
+        var dateToObj = new Date(now.getTime() + 2 * 86400000);
+        var dateTo = dateToObj.toISOString().split('T')[0];
         var oneYearAgo = new Date();
         oneYearAgo.setFullYear(now.getFullYear() - 1);
         var dateFrom = oneYearAgo.toISOString().split('T')[0];
@@ -3739,6 +3820,8 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
 
         // 5. Busca transações dos últimos 12 meses para cada conta (com paginação de cursor corrigida)
         window.updateOpenFinanceSyncProgress(65, 'Baixando movimentações dos últimos 12 meses...');
+        var resetMonths = new Set();
+
         for (var a = 0; a < accounts.length; a++) {
             var acc = accounts[a];
             var nextUrl = 'https://api.pluggy.ai/v2/transactions?accountId=' + acc.id + '&dateFrom=' + dateFrom + '&dateTo=' + dateTo;
@@ -3764,6 +3847,37 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
                         var h = window.getOrCreateMonthHistory(y, m);
                         affectedMonths.add(k);
 
+                        // SOBREPOSIÇÃO DE GASTOS MANUAIS:
+                        // No primeiro lançamento de cada mês sincronizado, limpa todos os gastos inseridos manualmente,
+                        // preservando apenas lançamentos do Open Finance de outros bancos.
+                        if (!resetMonths.has(k)) {
+                            resetMonths.add(k);
+                            var catsList = (h.expenseCatsSnapshot && h.expenseCatsSnapshot.length)
+                                ? h.expenseCatsSnapshot
+                                : (expenseCats && expenseCats.length ? expenseCats : CAT_KEYS.map(function(cid) { return { id: cid }; }));
+                            
+                            catsList.forEach(function(c) {
+                                if (!h.gastos[c.id]) {
+                                    h.gastos[c.id] = [];
+                                } else {
+                                    // Remove gastos manuais (sem source === 'open_finance') e renova os deste itemId
+                                    h.gastos[c.id] = h.gastos[c.id].filter(function(g) {
+                                        return g.source === 'open_finance' && g.itemId && g.itemId !== itemId;
+                                    });
+                                }
+                            });
+
+                            CAT_KEYS.forEach(function(catKey) {
+                                if (!h.gastos[catKey]) h.gastos[catKey] = [];
+                            });
+
+                            if (h.renda) {
+                                h.renda = h.renda.filter(function(r) {
+                                    return r.source === 'open_finance' && r.itemId && r.itemId !== itemId;
+                                });
+                            }
+                        }
+
                         var mapped = window.categorizePluggyTransaction(tx);
                         var txId = 'of_' + (tx.id || (txDate.getTime() + '_' + val));
 
@@ -3775,6 +3889,7 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
                                 h.renda.push({
                                     id: txId,
                                     ofId: tx.id,
+                                    itemId: itemId,
                                     val: val,
                                     cat: mapped.cat,
                                     desc: tx.description || 'Receita Open Finance',
@@ -3793,6 +3908,7 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
                                 h.gastos[catKey].push({
                                     id: txId,
                                     ofId: tx.id,
+                                    itemId: itemId,
                                     val: val,
                                     label: tx.description || 'Despesa Open Finance',
                                     date: dateISO,
@@ -3857,12 +3973,17 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
                     if (!cat) cat = assetsData.categories[0];
                     if (!cat.entries) cat.entries = [];
 
-                    var existingEntry = cat.entries.find(e => e.id === invId || (e.desc === inv.name && Math.abs(e.val - invVal) < 0.01));
+                    var existingEntry = cat.entries.find(e => e.id === invId || e.ofId === inv.id || (e.desc === inv.name && Math.abs(e.val - invVal) < 0.01));
                     if (existingEntry) {
                         existingEntry.val = invVal;
+                        existingEntry.desc = inv.name || existingEntry.desc;
+                        existingEntry.ofId = inv.id;
+                        existingEntry.itemId = itemId;
                     } else {
                         cat.entries.push({
                             id: invId,
+                            ofId: inv.id,
+                            itemId: itemId,
                             val: invVal,
                             desc: inv.name || 'Investimento Open Finance',
                             date: new Date().toISOString().split('T')[0],
@@ -3886,8 +4007,8 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
         // Se o mês atual exibido na tela foi alterado, recarrega variáveis ativas
         var curK = window.monthKey();
         if (historico[curK]) {
-            rendaItems = JSON.parse(JSON.stringify(historico[curK].renda || []));
             gastosData = JSON.parse(JSON.stringify(historico[curK].gastos || {}));
+            rendaItems = JSON.parse(JSON.stringify(historico[curK].renda || []));
         }
 
         // Salva tudo no Firestore e LocalStorage
@@ -3897,14 +4018,15 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
         localStorage.setItem('cv_open_finance_last_sync', new Date().toISOString());
 
         // Atualiza telas
-        if (window.renderRenda) window.renderRenda();
-        if (window.renderGastos) window.renderGastos();
-        if (window.updateFlow) window.updateFlow();
-        if (window.renderAssetList) window.renderAssetList();
-        if (window._updateAssets) window._updateAssets(true);
-        if (window._renderHistorico) window._renderHistorico();
-        if (window.renderGastosHist) window.renderGastosHist();
-        window.checkOpenFinanceStatus();
+        if (typeof initCounters === 'function') initCounters();
+        if (typeof renderRenda === 'function') renderRenda();
+        if (typeof renderGastos === 'function') renderGastos();
+        if (typeof updateFlow === 'function') updateFlow();
+        if (typeof renderAssetList === 'function') renderAssetList();
+        if (typeof _updateAssets === 'function') _updateAssets(true);
+        if (typeof _renderHistorico === 'function') _renderHistorico();
+        if (typeof renderGastosHist === 'function') renderGastosHist();
+        if (window.checkOpenFinanceStatus) window.checkOpenFinanceStatus();
 
         // Finaliza modal
         if (showModal) {
