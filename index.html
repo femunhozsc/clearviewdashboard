@@ -4643,15 +4643,29 @@ window.triggerInstall = async function() {
 };
 
 window.skipInstall = function() {
-    try { sessionStorage.setItem('cv_install_skipped', 'true'); } catch(e){}
+    try { 
+        sessionStorage.setItem('cv_install_skipped', 'true');
+        localStorage.setItem('cv_install_dismissed', 'true');
+    } catch(e){}
     var modal = document.getElementById('installModal');
     if(modal) modal.style.display = 'none';
     if(typeof window.setModalState === 'function') window.setModalState(false);
-    // Inicia a sequência de splash que foi pausada
-    var splash = document.getElementById('splash');
-    if(splash) splash.style.display = 'flex';
-    // Pequeno delay para garantir transição suave
-    setTimeout(function(){ runSplashSequence(true); }, 50);
+};
+
+window.checkInstallPrompt = function() {
+    try {
+        var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        var installDismissed = sessionStorage.getItem('cv_install_skipped') === 'true' || localStorage.getItem('cv_install_dismissed') === 'true';
+        if (!isStandalone && !installDismissed) {
+            setTimeout(function() {
+                var modal = document.getElementById('installModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    if (typeof window.setModalState === 'function') window.setModalState(true);
+                }
+            }, 1200);
+        }
+    } catch(e) {}
 };
 
 /* AUTH UI FUNCTIONS */
@@ -7517,19 +7531,9 @@ async function startApp(user) {
     // Esconde Auth
     document.getElementById('auth-screen').classList.add('hidden');
 
-    // VERIFICAÇÃO DE INSTALAÇÃO (PWA)
-    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    var installDismissed = sessionStorage.getItem('cv_install_skipped') === 'true';
-    
-    if (!isStandalone && !installDismissed) {
-        document.getElementById('installModal').style.display = 'flex';
-        window.setModalState(true);
-        return; 
-    }
-
-    // Inicia sequência de carregamento original
+    // Inicia sequência de carregamento sem travar no splash
     var splash = document.getElementById('splash');
-    splash.style.display = 'flex';
+    if(splash) splash.style.display = 'flex';
     runSplashSequence();
 }
 
@@ -8354,6 +8358,9 @@ async function runSplashSequence(skipIntro) {
         splash.classList.add('exit');
         setTimeout(function(){
             splash.style.display='none';
+            if(typeof window.checkInstallPrompt === 'function') {
+                window.checkInstallPrompt();
+            }
         },850);
     }
 }
