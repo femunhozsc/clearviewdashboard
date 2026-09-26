@@ -876,6 +876,14 @@
                 <div class="of-banks-list" id="openFinanceBanksList">
                     <!-- Renderizado dinamicamente via JS -->
                 </div>
+                <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:8px">
+                    <button class="btn-auth-v2 btn-auth-gold" style="width:100%;margin:0;font-size:0.78rem;padding:9px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="syncAllOpenFinanceItems(true)">
+                        <i class="fa-solid fa-arrows-rotate"></i> Sincronizar 12 Meses Agora
+                    </button>
+                    <div id="ofLastSyncLabel" style="font-size:0.68rem;color:var(--text-muted);text-align:center">
+                        Última sincronização: Nunca sincronizado
+                    </div>
+                </div>
             </div>
 
             <!-- SEÇÃO 1: DADOS PESSOAIS -->
@@ -1871,6 +1879,47 @@
     </div>
 </div>
 
+<!-- MODAL DE PROGRESSO DE SINCRONIZAÇÃO OPEN FINANCE -->
+<div id="openFinanceSyncModal" class="modal-overlay" style="display:none;z-index:99999" onclick="if(event.target===this&&window._ofSyncDone)closeOpenFinanceSyncModal()">
+    <div class="modal-content" style="max-width:390px;text-align:center;padding:24px 20px">
+        <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,204,0,0.1);border:1px solid rgba(255,204,0,0.3);margin:0 auto 16px;display:flex;align-items:center;justify-content:center">
+            <i id="ofSyncIcon" class="fa-solid fa-arrows-rotate fa-spin" style="font-size:1.8rem;color:var(--accent)"></i>
+        </div>
+        <h3 id="ofSyncTitle" style="font-size:1.05rem;font-weight:700;color:var(--text-main);margin-bottom:6px">Sincronizando Open Finance</h3>
+        <p id="ofSyncSubtitle" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:18px;line-height:1.4">
+            Importando extratos e investimentos dos últimos 12 meses diretamente da sua instituição...
+        </p>
+
+        <!-- Barra de Progresso -->
+        <div style="background:rgba(255,255,255,0.06);border-radius:10px;height:8px;overflow:hidden;margin-bottom:12px">
+            <div id="ofSyncProgressBar" style="width:15%;height:100%;background:linear-gradient(90deg, #c8960c, #ffcc00);transition:width 0.4s ease;border-radius:10px"></div>
+        </div>
+
+        <div id="ofSyncStepDesc" style="font-size:0.75rem;color:var(--accent);font-weight:600;margin-bottom:18px">
+            Identificando contas bancárias...
+        </div>
+
+        <div id="ofSyncStatsBox" style="display:none;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;margin-bottom:18px;text-align:left">
+            <div style="font-size:0.75rem;color:var(--text-sec);display:flex;justify-content:space-between;margin-bottom:4px">
+                <span>Transações importadas:</span>
+                <strong id="ofStatTxCount" style="color:var(--text-main)">0</strong>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-sec);display:flex;justify-content:space-between;margin-bottom:4px">
+                <span>Meses atualizados:</span>
+                <strong id="ofStatMonthsCount" style="color:var(--text-main)">0</strong>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-sec);display:flex;justify-content:space-between">
+                <span>Investimentos sincronizados:</span>
+                <strong id="ofStatInvCount" style="color:var(--text-main)">0</strong>
+            </div>
+        </div>
+
+        <button id="btnOfSyncFinish" class="btn-auth-v2 btn-auth-gold" style="width:100%;margin:0;display:none" onclick="closeOpenFinanceSyncModal()">
+            Concluir e Ver Dashboard
+        </button>
+    </div>
+</div>
+
 <!-- MODAL META DA CATEGORIA -->
 <div id="metaCategoryModal" class="modal-overlay" onclick="if(event.target===this)closeMetaCategoryModal()">
     <div class="modal-content" style="max-width:380px">
@@ -2802,6 +2851,13 @@ window.registerOpenFinanceConnection = async function(rawItem) {
             console.warn('[OpenFinance] Erro ao sincronizar item no Firestore:', fsErr);
         }
     }
+
+    // REGRA: Primeira ação ao conectar -> sincronização imediata dos 12 meses
+    setTimeout(function() {
+        if (window.syncOpenFinanceItem) {
+            window.syncOpenFinanceItem(formattedItem.id, true);
+        }
+    }, 800);
 };
 
 // Sincroniza e atualiza a interface (oculta o card promocional se conectado)
@@ -2873,13 +2929,34 @@ window.renderOpenFinanceBanksList = function(items) {
         html += '      <span class="of-bank-status"><i class="fa-solid fa-circle" style="font-size:0.45rem;color:' + statusColor + '"></i> ' + statusLabel + '</span>';
         html += '    </div>';
         html += '  </div>';
-        html += '  <button class="btn-of-disconnect" title="Desconectar banco" onclick="disconnectOpenFinanceItem(\'' + it.id + '\')">';
-        html += '    <i class="fa-solid fa-trash-can"></i>';
-        html += '  </button>';
+        html += '  <div class="btn-of-actions">';
+        html += '    <button class="btn-of-sync" title="Sincronizar extrato deste banco" onclick="syncOpenFinanceItem(\'' + it.id + '\', true)">';
+        html += '      <i class="fa-solid fa-arrows-rotate"></i>';
+        html += '    </button>';
+        html += '    <button class="btn-of-disconnect" title="Desconectar banco" onclick="disconnectOpenFinanceItem(\'' + it.id + '\')">';
+        html += '      <i class="fa-solid fa-trash-can"></i>';
+        html += '    </button>';
+        html += '  </div>';
         html += '</div>';
     });
 
     banksList.innerHTML = html;
+
+    var lastSyncLabel = document.getElementById('ofLastSyncLabel');
+    if (lastSyncLabel) {
+        var savedSync = localStorage.getItem('cv_open_finance_last_sync');
+        if (savedSync) {
+            try {
+                var d = new Date(savedSync);
+                var formatted = d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                lastSyncLabel.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Última sincronização: ' + formatted;
+            } catch(e) {
+                lastSyncLabel.textContent = 'Última sincronização: Recente';
+            }
+        } else {
+            lastSyncLabel.textContent = 'Última sincronização: Nunca sincronizado';
+        }
+    }
 };
 
 // Desconecta um banco
@@ -3224,6 +3301,488 @@ window.savePluggyDevConfig = function() {
     else localStorage.removeItem('cv_pluggy_functions_url');
     window.closePluggyDevModal();
     alert('Credenciais salvas com sucesso!');
+};
+
+/* ============================================================
+   OPEN FINANCE: MOTOR DE SINCRONIZAÇÃO COMPLETA (12 MESES DE HISTÓRICO & ATIVOS)
+   ============================================================ */
+
+window.openOpenFinanceSyncModal = function(title, subtitle) {
+    var modal = document.getElementById('openFinanceSyncModal');
+    var t = document.getElementById('ofSyncTitle');
+    var s = document.getElementById('ofSyncSubtitle');
+    var p = document.getElementById('ofSyncProgressBar');
+    var d = document.getElementById('ofSyncStepDesc');
+    var stats = document.getElementById('ofSyncStatsBox');
+    var btn = document.getElementById('btnOfSyncFinish');
+    var icon = document.getElementById('ofSyncIcon');
+
+    if (t && title) t.textContent = title;
+    if (s && subtitle) s.textContent = subtitle;
+    if (p) p.style.width = '15%';
+    if (d) d.textContent = 'Iniciando conexão segura com a instituição...';
+    if (stats) stats.style.display = 'none';
+    if (btn) btn.style.display = 'none';
+    if (icon) {
+        icon.className = 'fa-solid fa-arrows-rotate fa-spin';
+        icon.style.color = 'var(--accent)';
+    }
+    window._ofSyncDone = false;
+    if (modal) modal.style.display = 'flex';
+};
+
+window.updateOpenFinanceSyncProgress = function(percent, text) {
+    var p = document.getElementById('ofSyncProgressBar');
+    var d = document.getElementById('ofSyncStepDesc');
+    if (p) p.style.width = Math.min(100, Math.max(10, percent)) + '%';
+    if (d && text) d.textContent = text;
+};
+
+window.finishOpenFinanceSyncModal = function(stats) {
+    window._ofSyncDone = true;
+    var t = document.getElementById('ofSyncTitle');
+    var s = document.getElementById('ofSyncSubtitle');
+    var p = document.getElementById('ofSyncProgressBar');
+    var d = document.getElementById('ofSyncStepDesc');
+    var statsBox = document.getElementById('ofSyncStatsBox');
+    var btn = document.getElementById('btnOfSyncFinish');
+    var icon = document.getElementById('ofSyncIcon');
+
+    if (p) p.style.width = '100%';
+    if (icon) {
+        icon.className = 'fa-solid fa-circle-check';
+        icon.style.color = 'var(--success)';
+    }
+    if (t) t.textContent = 'Sincronização Concluída!';
+    if (s) s.textContent = 'Seus dados foram importados e organizados com sucesso no Clearview Atlas.';
+    if (d) d.textContent = 'Tudo pronto e consolidado!';
+
+    if (statsBox) {
+        statsBox.style.display = 'block';
+        var statTx = document.getElementById('ofStatTxCount');
+        var statMo = document.getElementById('ofStatMonthsCount');
+        var statInv = document.getElementById('ofStatInvCount');
+        if (statTx) statTx.textContent = stats.transactionsCount || 0;
+        if (statMo) statMo.textContent = stats.monthsCount || 0;
+        if (statInv) statInv.textContent = stats.investmentsCount || 0;
+    }
+
+    if (btn) {
+        btn.textContent = 'Concluir e Ver Dashboard';
+        btn.style.display = 'block';
+    }
+};
+
+window.closeOpenFinanceSyncModal = function() {
+    var modal = document.getElementById('openFinanceSyncModal');
+    if (modal) modal.style.display = 'none';
+    window.checkOpenFinanceStatus();
+};
+
+window.getOrCreateMonthHistory = function(y, m) {
+    var k = y + '-' + String(m + 1).padStart(2, '0');
+    if (!historico[k]) {
+        var baseGastos = {};
+        CAT_KEYS.forEach(function(catKey) {
+            baseGastos[catKey] = [];
+        });
+        historico[k] = {
+            year: y,
+            month: m,
+            renda: [],
+            gastos: baseGastos,
+            incomeCatsSnapshot: JSON.parse(JSON.stringify(incomeCats && incomeCats.length ? incomeCats : INCOME_DEFAULTS.map((l, i) => ({ id: 'inc_'+i, label: l })))),
+            expenseCatsSnapshot: JSON.parse(JSON.stringify(expenseCats && expenseCats.length ? expenseCats : CAT_KEYS.map((k, i) => ({ id: k, label: CATEGORIAS[i] })))),
+            totalRenda: 0,
+            totalDesp: 0,
+            aplicacoesTotal: 0,
+            saldo: 0
+        };
+    }
+    if (!historico[k].gastos) historico[k].gastos = {};
+    CAT_KEYS.forEach(function(catKey) {
+        if (!historico[k].gastos[catKey]) historico[k].gastos[catKey] = [];
+    });
+    if (!historico[k].renda) historico[k].renda = [];
+    return historico[k];
+};
+
+window.recalculateMonthTotals = function(h) {
+    if (!h) return;
+    var tr = (h.renda || []).reduce(function(sum, r) { return sum + (Number(r.val) || 0); }, 0);
+    var td = 0;
+    var aplicacoesTotal = 0;
+    var cats = (h.expenseCatsSnapshot && h.expenseCatsSnapshot.length) ? h.expenseCatsSnapshot : expenseCats;
+    cats.forEach(function(cat) {
+        (h.gastos[cat.id] || []).forEach(function(r) {
+            var val = Number(r.val) || 0;
+            if (isAplicacoesFinanceiras(cat.id, r.label)) {
+                aplicacoesTotal += val;
+            } else {
+                td += val;
+            }
+        });
+    });
+    h.totalRenda = tr;
+    h.totalDesp = td;
+    h.aplicacoesTotal = aplicacoesTotal;
+    h.saldo = tr - td - aplicacoesTotal;
+};
+
+// Motor de Categorização Inteligente
+window.categorizePluggyTransaction = function(tx) {
+    var desc = (tx.description || tx.descriptionRaw || '').toLowerCase();
+    var pluggyCat = (tx.category || '').toLowerCase();
+    var isCredit = (tx.type === 'CREDIT' || (tx.amount > 0 && tx.type !== 'DEBIT'));
+
+    // 1. RECEITAS / CRÉDITO
+    if (isCredit) {
+        if (desc.includes('salario') || desc.includes('salário') || desc.includes('folha') || desc.includes('remunera') || pluggyCat.includes('salary') || pluggyCat.includes('wage')) {
+            return { type: 'renda', cat: 'Salário', desc: tx.description };
+        }
+        if (desc.includes('divid') || desc.includes('juros s/ capital') || desc.includes('rendimento') || desc.includes('provento') || pluggyCat.includes('investment') || pluggyCat.includes('dividend')) {
+            return { type: 'renda', cat: 'Dividendos', desc: tx.description };
+        }
+        if (desc.includes('aluguel') || desc.includes('locação')) {
+            return { type: 'renda', cat: 'Aluguel', desc: tx.description };
+        }
+        if (desc.includes('ted') || desc.includes('pix') || desc.includes('transf') || desc.includes('recebid') || desc.includes('venda') || desc.includes('servico') || desc.includes('serviço')) {
+            return { type: 'renda', cat: 'Serviço', desc: tx.description };
+        }
+        return { type: 'renda', cat: 'Outros', desc: tx.description };
+    }
+
+    // 2. DESPESAS / DÉBITO
+    // Moradia
+    if (
+        desc.includes('aluguel') || desc.includes('condominio') || desc.includes('condomínio') ||
+        desc.includes('enel') || desc.includes('luz') || desc.includes('energia') || desc.includes('cpfl') || desc.includes('cemig') || desc.includes('eletro') ||
+        desc.includes('agua') || desc.includes('água') || desc.includes('sabesp') || desc.includes('sanepar') || desc.includes('copasa') ||
+        desc.includes('gas') || desc.includes('gás') || desc.includes('comgas') || desc.includes('ultragaz') ||
+        desc.includes('internet') || desc.includes('claro') || desc.includes('vivo') || desc.includes('tim') || desc.includes('oi') || desc.includes('fibra') ||
+        desc.includes('iptu') || desc.includes('imobili') || pluggyCat.includes('housing') || pluggyCat.includes('utilities')
+    ) {
+        return { type: 'gasto', catKey: 'moradia', label: tx.description };
+    }
+
+    // Transporte
+    if (
+        desc.includes('uber') || desc.includes('99app') || desc.includes('99 app') || desc.includes('taxi') || desc.includes('táxi') ||
+        desc.includes('posto') || desc.includes('combustivel') || desc.includes('combustível') || desc.includes('gasolina') || desc.includes('etanol') || desc.includes('ipiranga') || desc.includes('shell') || desc.includes('br distribuidora') ||
+        desc.includes('estacionamento') || desc.includes('pedagio') || desc.includes('pedágio') || desc.includes('sem parar') || desc.includes('veloe') || desc.includes('conectcar') ||
+        desc.includes('mecanic') || desc.includes('oficina') || desc.includes('ipva') || desc.includes('detran') || desc.includes('onibus') || desc.includes('ônibus') || desc.includes('metro') || desc.includes('metrô') ||
+        pluggyCat.includes('transport') || pluggyCat.includes('fuel') || pluggyCat.includes('gas') || pluggyCat.includes('auto')
+    ) {
+        return { type: 'gasto', catKey: 'transporte', label: tx.description };
+    }
+
+    // Saúde
+    if (
+        desc.includes('farmacia') || desc.includes('farmácia') || desc.includes('droga') || desc.includes('drogasil') || desc.includes('raia') || desc.includes('pague menos') || desc.includes('sao paulo') ||
+        desc.includes('hospital') || desc.includes('clinica') || desc.includes('clínica') || desc.includes('laboratorio') || desc.includes('laboratório') || desc.includes('fleury') || desc.includes('lavoisier') ||
+        desc.includes('dentista') || desc.includes('odonto') || desc.includes('medico') || desc.includes('médico') || desc.includes('consulta') || desc.includes('psicolog') || desc.includes('psicólog') ||
+        desc.includes('unimed') || desc.includes('bradesco saude') || desc.includes('amil') || desc.includes('sulamerica') || desc.includes('notredame') ||
+        pluggyCat.includes('health') || pluggyCat.includes('medical') || pluggyCat.includes('pharmacy')
+    ) {
+        return { type: 'gasto', catKey: 'saude', label: tx.description };
+    }
+
+    // Entretenimento
+    if (
+        desc.includes('netflix') || desc.includes('spotify') || desc.includes('amazon prime') || desc.includes('prime video') || desc.includes('disney') || desc.includes('hbo') || desc.includes('max') || desc.includes('youtube') || desc.includes('apple') ||
+        desc.includes('cinema') || desc.includes('cinemark') || desc.includes('cinepolis') || desc.includes('ingresso') || desc.includes('sympla') || desc.includes('eventim') ||
+        desc.includes('show') || desc.includes('teatro') || desc.includes('bar ') || desc.includes('boteco') || desc.includes('pub ') ||
+        desc.includes('smartfit') || desc.includes('bluefit') || desc.includes('academia') || desc.includes('gym') ||
+        desc.includes('steam') || desc.includes('playstation') || desc.includes('psn') || desc.includes('xbox') || desc.includes('nintendo') ||
+        desc.includes('livraria') || desc.includes('hotel') || desc.includes('airbnb') || desc.includes('booking') || desc.includes('viagem') || desc.includes('decolar') || desc.includes('latam') || desc.includes('gol ') || desc.includes('azul ') ||
+        pluggyCat.includes('entertainment') || pluggyCat.includes('recreation') || pluggyCat.includes('travel') || pluggyCat.includes('streaming')
+    ) {
+        return { type: 'gasto', catKey: 'entret', label: tx.description };
+    }
+
+    // Investimentos (Aplicações / Corretoras)
+    if (
+        desc.includes('tesouro direto') || desc.includes('cdb') || desc.includes('lci') || desc.includes('lca') ||
+        desc.includes('nuinvest') || desc.includes('rico') || desc.includes('xp invest') || desc.includes('clear corretora') || desc.includes('btg pactual') || desc.includes('orama') || desc.includes('inter dtvm') ||
+        desc.includes('binance') || desc.includes('mercadobitcoin') || desc.includes('foxbit') || desc.includes('cripto') ||
+        desc.includes('aplicacao') || desc.includes('aplicação') || desc.includes('aporte') ||
+        pluggyCat.includes('investment') || pluggyCat.includes('broker')
+    ) {
+        return { type: 'gasto', catKey: 'investimentos', label: tx.description };
+    }
+
+    // Obrigações (Tarifas, Taxas, Impostos, Empréstimos, Seguros)
+    if (
+        desc.includes('tarifa') || desc.includes('iof') || desc.includes('anuidade') || desc.includes('taxa') ||
+        desc.includes('emprestimo') || desc.includes('empréstimo') || desc.includes('financiamento') || desc.includes('parcela carne') ||
+        desc.includes('imposto') || desc.includes('darf') || desc.includes('das ') || desc.includes('multa') ||
+        desc.includes('seguro vida') || desc.includes('previdencia') || desc.includes('previdência') ||
+        pluggyCat.includes('tax') || pluggyCat.includes('bank fee') || pluggyCat.includes('loan') || pluggyCat.includes('insurance')
+    ) {
+        return { type: 'gasto', catKey: 'obrigacoes', label: tx.description };
+    }
+
+    // Vida Diária (Default para compras, mercados, restaurantes, pet, etc.)
+    return { type: 'gasto', catKey: 'vida', label: tx.description };
+};
+
+// Sincroniza um item (banco) específico da Pluggy (puxando extrato de 12 meses e investimentos)
+window.syncOpenFinanceItem = async function(itemId, showModal) {
+    if (!itemId) return;
+
+    if (showModal) {
+        window.openOpenFinanceSyncModal('Sincronizando Open Finance', 'Carregando extratos e investimentos dos últimos 12 meses...');
+    }
+
+    var totalTxImported = 0;
+    var affectedMonths = new Set();
+    var totalInvImported = 0;
+
+    try {
+        var devClientId = localStorage.getItem('cv_pluggy_client_id') || DEFAULT_PLUGGY_CLIENT_ID;
+        var devClientSecret = localStorage.getItem('cv_pluggy_client_secret') || DEFAULT_PLUGGY_CLIENT_SECRET;
+
+        // 1. Obtém API KEY da Pluggy
+        window.updateOpenFinanceSyncProgress(20, 'Autenticando na rede Pluggy Open Finance...');
+        var authResp = await fetch('https://api.pluggy.ai/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clientId: devClientId, clientSecret: devClientSecret })
+        });
+        if (!authResp.ok) throw new Error('Não foi possível autenticar na Pluggy API.');
+        var authData = await authResp.json();
+        var apiKey = authData.apiKey;
+
+        // 2. Define o período de 12 meses (365 dias)
+        var now = new Date();
+        var dateTo = now.toISOString().split('T')[0];
+        var oneYearAgo = new Date();
+        oneYearAgo.setFullYear(now.getFullYear() - 1);
+        var dateFrom = oneYearAgo.toISOString().split('T')[0];
+
+        // 3. Busca contas vinculadas a este Item
+        window.updateOpenFinanceSyncProgress(35, 'Buscando contas correntes e cartões de crédito...');
+        var accResp = await fetch('https://api.pluggy.ai/accounts?itemId=' + itemId, {
+            headers: { 'X-API-KEY': apiKey }
+        });
+        
+        var accounts = [];
+        if (accResp.ok) {
+            var accData = await accResp.json();
+            accounts = accData.results || [];
+        }
+
+        // 4. Busca transações dos últimos 12 meses para cada conta
+        window.updateOpenFinanceSyncProgress(50, 'Baixando movimentações dos últimos 12 meses...');
+        for (var a = 0; a < accounts.length; a++) {
+            var acc = accounts[a];
+            var nextCursor = null;
+            var pageCount = 0;
+
+            do {
+                var txUrl = 'https://api.pluggy.ai/v2/transactions?accountId=' + acc.id + '&dateFrom=' + dateFrom + '&dateTo=' + dateTo;
+                if (nextCursor) txUrl += '&after=' + encodeURIComponent(nextCursor);
+
+                try {
+                    var txResp = await fetch(txUrl, { headers: { 'X-API-KEY': apiKey } });
+                    if (!txResp.ok) break;
+                    var txData = await txResp.json();
+                    var transactions = txData.results || [];
+
+                    transactions.forEach(function(tx) {
+                        var txDate = tx.date ? new Date(tx.date) : new Date();
+                        if (isNaN(txDate.getTime())) txDate = new Date();
+                        var y = txDate.getFullYear();
+                        var m = txDate.getMonth(); // 0-11
+                        var k = y + '-' + String(m + 1).padStart(2, '0');
+                        var dateISO = txDate.toISOString().split('T')[0];
+                        var val = Math.abs(Number(tx.amount) || 0);
+                        if (val <= 0) return;
+
+                        var h = window.getOrCreateMonthHistory(y, m);
+                        affectedMonths.add(k);
+
+                        var mapped = window.categorizePluggyTransaction(tx);
+                        var txId = 'of_' + (tx.id || (txDate.getTime() + '_' + val));
+
+                        if (mapped.type === 'renda') {
+                            var existsR = h.renda.find(function(r) {
+                                return (r.id === txId) || (r.ofId === tx.id) || (r.desc === tx.description && Math.abs(r.val - val) < 0.01 && r.date === dateISO);
+                            });
+                            if (!existsR) {
+                                h.renda.push({
+                                    id: txId,
+                                    ofId: tx.id,
+                                    val: val,
+                                    cat: mapped.cat,
+                                    desc: tx.description || 'Receita Open Finance',
+                                    date: dateISO,
+                                    source: 'open_finance'
+                                });
+                                totalTxImported++;
+                            }
+                        } else {
+                            var catKey = mapped.catKey || 'vida';
+                            if (!h.gastos[catKey]) h.gastos[catKey] = [];
+                            var existsG = h.gastos[catKey].find(function(g) {
+                                return (g.id === txId) || (g.ofId === tx.id) || (g.label === tx.description && Math.abs(g.val - val) < 0.01 && g.date === dateISO);
+                            });
+                            if (!existsG) {
+                                h.gastos[catKey].push({
+                                    id: txId,
+                                    ofId: tx.id,
+                                    val: val,
+                                    label: tx.description || 'Despesa Open Finance',
+                                    date: dateISO,
+                                    source: 'open_finance'
+                                });
+                                totalTxImported++;
+                            }
+                        }
+                    });
+
+                    nextCursor = txData.next;
+                    pageCount++;
+                } catch(txErr) {
+                    console.warn('Erro ao buscar página de transações:', txErr);
+                    break;
+                }
+            } while (nextCursor && pageCount < 20);
+        }
+
+        // 5. Busca investimentos vinculados ao Item
+        window.updateOpenFinanceSyncProgress(75, 'Sincronizando carteira de investimentos...');
+        try {
+            var invResp = await fetch('https://api.pluggy.ai/investments?itemId=' + itemId, {
+                headers: { 'X-API-KEY': apiKey }
+            });
+            if (invResp.ok) {
+                var invData = await invResp.json();
+                var investments = invData.results || [];
+                
+                if (!assetsData) assetsData = { categories: [], meta: 0 };
+                if (!assetsData.categories || assetsData.categories.length === 0) {
+                    assetsData.categories = DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries: []}));
+                }
+
+                investments.forEach(function(inv) {
+                    var invVal = Number(inv.balance || inv.value || 0);
+                    if (invVal <= 0) return;
+                    var invId = 'of_inv_' + (inv.id || inv.code || Math.random().toString(36).substring(2, 8));
+
+                    var targetCatId = 'rf';
+                    var type = (inv.type || '').toUpperCase();
+                    var name = (inv.name || '').toLowerCase();
+
+                    if (type.includes('EQUITY') || name.includes('ação') || name.includes('acoes') || name.includes('bdr') || name.includes('etf')) {
+                        targetCatId = 'rv';
+                    } else if (type.includes('REAL_ESTATE') || name.includes('fii') || name.includes('imobiliario') || name.includes('imobiliário')) {
+                        targetCatId = 'imoveis';
+                    } else if (type.includes('CRYPTO') || name.includes('bitcoin') || name.includes('cripto') || name.includes('eth')) {
+                        targetCatId = 'cripto';
+                    } else if (type.includes('INTERNATIONAL') || name.includes('internacional') || name.includes('global') || name.includes('dolar') || name.includes('dólar')) {
+                        targetCatId = 'internacional';
+                    } else if (type.includes('FIXED_INCOME') || name.includes('cdb') || name.includes('tesouro') || name.includes('lci') || name.includes('lca') || name.includes('debenture')) {
+                        targetCatId = 'rf';
+                    }
+
+                    var cat = assetsData.categories.find(c => c.id === targetCatId);
+                    if (!cat) cat = assetsData.categories[0];
+                    if (!cat.entries) cat.entries = [];
+
+                    var existingEntry = cat.entries.find(e => e.id === invId || (e.desc === inv.name && Math.abs(e.val - invVal) < 0.01));
+                    if (existingEntry) {
+                        existingEntry.val = invVal;
+                    } else {
+                        cat.entries.push({
+                            id: invId,
+                            val: invVal,
+                            desc: inv.name || 'Investimento Open Finance',
+                            date: new Date().toISOString().split('T')[0],
+                            source: 'open_finance'
+                        });
+                        totalInvImported++;
+                    }
+                });
+            }
+        } catch(invErr) {
+            console.warn('Erro ao sincronizar investimentos:', invErr);
+        }
+
+        // 6. Recalcula todos os meses afetados e atualiza a interface
+        window.updateOpenFinanceSyncProgress(90, 'Recalculando fluxo de caixa e consolidando histórico...');
+        affectedMonths.forEach(function(mKey) {
+            var h = historico[mKey];
+            if (h) window.recalculateMonthTotals(h);
+        });
+
+        // Se o mês atual exibido na tela foi alterado, recarrega variáveis ativas
+        var curK = window.monthKey();
+        if (historico[curK]) {
+            rendaItems = JSON.parse(JSON.stringify(historico[curK].renda || []));
+            gastosData = JSON.parse(JSON.stringify(historico[curK].gastos || {}));
+        }
+
+        // Salva tudo no Firestore e LocalStorage
+        window._saveAllData();
+
+        // Registra data da última sincronização
+        localStorage.setItem('cv_open_finance_last_sync', new Date().toISOString());
+
+        // Atualiza telas
+        if (window.renderRenda) window.renderRenda();
+        if (window.renderGastos) window.renderGastos();
+        if (window.updateFlow) window.updateFlow();
+        if (window.renderAssetList) window.renderAssetList();
+        if (window._updateAssets) window._updateAssets(true);
+        if (window._renderHistorico) window._renderHistorico();
+        if (window.renderGastosHist) window.renderGastosHist();
+        window.checkOpenFinanceStatus();
+
+        // Finaliza modal
+        if (showModal) {
+            window.finishOpenFinanceSyncModal({
+                transactionsCount: totalTxImported,
+                monthsCount: affectedMonths.size,
+                investmentsCount: totalInvImported
+            });
+        }
+
+    } catch(err) {
+        console.error('Erro na sincronização Open Finance:', err);
+        if (showModal) {
+            window.updateOpenFinanceSyncProgress(100, 'Atenção: ' + (err.message || 'Erro na sincronização'));
+            var btn = document.getElementById('btnOfSyncFinish');
+            if (btn) {
+                btn.textContent = 'Fechar';
+                btn.style.display = 'block';
+            }
+        }
+    }
+};
+
+window.syncAllOpenFinanceItems = async function(showModal) {
+    var items = window.getOpenFinanceItems();
+    if (!items || items.length === 0) {
+        alert('Nenhuma instituição financeira conectada.');
+        return;
+    }
+
+    if (showModal) {
+        window.openOpenFinanceSyncModal('Sincronizando 12 Meses', 'Atualizando movimentações de todos os seus bancos conectados...');
+    }
+
+    for (var i = 0; i < items.length; i++) {
+        await window.syncOpenFinanceItem(items[i].id, false);
+    }
+
+    if (showModal) {
+        window.finishOpenFinanceSyncModal({
+            transactionsCount: 'Verificado',
+            monthsCount: 'Últimos 12',
+            investmentsCount: 'Atualizado'
+        });
+    }
 };
 
 window.initProfileData = async function() {

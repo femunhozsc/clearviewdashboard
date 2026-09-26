@@ -1540,6 +1540,24 @@ body.modal-open {
     color: var(--danger);
     background: rgba(233, 59, 59, 0.1);
 }
+.btn-of-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.btn-of-sync {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 6px;
+    font-size: 0.82rem;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+.btn-of-sync:hover, .btn-of-sync:active {
+    background: rgba(255, 204, 0, 0.12);
+}
 
 /* PROFILE SECTIONS & LISTS */
 .profile-section {
