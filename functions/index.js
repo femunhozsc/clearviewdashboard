@@ -1,5 +1,6 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const { PluggyClient } = require("pluggy-sdk");
 const axios = require("axios");
 const cors = require("cors")({ origin: true });
 
@@ -9,7 +10,24 @@ const db = admin.firestore();
 const PLUGGY_API_URL = "https://api.pluggy.ai";
 
 /**
- * Obtém API Key da Pluggy usando CLIENT_ID e CLIENT_SECRET
+ * Cria uma instância do PluggyClient com suporte a chaves passadas por header ou variáveis de ambiente
+ */
+function getPluggyClient(clientId, clientSecret) {
+  const cid = clientId || process.env.PLUGGY_CLIENT_ID;
+  const csecret = clientSecret || process.env.PLUGGY_CLIENT_SECRET;
+
+  if (!cid || !csecret) {
+    throw new Error("Credenciais da Pluggy (CLIENT_ID ou CLIENT_SECRET) não configuradas.");
+  }
+
+  return new PluggyClient({
+    clientId: cid,
+    clientSecret: csecret,
+  });
+}
+
+/**
+ * Obtém API Key da Pluggy usando CLIENT_ID e CLIENT_SECRET (Fallback Axios)
  */
 async function getPluggyApiKey(clientId, clientSecret) {
   const cid = clientId || process.env.PLUGGY_CLIENT_ID;
@@ -38,29 +56,37 @@ exports.createPluggyConnectToken = onRequest({ cors: true }, (req, res) => {
       const customClientId = req.headers["x-pluggy-client-id"];
       const customClientSecret = req.headers["x-pluggy-client-secret"];
 
-      const apiKey = await getPluggyApiKey(customClientId, customClientSecret);
+      const pluggy = getPluggyClient(customClientId, customClientSecret);
+      const options = {};
+      if (clientUserId) options.clientUserId = clientUserId;
 
-      const payload = {};
-      if (clientUserId) payload.clientUserId = clientUserId;
-      if (itemId) payload.itemId = itemId;
-
-      const tokenResponse = await axios.post(
-        `${PLUGGY_API_URL}/connect_token`,
-        payload,
-        {
-          headers: { "X-API-KEY": apiKey },
-        }
-      );
+      const tokenData = await pluggy.createConnectToken(itemId || undefined, Object.keys(options).length > 0 ? options : undefined);
 
       return res.status(200).json({
-        accessToken: tokenResponse.data.accessToken,
+        accessToken: tokenData.accessToken,
       });
     } catch (error) {
-      console.error("Erro ao criar Connect Token:", error.response?.data || error.message);
-      return res.status(500).json({
-        error: "Falha ao gerar Connect Token da Pluggy",
-        details: error.response?.data || error.message,
-      });
+      console.error("Tentando fallback axios para Connect Token devido a:", error.response?.data || error.message);
+      try {
+        const apiKey = await getPluggyApiKey(req.headers["x-pluggy-client-id"], req.headers["x-pluggy-client-secret"]);
+        const payload = {};
+        if (req.body?.clientUserId) payload.clientUserId = req.body.clientUserId;
+        if (req.body?.itemId) payload.itemId = req.body.itemId;
+
+        const tokenResp = await axios.post(`${PLUGGY_API_URL}/connect_token`, payload, {
+          headers: { "X-API-KEY": apiKey },
+        });
+
+        return res.status(200).json({
+          accessToken: tokenResp.data.accessToken,
+        });
+      } catch (fallbackErr) {
+        console.error("Erro no fallback ao criar Connect Token:", fallbackErr.response?.data || fallbackErr.message);
+        return res.status(500).json({
+          error: "Falha ao gerar Connect Token da Pluggy",
+          details: fallbackErr.response?.data || fallbackErr.message || error.message,
+        });
+      }
     }
   });
 });
@@ -79,23 +105,38 @@ exports.getPluggyItem = onRequest({ cors: true }, (req, res) => {
 
       const customClientId = req.headers["x-pluggy-client-id"];
       const customClientSecret = req.headers["x-pluggy-client-secret"];
-      const apiKey = await getPluggyApiKey(customClientId, customClientSecret);
+      const pluggy = getPluggyClient(customClientId, customClientSecret);
 
-      const [itemResp, accountsResp] = await Promise.all([
-        axios.get(`${PLUGGY_API_URL}/items/${itemId}`, { headers: { "X-API-KEY": apiKey } }),
-        axios.get(`${PLUGGY_API_URL}/accounts?itemId=${itemId}`, { headers: { "X-API-KEY": apiKey } }),
+      const [item, accountsData] = await Promise.all([
+        pluggy.fetchItem(itemId),
+        pluggy.fetchAccounts(itemId),
       ]);
 
       return res.status(200).json({
-        item: itemResp.data,
-        accounts: accountsResp.data.results || [],
+        item: item,
+        accounts: accountsData.results || [],
       });
     } catch (error) {
-      console.error("Erro ao consultar Item Pluggy:", error.response?.data || error.message);
-      return res.status(500).json({
-        error: "Falha ao consultar Item da Pluggy",
-        details: error.response?.data || error.message,
-      });
+      console.error("Erro ao consultar Item Pluggy via SDK, tentando fallback:", error.message);
+      try {
+        const itemId = req.query.itemId || req.body?.itemId;
+        const apiKey = await getPluggyApiKey(req.headers["x-pluggy-client-id"], req.headers["x-pluggy-client-secret"]);
+        const [itemResp, accountsResp] = await Promise.all([
+          axios.get(`${PLUGGY_API_URL}/items/${itemId}`, { headers: { "X-API-KEY": apiKey } }),
+          axios.get(`${PLUGGY_API_URL}/accounts?itemId=${itemId}`, { headers: { "X-API-KEY": apiKey } }),
+        ]);
+
+        return res.status(200).json({
+          item: itemResp.data,
+          accounts: accountsResp.data.results || [],
+        });
+      } catch (fallbackErr) {
+        console.error("Erro ao consultar Item Pluggy:", fallbackErr.response?.data || fallbackErr.message);
+        return res.status(500).json({
+          error: "Falha ao consultar Item da Pluggy",
+          details: fallbackErr.response?.data || fallbackErr.message,
+        });
+      }
     }
   });
 });
@@ -114,11 +155,16 @@ exports.deletePluggyItem = onRequest({ cors: true }, (req, res) => {
 
       const customClientId = req.headers["x-pluggy-client-id"];
       const customClientSecret = req.headers["x-pluggy-client-secret"];
-      const apiKey = await getPluggyApiKey(customClientId, customClientSecret);
+      const pluggy = getPluggyClient(customClientId, customClientSecret);
 
-      await axios.delete(`${PLUGGY_API_URL}/items/${itemId}`, {
-        headers: { "X-API-KEY": apiKey },
-      });
+      try {
+        await pluggy.deleteItem(itemId);
+      } catch (delErr) {
+        const apiKey = await getPluggyApiKey(customClientId, customClientSecret);
+        await axios.delete(`${PLUGGY_API_URL}/items/${itemId}`, {
+          headers: { "X-API-KEY": apiKey },
+        });
+      }
 
       // Se passou clientId, remove também do Firestore
       if (clientId) {

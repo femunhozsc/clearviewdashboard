@@ -10,7 +10,8 @@
     "axios": "^1.7.2",
     "cors": "^2.8.5",
     "firebase-admin": "^12.1.0",
-    "firebase-functions": "^5.0.0"
+    "firebase-functions": "^5.0.0",
+    "pluggy-sdk": "^0.90.0"
   },
   "scripts": {
     "serve": "firebase emulators:start --only functions",

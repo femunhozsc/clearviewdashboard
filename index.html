@@ -2820,11 +2820,15 @@ window.disconnectOpenFinanceItem = async function(itemId) {
     alert('Instituição desconectada com sucesso.');
 };
 
+// Constantes Padrão Pluggy Open Finance
+var DEFAULT_PLUGGY_CLIENT_ID = '0c20b88e-014c-482b-a8e7-017ccd6c50b9';
+var DEFAULT_PLUGGY_CLIENT_SECRET = 'BkwU6jNXduBKe8LsEfLG3-1v0aD0L1G9KZ3jWgxVJDo';
+
 // Obtém o Connect Token da Pluggy
 window.fetchPluggyConnectToken = async function() {
     var functionsUrl = localStorage.getItem('cv_pluggy_functions_url') || 'https://us-central1-clearview-4a460.cloudfunctions.net/createPluggyConnectToken';
-    var devClientId = localStorage.getItem('cv_pluggy_client_id');
-    var devClientSecret = localStorage.getItem('cv_pluggy_client_secret');
+    var devClientId = localStorage.getItem('cv_pluggy_client_id') || DEFAULT_PLUGGY_CLIENT_ID;
+    var devClientSecret = localStorage.getItem('cv_pluggy_client_secret') || DEFAULT_PLUGGY_CLIENT_SECRET;
 
     // 1. Tenta via Cloud Function do Firebase
     try {
@@ -2855,7 +2859,10 @@ window.fetchPluggyConnectToken = async function() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ clientId: devClientId, clientSecret: devClientSecret })
             });
-            if (!authResp.ok) throw new Error('Falha ao autenticar na Pluggy com as chaves fornecidas.');
+            if (!authResp.ok) {
+                var authErrText = await authResp.text();
+                throw new Error('Falha ao autenticar na Pluggy: ' + (authErrText || authResp.statusText));
+            }
             var authData = await authResp.json();
             var apiKey = authData.apiKey;
 
@@ -2865,7 +2872,10 @@ window.fetchPluggyConnectToken = async function() {
                 headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey },
                 body: JSON.stringify({ clientUserId: CLIENT_ID || ('user_' + Date.now()) })
             });
-            if (!tokenResp.ok) throw new Error('Falha ao gerar connect_token da Pluggy.');
+            if (!tokenResp.ok) {
+                var tokenErrText = await tokenResp.text();
+                throw new Error('Falha ao gerar connect_token da Pluggy: ' + (tokenErrText || tokenResp.statusText));
+            }
             var tokenData = await tokenResp.json();
             return tokenData.accessToken;
         } catch(directErr) {
@@ -2908,6 +2918,11 @@ window.startPluggyConnectFlow = async function() {
         var pluggyConnect = new window.PluggyConnect({
             connectToken: connectToken,
             includeSandbox: true, // Habilita conectores simulados de teste
+            onOpen: function() {
+                if (loadingBox) loadingBox.style.display = 'none';
+                if (actionBox) actionBox.style.display = 'block';
+                window.closeOpenFinanceInfoModal();
+            },
             onSuccess: async function(itemData) {
                 console.log('Pluggy Connect Sucesso!', itemData);
                 var item = itemData.item || itemData;
@@ -2963,8 +2978,8 @@ window.openPluggyDevConfigModal = function() {
     var cidInput = document.getElementById('cfgPluggyClientId');
     var csecInput = document.getElementById('cfgPluggyClientSecret');
     var curlInput = document.getElementById('cfgPluggyFunctionUrl');
-    if (cidInput) cidInput.value = localStorage.getItem('cv_pluggy_client_id') || '';
-    if (csecInput) csecInput.value = localStorage.getItem('cv_pluggy_client_secret') || '';
+    if (cidInput) cidInput.value = localStorage.getItem('cv_pluggy_client_id') || DEFAULT_PLUGGY_CLIENT_ID;
+    if (csecInput) csecInput.value = localStorage.getItem('cv_pluggy_client_secret') || DEFAULT_PLUGGY_CLIENT_SECRET;
     if (curlInput) curlInput.value = localStorage.getItem('cv_pluggy_functions_url') || '';
     if (modal) modal.style.display = 'flex';
 };
