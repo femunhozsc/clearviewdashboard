@@ -876,8 +876,11 @@
                 <div class="of-banks-list" id="openFinanceBanksList">
                     <!-- Renderizado dinamicamente via JS -->
                 </div>
-                <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center">
-                    <div id="ofLastSyncLabel" style="font-size:0.68rem;color:var(--text-muted)">
+                <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:8px">
+                    <button class="btn-auth-v2 btn-auth-gold" style="width:100%;margin:0;font-size:0.78rem;padding:9px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="syncAllOpenFinanceItems(true)">
+                        <i class="fa-solid fa-arrows-rotate"></i> Sincronizar 12 Meses Agora
+                    </button>
+                    <div id="ofLastSyncLabel" style="font-size:0.68rem;color:var(--text-muted);text-align:center">
                         Última sincronização: Nunca sincronizado
                     </div>
                 </div>
@@ -2744,73 +2747,11 @@ window.syncProfileAvatar = function() {
    PLUGGY OPEN FINANCE (FASE 1: CONEXÃO E GERENCIAMENTO DE BANCOS)
    ============================================================ */
 
-// Constantes Padrão Pluggy Open Finance
-var DEFAULT_PLUGGY_CLIENT_ID = '0c20b88e-014c-482b-a8e7-017ccd6c50b9';
-var DEFAULT_PLUGGY_CLIENT_SECRET = 'BkwU6jNXduBKe8LsEfLG3-1v0aD0L1G9KZ3jWgxVJDo';
-var PLUGGY_UUID_REGEX = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-
-// Extrai com segurança qualquer UUID legítimo da Pluggy de qualquer objeto, array ou string de evento
-window.extractPluggyItemId = function(data) {
-    if (!data) return null;
-
-    if (typeof data === 'string') {
-        var sm = data.match(PLUGGY_UUID_REGEX);
-        return sm ? sm[0] : null;
-    }
-
-    if (data.id && typeof data.id === 'string' && PLUGGY_UUID_REGEX.test(data.id)) return data.id;
-    if (data.itemId && typeof data.itemId === 'string' && PLUGGY_UUID_REGEX.test(data.itemId)) return data.itemId;
-    if (data.item && data.item.id && typeof data.item.id === 'string' && PLUGGY_UUID_REGEX.test(data.item.id)) return data.item.id;
-
-    var inner = data.data || data.error || data.payload;
-    if (inner && typeof inner === 'object') {
-        if (inner.id && typeof inner.id === 'string' && PLUGGY_UUID_REGEX.test(inner.id)) return inner.id;
-        if (inner.itemId && typeof inner.itemId === 'string' && PLUGGY_UUID_REGEX.test(inner.itemId)) return inner.itemId;
-        if (inner.item && inner.item.id && typeof inner.item.id === 'string' && PLUGGY_UUID_REGEX.test(inner.item.id)) return inner.item.id;
-
-        var innerItems = inner.items || inner.itemIds;
-        if (Array.isArray(innerItems) && innerItems.length > 0) {
-            for (var i = 0; i < innerItems.length; i++) {
-                var it = innerItems[i];
-                if (typeof it === 'string' && PLUGGY_UUID_REGEX.test(it)) return it;
-                if (it && it.id && typeof it.id === 'string' && PLUGGY_UUID_REGEX.test(it.id)) return it.id;
-            }
-        }
-    }
-
-    if (Array.isArray(data.items)) {
-        for (var j = 0; j < data.items.length; j++) {
-            var el = data.items[j];
-            if (typeof el === 'string' && PLUGGY_UUID_REGEX.test(el)) return el;
-            if (el && el.id && typeof el.id === 'string' && PLUGGY_UUID_REGEX.test(el.id)) return el.id;
-        }
-    }
-
-    try {
-        var jsonStr = JSON.stringify(data);
-        var jm = jsonStr.match(PLUGGY_UUID_REGEX);
-        if (jm) return jm[0];
-    } catch(e) {}
-
-    return null;
-};
-
-// Retorna itens conectados do localStorage sanitizados (apenas UUIDs legítimos)
+// Retorna itens conectados do localStorage
 window.getOpenFinanceItems = function() {
     try {
         var raw = localStorage.getItem('cv_open_finance_items');
-        var parsed = raw ? JSON.parse(raw) : [];
-        if (!Array.isArray(parsed)) return [];
-        
-        var validItems = parsed.filter(function(i) {
-            return i && i.id && typeof i.id === 'string' && PLUGGY_UUID_REGEX.test(i.id);
-        });
-
-        if (validItems.length !== parsed.length) {
-            localStorage.setItem('cv_open_finance_items', JSON.stringify(validItems));
-            localStorage.setItem('cv_open_finance_connected', validItems.length > 0 ? 'true' : 'false');
-        }
-        return validItems;
+        return raw ? JSON.parse(raw) : [];
     } catch(e) {
         return [];
     }
@@ -2818,21 +2759,16 @@ window.getOpenFinanceItems = function() {
 
 // Salva lista de itens conectados
 window.saveOpenFinanceItems = async function(items) {
-    if (!Array.isArray(items)) items = [];
-    var validItems = items.filter(function(i) {
-        return i && i.id && typeof i.id === 'string' && PLUGGY_UUID_REGEX.test(i.id);
-    });
-
-    localStorage.setItem('cv_open_finance_items', JSON.stringify(validItems));
-    localStorage.setItem('cv_open_finance_connected', validItems.length > 0 ? 'true' : 'false');
+    localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
+    localStorage.setItem('cv_open_finance_connected', items.length > 0 ? 'true' : 'false');
     
     // Sincroniza com Firestore se cliente autenticado
     if (CLIENT_ID && typeof setDoc === 'function') {
         try {
             var payload = JSON.parse(JSON.stringify({
-                connected: validItems.length > 0,
+                connected: items.length > 0,
                 updatedAt: new Date().toISOString(),
-                itemsCount: validItems.length
+                itemsCount: items.length
             }));
             await setDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance', 'status'), payload, { merge: true });
         } catch(err) {
@@ -2859,70 +2795,18 @@ window.renderOpenFinanceUI = function(items) {
     }
 };
 
-// Autentica e gera API Key temporária na Pluggy
-window.getPluggyApiKey = async function() {
-    var devClientId = localStorage.getItem('cv_pluggy_client_id') || DEFAULT_PLUGGY_CLIENT_ID;
-    var devClientSecret = localStorage.getItem('cv_pluggy_client_secret') || DEFAULT_PLUGGY_CLIENT_SECRET;
-    
-    var resp = await fetch('https://api.pluggy.ai/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: devClientId, clientSecret: devClientSecret })
-    });
-    if (!resp.ok) {
-        var errTxt = await resp.text();
-        throw new Error('Falha na autenticação da Pluggy API: ' + (errTxt || resp.statusText));
-    }
-    var data = await resp.json();
-    return data.apiKey;
-};
-
-// Busca detalhes oficiais do Item na Pluggy API
-window.fetchPluggyItemDetails = async function(itemId) {
-    if (!itemId || !PLUGGY_UUID_REGEX.test(itemId)) return null;
-    try {
-        var apiKey = await window.getPluggyApiKey();
-        var resp = await fetch('https://api.pluggy.ai/items/' + itemId, {
-            headers: { 'X-API-KEY': apiKey }
-        });
-        if (resp.ok) {
-            return await resp.json();
-        }
-    } catch(e) {
-        console.warn('[OpenFinance] Erro ao consultar detalhes do item:', e);
-    }
-    return null;
-};
-
-// Deleta um item diretamente na Pluggy API (revoga consentimento e limpa credenciais)
-window.deletePluggyItemFromApi = async function(itemId) {
-    if (!itemId || !PLUGGY_UUID_REGEX.test(itemId)) return;
-    try {
-        var apiKey = await window.getPluggyApiKey();
-        var resp = await fetch('https://api.pluggy.ai/items/' + itemId, {
-            method: 'DELETE',
-            headers: { 'X-API-KEY': apiKey }
-        });
-        console.log('[OpenFinance] DELETE /items/' + itemId + ' status:', resp.status);
-    } catch(e) {
-        console.warn('[OpenFinance] Falha ao deletar item na Pluggy:', e);
-    }
-};
-
-// Registra um banco conectado (APENAS se possuir UUID legítimo)
+// Registra um banco conectado (executado por onSuccess, onEvent ou postMessage)
 window.registerOpenFinanceConnection = async function(rawItem) {
     console.log('[OpenFinance] Registrando item conectado:', rawItem);
     if (!rawItem) return;
 
-    var itemId = window.extractPluggyItemId(rawItem);
-    if (!itemId || !PLUGGY_UUID_REGEX.test(itemId)) {
-        console.warn('[OpenFinance] Item descartado: sem UUID válido da Pluggy.', rawItem);
-        return;
-    }
+    var itemId = rawItem.id || rawItem.itemId || (rawItem.item && rawItem.item.id);
+    if (!itemId && typeof rawItem === 'string') itemId = rawItem;
+    if (!itemId) itemId = 'item_' + Date.now();
 
     var conn = rawItem.connector || (rawItem.item && rawItem.item.connector) || {};
-    var name = conn.name || rawItem.connectorName || rawItem.name || 'Instituição Financeira';
-    var logoUrl = conn.imageUrl || rawItem.imageUrl || '';
+    var name = conn.name || rawItem.connectorName || rawItem.name || 'Pluggy Bank (Sandbox)';
+    var logoUrl = conn.imageUrl || rawItem.imageUrl || 'https://cdn.pluggy.ai/assets/connector-icons/sandbox.svg';
 
     var formattedItem = {
         id: itemId,
@@ -2934,17 +2818,19 @@ window.registerOpenFinanceConnection = async function(rawItem) {
             imageUrl: logoUrl,
             primaryColor: conn.primaryColor || '#ffcc00'
         },
-        connectedAt: rawItem.connectedAt || new Date().toISOString()
+        connectedAt: new Date().toISOString()
     };
 
     var items = window.getOpenFinanceItems();
-    // Evita duplicatas pelo ID
+    // Evita duplicatas pelo ID ou pelo mesmo conector
     items = items.filter(function(i) {
-        return i.id !== formattedItem.id;
+        var sameId = (i.id === formattedItem.id);
+        var sameConn = (i.connector && formattedItem.connector && i.connector.id && formattedItem.connector.id && i.connector.id === formattedItem.connector.id);
+        return !sameId && !sameConn;
     });
     items.push(formattedItem);
 
-    // Salva localmente
+    // Salva imediatamente localmente
     localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
     localStorage.setItem('cv_open_finance_connected', 'true');
 
@@ -2965,78 +2851,43 @@ window.registerOpenFinanceConnection = async function(rawItem) {
             console.warn('[OpenFinance] Erro ao sincronizar item no Firestore:', fsErr);
         }
     }
-};
-
-// Processa conexão confirmada ou já existente com a Pluggy
-window.handleExistingItemConnected = async function(itemId, fallbackConnector) {
-    if (!itemId || !PLUGGY_UUID_REGEX.test(itemId)) return;
-    console.log('[OpenFinance] handleExistingItemConnected com UUID:', itemId);
-
-    var itemDetails = await window.fetchPluggyItemDetails(itemId);
-    var conn = (itemDetails && itemDetails.connector) || fallbackConnector || window._lastPluggyConnector || {};
-    var name = conn.name || (itemDetails && itemDetails.connectorName) || 'Instituição Financeira';
-    var logoUrl = conn.imageUrl || (itemDetails && itemDetails.imageUrl) || '';
-
-    var formatted = {
-        id: itemId,
-        name: name,
-        status: (itemDetails && itemDetails.status) || 'UPDATED',
-        connector: {
-            id: conn.id || 2,
-            name: name,
-            imageUrl: logoUrl,
-            primaryColor: conn.primaryColor || '#ffcc00'
-        },
-        connectedAt: (itemDetails && itemDetails.createdAt) || new Date().toISOString()
-    };
-
-    await window.registerOpenFinanceConnection(formatted);
-    window.closeOpenFinanceInfoModal();
-
-    alert('Sua conta no ' + name + ' foi conectada com sucesso ao Clearview Atlas!');
 
     // REGRA: Primeira ação ao conectar -> sincronização imediata dos 12 meses
     setTimeout(function() {
         if (window.syncOpenFinanceItem) {
-            window.syncOpenFinanceItem(itemId, true);
+            window.syncOpenFinanceItem(formattedItem.id, true);
         }
-    }, 600);
+    }, 800);
 };
 
 // Sincroniza e atualiza a interface (oculta o card promocional se conectado)
 window.checkOpenFinanceStatus = async function() {
     var items = window.getOpenFinanceItems();
 
-    // Se a lista estiver vazia, garante que a flag conectada seja falsa
-    if (items.length === 0) {
-        localStorage.removeItem('cv_open_finance_connected');
+    // Se estiver marcado como conectado no localStorage mas a lista estiver vazia
+    if (items.length === 0 && localStorage.getItem('cv_open_finance_connected') === 'true') {
+        items = [{
+            id: 'item_sandbox',
+            name: 'Pluggy Bank (Sandbox)',
+            status: 'UPDATED',
+            connector: {
+                id: 2,
+                name: 'Pluggy Bank (Sandbox)',
+                imageUrl: 'https://cdn.pluggy.ai/assets/connector-icons/sandbox.svg'
+            }
+        }];
+        localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
     }
 
-    // Se estiver autenticado e a lista local for vazia, tenta buscar do Firestore com timeout
+    // Se estiver autenticado e a lista local for vazia, tenta buscar do Firestore
     if (items.length === 0 && CLIENT_ID && typeof getDocs === 'function') {
         try {
-            var getDocsPromise = getDocs(collection(db, 'clientes', CLIENT_ID, 'open_finance_items'));
-            var getDocsTimeout = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 2000); });
-            var snap = await Promise.race([getDocsPromise, getDocsTimeout]);
-            if (snap && !snap.empty) {
+            var snap = await getDocs(collection(db, 'clientes', CLIENT_ID, 'open_finance_items'));
+            if (!snap.empty) {
                 items = [];
-                snap.forEach(function(d) {
-                    var data = d.data();
-                    var dId = (data && data.id) || d.id;
-                    if (dId && PLUGGY_UUID_REGEX.test(dId)) {
-                        data.id = dId;
-                        items.push(data);
-                    } else if (CLIENT_ID && typeof deleteDoc === 'function') {
-                        try { deleteDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance_items', d.id)); } catch(ign){}
-                    }
-                });
-                if (items.length > 0) {
-                    localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
-                    localStorage.setItem('cv_open_finance_connected', 'true');
-                } else {
-                    localStorage.removeItem('cv_open_finance_connected');
-                    localStorage.removeItem('cv_open_finance_items');
-                }
+                snap.forEach(function(d) { items.push(d.data()); });
+                localStorage.setItem('cv_open_finance_items', JSON.stringify(items));
+                localStorage.setItem('cv_open_finance_connected', 'true');
             }
         } catch(e) {
             console.log('Open finance items Firestore check:', e);
@@ -3082,9 +2933,6 @@ window.renderOpenFinanceBanksList = function(items) {
         html += '    <button class="btn-of-sync" title="Sincronizar extrato deste banco" onclick="syncOpenFinanceItem(\'' + it.id + '\', true)">';
         html += '      <i class="fa-solid fa-arrows-rotate"></i>';
         html += '    </button>';
-        html += '    <button class="btn-of-sync" style="color:var(--accent)" title="Atualizar credenciais da conexão" onclick="startPluggyConnectFlow(\'' + it.id + '\')">';
-        html += '      <i class="fa-solid fa-key"></i>';
-        html += '    </button>';
         html += '    <button class="btn-of-disconnect" title="Desconectar banco" onclick="disconnectOpenFinanceItem(\'' + it.id + '\')">';
         html += '      <i class="fa-solid fa-trash-can"></i>';
         html += '    </button>';
@@ -3113,21 +2961,12 @@ window.renderOpenFinanceBanksList = function(items) {
 
 // Desconecta um banco
 window.disconnectOpenFinanceItem = async function(itemId) {
-    if (!confirm('Deseja realmente desconectar esta instituição financeira?\n\nIsso revogará a autorização do banco na Pluggy e removerá a conexão do Clearview.')) return;
+    if (!confirm('Deseja realmente desconectar esta instituição financeira?')) return;
 
-    if (window.openOpenFinanceSyncModal) {
-        window.openOpenFinanceSyncModal('Desconectando...', 'Revogando consentimento e excluindo conexão na Pluggy...');
-    }
-
-    // 1. Deleta na Pluggy API diretamente
-    await window.deletePluggyItemFromApi(itemId);
-
-    // 2. Remove do localStorage
     var items = window.getOpenFinanceItems();
     items = items.filter(function(i) { return i.id !== itemId; });
     await window.saveOpenFinanceItems(items);
 
-    // 3. Remove do Firestore
     if (CLIENT_ID && typeof deleteDoc === 'function') {
         try {
             await deleteDoc(doc(db, 'clientes', CLIENT_ID, 'open_finance_items', itemId));
@@ -3136,10 +2975,23 @@ window.disconnectOpenFinanceItem = async function(itemId) {
         }
     }
 
-    if (window.closeOpenFinanceSyncModal) window.closeOpenFinanceSyncModal();
+    // Tenta chamar backend para excluir da Pluggy
+    try {
+        var funcUrl = localStorage.getItem('cv_pluggy_functions_url') || 'https://us-central1-clearview-4a460.cloudfunctions.net/deletePluggyItem';
+        fetch(funcUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ itemId: itemId, clientId: CLIENT_ID })
+        }).catch(function(){});
+    } catch(e) {}
+
     window.checkOpenFinanceStatus();
-    alert('Instituição financeira desconectada com sucesso.');
+    alert('Instituição desconectada com sucesso.');
 };
+
+// Constantes Padrão Pluggy Open Finance
+var DEFAULT_PLUGGY_CLIENT_ID = '0c20b88e-014c-482b-a8e7-017ccd6c50b9';
+var DEFAULT_PLUGGY_CLIENT_SECRET = 'BkwU6jNXduBKe8LsEfLG3-1v0aD0L1G9KZ3jWgxVJDo';
 
 // Retorna um Client User ID persistente para a Pluggy (nunca gera IDs randômicos voláteis)
 window.getPersistentUserId = function() {
@@ -3152,7 +3004,7 @@ window.getPersistentUserId = function() {
 };
 
 // Obtém o Connect Token da Pluggy
-window.fetchPluggyConnectToken = async function(updateItemId) {
+window.fetchPluggyConnectToken = async function() {
     var functionsUrl = localStorage.getItem('cv_pluggy_functions_url') || 'https://us-central1-clearview-4a460.cloudfunctions.net/createPluggyConnectToken';
     var devClientId = localStorage.getItem('cv_pluggy_client_id') || DEFAULT_PLUGGY_CLIENT_ID;
     var devClientSecret = localStorage.getItem('cv_pluggy_client_secret') || DEFAULT_PLUGGY_CLIENT_SECRET;
@@ -3164,13 +3016,10 @@ window.fetchPluggyConnectToken = async function(updateItemId) {
         if (devClientId) headers['x-pluggy-client-id'] = devClientId;
         if (devClientSecret) headers['x-pluggy-client-secret'] = devClientSecret;
 
-        var bodyPayload = { clientUserId: persistentUserId };
-        if (updateItemId) bodyPayload.itemId = updateItemId;
-
         var resp = await fetch(functionsUrl, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify(bodyPayload)
+            body: JSON.stringify({ clientUserId: persistentUserId })
         });
 
         if (resp.ok) {
@@ -3184,23 +3033,24 @@ window.fetchPluggyConnectToken = async function(updateItemId) {
     // 2. Fallback direto (Sandbox / Dev) se o usuário informou as chaves localmente
     if (devClientId && devClientSecret) {
         try {
-            var apiKey = await window.getPluggyApiKey();
-
-            var tokenBody = {
-                options: {
-                    clientUserId: persistentUserId,
-                    avoidDuplicates: true
-                }
-            };
-            if (updateItemId) {
-                tokenBody.itemId = updateItemId;
+            // Autentica na Pluggy API
+            var authResp = await fetch('https://api.pluggy.ai/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clientId: devClientId, clientSecret: devClientSecret })
+            });
+            if (!authResp.ok) {
+                var authErrText = await authResp.text();
+                throw new Error('Falha ao autenticar na Pluggy: ' + (authErrText || authResp.statusText));
             }
+            var authData = await authResp.json();
+            var apiKey = authData.apiKey;
 
             // Gera connect_token
             var tokenResp = await fetch('https://api.pluggy.ai/connect_token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey },
-                body: JSON.stringify(tokenBody)
+                body: JSON.stringify({ clientUserId: persistentUserId })
             });
             if (!tokenResp.ok) {
                 var tokenErrText = await tokenResp.text();
@@ -3231,23 +3081,24 @@ window.addEventListener('message', function(e) {
         }
         if (data.event === 'ITEM_RESPONSE' || data.event === 'LOGIN_SUCCESS' || data.event === 'SUCCESS') {
             var it = data.item || data.data?.item;
-            var uuid = window.extractPluggyItemId(it);
-            if (uuid) {
+            if (it) {
                 window._lastPluggyItem = it;
-                window.handleExistingItemConnected(uuid, it.connector || window._lastPluggyConnector);
+                window.registerOpenFinanceConnection(it);
             }
         }
-        if (data.event === 'ITEM_USER_ALREADY_EXISTS' || (JSON.stringify(data).includes('ITEM_USER_ALREADY_EXISTS'))) {
-            var existingUuid = window.extractPluggyItemId(data);
-            if (existingUuid) {
-                window.handleExistingItemConnected(existingUuid, window._lastPluggyConnector);
-            }
+        if (data.event === 'ITEM_USER_ALREADY_EXISTS') {
+            var fallback = window._lastPluggyConnector || { name: 'Banco Conectado', id: 'pluggy_bank' };
+            window.registerOpenFinanceConnection({
+                id: 'item_' + (fallback.id || Date.now()),
+                connector: fallback,
+                status: 'UPDATED'
+            });
         }
     } catch(ign) {}
 });
 
 // Inicia o fluxo oficial do Pluggy Connect Widget
-window.startPluggyConnectFlow = async function(updateItemId) {
+window.startPluggyConnectFlow = async function() {
     var loadingBox = document.getElementById('ofLoadingBox');
     var actionBox = document.getElementById('ofActionBox');
 
@@ -3261,7 +3112,7 @@ window.startPluggyConnectFlow = async function(updateItemId) {
 
         var connectToken;
         try {
-            connectToken = await window.fetchPluggyConnectToken(updateItemId);
+            connectToken = await window.fetchPluggyConnectToken();
         } catch(tokenErr) {
             if (tokenErr.message === 'MISSING_CREDENTIALS') {
                 if (loadingBox) loadingBox.style.display = 'none';
@@ -3276,29 +3127,28 @@ window.startPluggyConnectFlow = async function(updateItemId) {
         var lastSelectedConnector = null;
         var lastItemReceived = null;
 
-        var widgetConfig = {
+        // Instancia o Widget oficial da Pluggy
+        var pluggyConnect = new window.PluggyConnect({
             connectToken: connectToken,
-            includeSandbox: true,
+            includeSandbox: true, // Habilita conectores simulados de teste
             onOpen: function() {
                 if (loadingBox) loadingBox.style.display = 'none';
                 if (actionBox) actionBox.style.display = 'block';
                 window.closeOpenFinanceInfoModal();
             },
             onSuccess: async function(itemData) {
-                console.log('[Pluggy Connect] onSuccess:', itemData);
+                console.log('Pluggy Connect onSuccess:', itemData);
                 var rawItem = itemData?.item || itemData;
-                var realUuid = window.extractPluggyItemId(rawItem);
-                if (realUuid) {
-                    await window.handleExistingItemConnected(realUuid, rawItem.connector || lastSelectedConnector);
-                }
-                try { if (pluggyConnect && pluggyConnect.close) pluggyConnect.close(); } catch(e){}
+                await window.registerOpenFinanceConnection(rawItem);
+                window.closeOpenFinanceInfoModal();
+                alert('Instituição financeira conectada com sucesso ao Clearview Atlas!');
             },
             onEvent: async function(eventData) {
-                console.log('[Pluggy Connect] onEvent:', eventData);
+                console.log('Pluggy Connect onEvent:', eventData);
                 var eventName = eventData?.event || eventData?.type;
 
                 // 1. Instituição selecionada pelo usuário
-                if (eventName === 'SELECTED_INSTITUTION' || eventName === 'SELECT_CONNECTOR') {
+                if (eventName === 'SELECTED_INSTITUTION') {
                     var conn = eventData?.connector || eventData?.data?.connector;
                     if (conn) {
                         lastSelectedConnector = conn;
@@ -3309,64 +3159,67 @@ window.startPluggyConnectFlow = async function(updateItemId) {
                 // 2. Resposta de Item criado ou atualizado (incluindo login com sucesso)
                 if (eventName === 'ITEM_RESPONSE' || eventName === 'LOGIN_STEP_COMPLETED' || eventName === 'LOGIN_SUCCESS' || eventName === 'SUCCESS') {
                     var rawItem = eventData?.item || eventData?.data?.item || eventData?.data;
-                    var uuid = window.extractPluggyItemId(rawItem);
-                    if (uuid) {
+                    if (rawItem) {
                         lastItemReceived = rawItem;
                         window._lastPluggyItem = rawItem;
-                        await window.handleExistingItemConnected(uuid, rawItem.connector || lastSelectedConnector);
+                        await window.registerOpenFinanceConnection(rawItem);
                     }
                 }
 
-                // 3. Caso o item já exista na Pluggy (ITEM_USER_ALREADY_EXISTS)
-                var eventStr = JSON.stringify(eventData || {});
-                if (eventName === 'ITEM_USER_ALREADY_EXISTS' || eventStr.includes('ITEM_USER_ALREADY_EXISTS')) {
-                    console.log('[Pluggy Connect] Evento ITEM_USER_ALREADY_EXISTS detectado:', eventData);
-                    var existingUuid = window.extractPluggyItemId(eventData);
-                    if (existingUuid) {
-                        await window.handleExistingItemConnected(existingUuid, lastSelectedConnector);
-                        try { if (pluggyConnect && pluggyConnect.close) pluggyConnect.close(); } catch(e){}
-                    }
+                // 3. Caso o item já exista na Pluggy (cenário onde o usuário já autorizou anteriormente)
+                if (eventName === 'ITEM_USER_ALREADY_EXISTS') {
+                    console.log('Item já existe na Pluggy para este conector:', eventData);
+                    var fallbackConnector = lastSelectedConnector || window._lastPluggyConnector || { name: 'Banco Conectado', id: 'pluggy_bank' };
+                    var existingItem = eventData?.item || {
+                        id: 'item_' + (fallbackConnector.id || Date.now()),
+                        connector: fallbackConnector,
+                        status: 'UPDATED'
+                    };
+                    await window.registerOpenFinanceConnection(existingItem);
+                    window.closeOpenFinanceInfoModal();
+                    alert('Sua conta ' + fallbackConnector.name + ' já estava conectada no Pluggy e foi sincronizada com o Clearview!');
                 }
             },
-            onError: async function(error) {
-                console.error('[Pluggy Connect] onError:', error);
-                var errStr = typeof error === 'string' ? error : JSON.stringify(error);
-
-                // Recuperação transparente de ITEM_USER_ALREADY_EXISTS
-                if (errStr.includes('ITEM_USER_ALREADY_EXISTS') || errStr.includes('already exists') || (error && error.codeDescription === 'ITEM_USER_ALREADY_EXISTS')) {
-                    var existingUuid = window.extractPluggyItemId(error);
-                    if (existingUuid) {
-                        console.log('[Pluggy Connect] Recuperando item existente via onError:', existingUuid);
-                        await window.handleExistingItemConnected(existingUuid, lastSelectedConnector);
-                        try { if (pluggyConnect && pluggyConnect.close) pluggyConnect.close(); } catch(e){}
-                        return;
-                    }
+            onError: function(error) {
+                console.error('Pluggy Connect onError:', error);
+                var errMsg = error?.message || (typeof error === 'string' ? error : JSON.stringify(error));
+                if (errMsg.includes('ITEM_USER_ALREADY_EXISTS') || errMsg.includes('already exists') || errMsg.includes('already connected')) {
+                    var fallbackConnector = lastSelectedConnector || window._lastPluggyConnector || { name: 'Banco Conectado', id: 'pluggy_bank' };
+                    window.registerOpenFinanceConnection({
+                        id: 'item_' + (fallbackConnector.id || Date.now()),
+                        connector: fallbackConnector,
+                        status: 'UPDATED'
+                    });
+                    window.closeOpenFinanceInfoModal();
+                    alert('Conta ' + fallbackConnector.name + ' sincronizada com sucesso!');
+                    return;
                 }
-
+                alert('Ocorreu uma notificação na conexão: ' + errMsg);
                 if (loadingBox) loadingBox.style.display = 'none';
                 if (actionBox) actionBox.style.display = 'block';
-                alert('Aviso na conexão Open Finance: ' + (error?.message || errStr));
             },
             onClose: async function() {
-                console.log('[Pluggy Connect] onClose');
+                console.log('Pluggy Connect onClose');
                 if (loadingBox) loadingBox.style.display = 'none';
                 if (actionBox) actionBox.style.display = 'block';
 
+                // Se durante a sessão um item foi recebido ou conector foi selecionado antes da janela fechar:
                 if (lastItemReceived) {
-                    var realUuid = window.extractPluggyItemId(lastItemReceived);
-                    if (realUuid) {
-                        await window.handleExistingItemConnected(realUuid, lastItemReceived.connector || lastSelectedConnector);
-                    }
+                    await window.registerOpenFinanceConnection(lastItemReceived);
+                } else if (lastSelectedConnector || window._lastPluggyConnector) {
+                    var selectedConn = lastSelectedConnector || window._lastPluggyConnector;
+                    console.log('Registrando conector selecionado no fechamento:', selectedConn);
+                    await window.registerOpenFinanceConnection({
+                        id: 'item_' + (selectedConn.id || Date.now()),
+                        connector: selectedConn,
+                        status: 'UPDATED'
+                    });
                 }
+
                 window.checkOpenFinanceStatus();
             }
-        };
+        });
 
-        if (updateItemId) {
-            widgetConfig.updateItem = updateItemId;
-        }
-
-        var pluggyConnect = new window.PluggyConnect(widgetConfig);
         pluggyConnect.init();
     } catch(err) {
         console.error('Erro startPluggyConnectFlow:', err);
@@ -3559,35 +3412,17 @@ window.recalculateMonthTotals = function(h) {
     var tr = (h.renda || []).reduce(function(sum, r) { return sum + (Number(r.val) || 0); }, 0);
     var td = 0;
     var aplicacoesTotal = 0;
-    var cats = (h.expenseCatsSnapshot && h.expenseCatsSnapshot.length) ? h.expenseCatsSnapshot : (expenseCats && expenseCats.length ? expenseCats : CAT_KEYS.map((k, i) => ({ id: k, label: CATEGORIAS[i] })));
-    var seenCats = new Set();
+    var cats = (h.expenseCatsSnapshot && h.expenseCatsSnapshot.length) ? h.expenseCatsSnapshot : expenseCats;
     cats.forEach(function(cat) {
-        seenCats.add(cat.id);
-        (h.gastos && h.gastos[cat.id] || []).forEach(function(r) {
+        (h.gastos[cat.id] || []).forEach(function(r) {
             var val = Number(r.val) || 0;
-            var isAplic = (typeof isAplicacoesFinanceiras === 'function') ? isAplicacoesFinanceiras(cat.id, r.label) : (r.label && r.label.toLowerCase().includes('aplica'));
-            if (isAplic) {
+            if (isAplicacoesFinanceiras(cat.id, r.label)) {
                 aplicacoesTotal += val;
             } else {
                 td += val;
             }
         });
     });
-    if (h.gastos) {
-        Object.keys(h.gastos).forEach(function(catId) {
-            if (!seenCats.has(catId)) {
-                (h.gastos[catId] || []).forEach(function(r) {
-                    var val = Number(r.val) || 0;
-                    var isAplic = (typeof isAplicacoesFinanceiras === 'function') ? isAplicacoesFinanceiras(catId, r.label) : (r.label && r.label.toLowerCase().includes('aplica'));
-                    if (isAplic) {
-                        aplicacoesTotal += val;
-                    } else {
-                        td += val;
-                    }
-                });
-            }
-        });
-    }
     h.totalRenda = tr;
     h.totalDesp = td;
     h.aplicacoesTotal = aplicacoesTotal;
@@ -3602,10 +3437,6 @@ window.categorizePluggyTransaction = function(tx) {
 
     // 1. RECEITAS / CRÉDITO
     if (isCredit) {
-        // Ignora pagamento de fatura ou transferências internas que não representam renda real
-        if (desc.includes('pagamento de fatura') || desc.includes('pagamento fatura') || desc.includes('pgto fatura') || desc.includes('pagamento recebido - cart') || desc.includes('pagamento de cartao') || desc.includes('pagamento cartão')) {
-            return { type: 'ignore', desc: tx.description };
-        }
         if (desc.includes('salario') || desc.includes('salário') || desc.includes('folha') || desc.includes('remunera') || pluggyCat.includes('salary') || pluggyCat.includes('wage')) {
             return { type: 'renda', cat: 'Salário', desc: tx.description };
         }
@@ -3729,22 +3560,6 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
         oneYearAgo.setFullYear(now.getFullYear() - 1);
         var dateFrom = oneYearAgo.toISOString().split('T')[0];
 
-        // Valida e localiza o UUID real da conexão
-        if (!itemId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId)) {
-            var savedItems = window.getOpenFinanceItems();
-            var found = savedItems.find(function(i) {
-                return i && i.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(i.id);
-            });
-            if (found) {
-                itemId = found.id;
-            } else {
-                if (showModal && window.closeOpenFinanceSyncModal) window.closeOpenFinanceSyncModal();
-                alert('Nenhuma instituição financeira ativa encontrada. Clique em Conectar para vincular seu banco pelo Open Finance.');
-                if (window.openOpenFinanceInfoModal) window.openOpenFinanceInfoModal();
-                return;
-            }
-        }
-
         // 3. Busca contas vinculadas a este Item
         window.updateOpenFinanceSyncProgress(35, 'Buscando contas correntes e cartões de crédito...');
         var accResp = await fetch('https://api.pluggy.ai/accounts?itemId=' + itemId, {
@@ -3757,35 +3572,16 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
             accounts = accData.results || [];
         }
 
-        // Se a instituição acabou de ser conectada, aguarda até 12s o banco disponibilizar as contas
-        if (accounts.length === 0) {
-            window.updateOpenFinanceSyncProgress(40, 'Aguardando o banco processar as contas...');
-            for (var retry = 0; retry < 4; retry++) {
-                await new Promise(function(r) { setTimeout(r, 3000); });
-                var retryResp = await fetch('https://api.pluggy.ai/accounts?itemId=' + itemId, {
-                    headers: { 'X-API-KEY': apiKey }
-                });
-                if (retryResp.ok) {
-                    var retryData = await retryResp.json();
-                    if (retryData.results && retryData.results.length > 0) {
-                        accounts = retryData.results;
-                        break;
-                    }
-                }
-            }
-        }
-
         // 4. Busca transações dos últimos 12 meses para cada conta
         window.updateOpenFinanceSyncProgress(50, 'Baixando movimentações dos últimos 12 meses...');
         for (var a = 0; a < accounts.length; a++) {
             var acc = accounts[a];
-            var nextUrl = null;
+            var nextCursor = null;
             var pageCount = 0;
 
             do {
-                var txUrl = nextUrl
-                    ? (nextUrl.startsWith('http') ? nextUrl : ('https://api.pluggy.ai/v2/transactions' + (nextUrl.startsWith('?') ? nextUrl : ('?' + nextUrl))))
-                    : ('https://api.pluggy.ai/v2/transactions?accountId=' + acc.id + '&dateFrom=' + dateFrom + '&dateTo=' + dateTo + '&pageSize=500');
+                var txUrl = 'https://api.pluggy.ai/v2/transactions?accountId=' + acc.id + '&dateFrom=' + dateFrom + '&dateTo=' + dateTo;
+                if (nextCursor) txUrl += '&after=' + encodeURIComponent(nextCursor);
 
                 try {
                     var txResp = await fetch(txUrl, { headers: { 'X-API-KEY': apiKey } });
@@ -3794,31 +3590,20 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
                     var transactions = txData.results || [];
 
                     transactions.forEach(function(tx) {
-                        var dateStr = (tx.date || '').split('T')[0];
-                        var y, m;
-                        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                            var parts = dateStr.split('-');
-                            y = parseInt(parts[0], 10);
-                            m = parseInt(parts[1], 10) - 1;
-                        } else {
-                            var txDate = tx.date ? new Date(tx.date) : new Date();
-                            if (isNaN(txDate.getTime())) txDate = new Date();
-                            y = txDate.getFullYear();
-                            m = txDate.getMonth();
-                            dateStr = txDate.toISOString().split('T')[0];
-                        }
+                        var txDate = tx.date ? new Date(tx.date) : new Date();
+                        if (isNaN(txDate.getTime())) txDate = new Date();
+                        var y = txDate.getFullYear();
+                        var m = txDate.getMonth(); // 0-11
                         var k = y + '-' + String(m + 1).padStart(2, '0');
-                        var dateISO = dateStr;
+                        var dateISO = txDate.toISOString().split('T')[0];
                         var val = Math.abs(Number(tx.amount) || 0);
                         if (val <= 0) return;
-
-                        var mapped = window.categorizePluggyTransaction(tx);
-                        if (mapped.type === 'ignore') return;
 
                         var h = window.getOrCreateMonthHistory(y, m);
                         affectedMonths.add(k);
 
-                        var txId = 'of_' + (tx.id || (dateISO + '_' + val));
+                        var mapped = window.categorizePluggyTransaction(tx);
+                        var txId = 'of_' + (tx.id || (txDate.getTime() + '_' + val));
 
                         if (mapped.type === 'renda') {
                             var existsR = h.renda.find(function(r) {
@@ -3856,13 +3641,13 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
                         }
                     });
 
-                    nextUrl = txData.next;
+                    nextCursor = txData.next;
                     pageCount++;
                 } catch(txErr) {
                     console.warn('Erro ao buscar página de transações:', txErr);
                     break;
                 }
-            } while (nextUrl && pageCount < 20);
+            } while (nextCursor && pageCount < 20);
         }
 
         // 5. Busca investimentos vinculados ao Item
@@ -3877,16 +3662,7 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
                 
                 if (!assetsData) assetsData = { categories: [], meta: 0 };
                 if (!assetsData.categories || assetsData.categories.length === 0) {
-                    var defaultAssetCats = (typeof DEFAULT_ASSET_CATEGORIES !== 'undefined') ? DEFAULT_ASSET_CATEGORIES : [
-                        {id:'rf', name:'Renda Fixa', color:'#ffcc00'},
-                        {id:'reserva', name:'Reserva de Emergencia', color:'#c8960c'},
-                        {id:'rv', name:'Renda Variavel', color:'#d8d8d8'},
-                        {id:'imoveis', name:'Imoveis/FIIs', color:'#999999'},
-                        {id:'cripto', name:'Criptoativos', color:'#555555'},
-                        {id:'internacional', name:'Internacional', color:'#444444'},
-                        {id:'outros_ativos', name:'Outros', color:'#7a5c1e'}
-                    ];
-                    assetsData.categories = defaultAssetCats.map(c => ({...c, entries: []}));
+                    assetsData.categories = DEFAULT_ASSET_CATEGORIES.map(c => ({...c, entries: []}));
                 }
 
                 investments.forEach(function(inv) {
@@ -3933,7 +3709,7 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
             console.warn('Erro ao sincronizar investimentos:', invErr);
         }
 
-        // 6. Recalcula todos os meses afetados e consolida no histórico
+        // 6. Recalcula todos os meses afetados e atualiza a interface
         window.updateOpenFinanceSyncProgress(90, 'Recalculando fluxo de caixa e consolidando histórico...');
         affectedMonths.forEach(function(mKey) {
             var h = historico[mKey];
@@ -3941,43 +3717,26 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
         });
 
         // Se o mês atual exibido na tela foi alterado, recarrega variáveis ativas
-        var curK = (typeof monthKey === 'function') ? monthKey() : (window.monthKey ? window.monthKey() : `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`);
+        var curK = window.monthKey();
         if (historico[curK]) {
             rendaItems = JSON.parse(JSON.stringify(historico[curK].renda || []));
             gastosData = JSON.parse(JSON.stringify(historico[curK].gastos || {}));
-            expenseCats.forEach(function(cat) {
-                if (!gastosData[cat.id]) gastosData[cat.id] = [];
-                rowCounters[cat.id] = gastosData[cat.id].length;
-            });
         }
 
         // Salva tudo no Firestore e LocalStorage
-        if (typeof window._saveAllData === 'function') {
-            window._saveAllData();
-        }
+        window._saveAllData();
 
         // Registra data da última sincronização
         localStorage.setItem('cv_open_finance_last_sync', new Date().toISOString());
 
         // Atualiza telas
-        if (typeof renderRenda === 'function') renderRenda();
-        else if (typeof window.renderRenda === 'function') window.renderRenda();
-
-        if (typeof renderGastos === 'function') renderGastos();
-        else if (typeof window.renderGastos === 'function') window.renderGastos();
-
-        if (typeof updateFlow === 'function') updateFlow();
-        else if (typeof window.updateFlow === 'function') window.updateFlow();
-
-        if (typeof renderAssetList === 'function') renderAssetList();
-        else if (typeof window.renderAssetList === 'function') window.renderAssetList();
-
-        if (typeof window._updateAssets === 'function') window._updateAssets(true);
-
-        if (typeof window._renderHistorico === 'function') window._renderHistorico();
-        if (typeof window.renderGastosHist === 'function') window.renderGastosHist();
-        if (typeof window.renderHistorico === 'function') window.renderHistorico();
-
+        if (window.renderRenda) window.renderRenda();
+        if (window.renderGastos) window.renderGastos();
+        if (window.updateFlow) window.updateFlow();
+        if (window.renderAssetList) window.renderAssetList();
+        if (window._updateAssets) window._updateAssets(true);
+        if (window._renderHistorico) window._renderHistorico();
+        if (window.renderGastosHist) window.renderGastosHist();
         window.checkOpenFinanceStatus();
 
         // Finaliza modal
@@ -3992,11 +3751,6 @@ window.syncOpenFinanceItem = async function(itemId, showModal) {
     } catch(err) {
         console.error('Erro na sincronização Open Finance:', err);
         if (showModal) {
-            var icon = document.getElementById('ofSyncIcon');
-            if (icon) {
-                icon.className = 'fa-solid fa-triangle-exclamation';
-                icon.style.color = 'var(--danger)';
-            }
             window.updateOpenFinanceSyncProgress(100, 'Atenção: ' + (err.message || 'Erro na sincronização'));
             var btn = document.getElementById('btnOfSyncFinish');
             if (btn) {
@@ -4643,29 +4397,14 @@ window.triggerInstall = async function() {
 };
 
 window.skipInstall = function() {
-    try { 
-        sessionStorage.setItem('cv_install_skipped', 'true');
-        localStorage.setItem('cv_install_dismissed', 'true');
-    } catch(e){}
-    var modal = document.getElementById('installModal');
-    if(modal) modal.style.display = 'none';
-    if(typeof window.setModalState === 'function') window.setModalState(false);
-};
-
-window.checkInstallPrompt = function() {
-    try {
-        var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-        var installDismissed = sessionStorage.getItem('cv_install_skipped') === 'true' || localStorage.getItem('cv_install_dismissed') === 'true';
-        if (!isStandalone && !installDismissed) {
-            setTimeout(function() {
-                var modal = document.getElementById('installModal');
-                if (modal) {
-                    modal.style.display = 'flex';
-                    if (typeof window.setModalState === 'function') window.setModalState(true);
-                }
-            }, 1200);
-        }
-    } catch(e) {}
+    document.getElementById('installModal').style.display = 'none';
+    window.setModalState(false);
+    // Inicia a sequência de splash que foi pausada
+    var splash = document.getElementById('splash');
+    splash.style.display = 'flex';
+    // Pequeno delay para garantir transição suave
+    // Passamos true para indicar que deve pular a introdução do logo
+    setTimeout(function(){ runSplashSequence(true); }, 50);
 };
 
 /* AUTH UI FUNCTIONS */
@@ -4744,9 +4483,6 @@ const auth = getAuth(fbApp);
 auth.languageCode = 'pt';
 
 let currentYear=new Date().getFullYear(), currentMonth=new Date().getMonth(), currentDay=new Date().getDate();
-window.monthKey = function() {
-    return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
-};
 let donutChart=null, lineChart=null, ccChart=null, incomeSummaryChart=null, expenseSummaryChart=null;
 let rendaItems=[], gastosData={}, rowCounters={}, historico={}, gastosRemovidos=[];
 let assetsData = { categories: [], meta: 0 };
@@ -4765,9 +4501,6 @@ const CAT_DEFAULTS={
     investimentos: ['Aplicações financeiras','Projetos visando lucro','Desenvolvimento']
 };
 const INCOME_DEFAULTS=['Salario','Serviço','Aluguel','Dividendos','Bonus','Venda'];
-
-expenseCats = CAT_KEYS.map((k, i) => ({ id: k, label: CATEGORIAS[i] }));
-incomeCats = INCOME_DEFAULTS.map((l, i) => ({ id: 'inc_'+i, label: l }));
 
 const DEFAULT_ASSET_CATEGORIES = [
     {id:'rf',          name:'Renda Fixa',        color:'#ffcc00'},
@@ -5455,8 +5188,7 @@ window.confirmCviewImport = function() {
     alert(`Importação concluída com sucesso!\n\n• Meses importados/atualizados: ${importedCount}\n• Meses ignorados (modo pular): ${skippedCount}`);
 };
 
-function monthKey(){ return window.monthKey ? window.monthKey() : `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`; }
-window.monthKey = monthKey;
+function monthKey(){return `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;}
 function getViewDateISO() {
     var y = String(currentYear).padStart(4, '0');
     var m = String(currentMonth + 1).padStart(2, '0');
@@ -6629,39 +6361,20 @@ function animateValue(obj, start, end, duration) {
 /* HISTÓRICO */
 function saveSnap(){
     var key=monthKey();
-    var tr=rendaItems.reduce(function(s,r){return s+(Number(r.val)||0);},0);
+    var tr=rendaItems.reduce(function(s,r){return s+r.val;},0);
     var td=0;
     var aplicacoesTotal=0;
-    var seenCats = new Set();
     expenseCats.forEach(function(cat){
-        seenCats.add(cat.id);
         (gastosData[cat.id]||[]).forEach(function(r){
-            var val = Number(r.val) || 0;
-            var isAplic = (typeof isAplicacoesFinanceiras === 'function') ? isAplicacoesFinanceiras(cat.id, r.label) : (r.label && r.label.toLowerCase().includes('aplica'));
-            if (isAplic) {
-                aplicacoesTotal += val;
+            if (isAplicacoesFinanceiras(cat.id, r.label)) {
+                aplicacoesTotal += r.val;
             } else {
-                td += val;
+                td += r.val;
             }
         });
     });
-    Object.keys(gastosData).forEach(function(catId) {
-        if (!seenCats.has(catId)) {
-            (gastosData[catId]||[]).forEach(function(r){
-                var val = Number(r.val) || 0;
-                var isAplic = (typeof isAplicacoesFinanceiras === 'function') ? isAplicacoesFinanceiras(catId, r.label) : (r.label && r.label.toLowerCase().includes('aplica'));
-                if (isAplic) {
-                    aplicacoesTotal += val;
-                } else {
-                    td += val;
-                }
-            });
-        }
-    });
     if(tr===0 && td===0 && aplicacoesTotal===0 && rendaItems.length===0) {
-        if (!historico[key] || ((!historico[key].renda || historico[key].renda.length === 0) && (!historico[key].gastos || Object.keys(historico[key].gastos).length === 0))) {
-            delete historico[key];
-        }
+        delete historico[key];
         return;
     }
     historico[key]={
@@ -6738,21 +6451,10 @@ window._renderHistorico=function(){
     var keys=Object.keys(historico).sort().reverse();
     if(!keys.length){container.innerHTML='<div class="empty-hist">Nenhum registro ainda.<br>Os meses com dados aparecerão aqui.</div>';return;}
     
-    // Filtrar meses com dados (recalculando totais caso necessário)
+    // Filtrar meses vazios
     var validKeys = keys.filter(function(k){
         var h = historico[k];
-        if (!h) return false;
-        if (typeof window.recalculateMonthTotals === 'function' && (h.totalRenda === undefined || h.totalDesp === undefined || isNaN(h.saldo))) {
-            window.recalculateMonthTotals(h);
-        }
-        var hasRenda = (Number(h.totalRenda) > 0) || (h.renda && h.renda.length > 0);
-        var hasGastos = (Number(h.totalDesp) > 0) || (Number(h.aplicacoesTotal) > 0);
-        if (!hasGastos && h.gastos) {
-            hasGastos = Object.values(h.gastos).some(function(arr) {
-                return Array.isArray(arr) && arr.some(function(r) { return r && Number(r.val) > 0; });
-            });
-        }
-        return hasRenda || hasGastos;
+        return (h.totalRenda > 0 || h.totalDesp > 0 || (h.renda && h.renda.length > 0));
     });
 
     if(!validKeys.length){container.innerHTML='<div class="empty-hist">Nenhum registro com dados ainda.</div>';return;}
@@ -7498,10 +7200,8 @@ async function startApp(user) {
     // Tenta buscar nome do perfil com prioridade para localStorage e displayName
     var nameToDisplay = localStorage.getItem('cv_profile_nome') || user.displayName || "Usuário";
     try {
-        var profilePromise = getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
-        var profileTimeout = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 1500); });
-        var docSnap = await Promise.race([profilePromise, profileTimeout]);
-        if(docSnap && docSnap.exists && docSnap.exists()) {
+        var docSnap = await getDoc(doc(db, 'clientes', CLIENT_ID, 'perfil', 'dados'));
+        if(docSnap.exists()) {
             var data = docSnap.data();
             var fullName = data.nomeCompleto || (data.nome ? (data.sobrenome ? (data.nome + ' ' + data.sobrenome) : data.nome) : '');
             if(fullName && fullName.trim()) {
@@ -7513,7 +7213,7 @@ async function startApp(user) {
             localStorage.setItem('cv_profile_nome', nameToDisplay);
         }
     } catch(e) {
-        console.log("Perfil carregado do cache ou fallback:", e);
+        console.log("Erro ao buscar nome no Firestore:", e);
     }
     
     document.getElementById('splashName').textContent = formatName(nameToDisplay);
@@ -7531,9 +7231,22 @@ async function startApp(user) {
     // Esconde Auth
     document.getElementById('auth-screen').classList.add('hidden');
 
-    // Inicia sequência de carregamento sem travar no splash
+    // VERIFICAÇÃO DE INSTALAÇÃO (PWA)
+    // Se não estiver em modo standalone (instalado) e não for iOS (que não suporta detecção fácil via JS puro as vezes), mostra modal
+    // navigator.standalone é para iOS legacy. matchMedia é padrão moderno.
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    
+    if (!isStandalone) {
+        // Mostra modal de instalação e PAUSA o fluxo. 
+        // O fluxo continua apenas quando chamar skipInstall()
+        document.getElementById('installModal').style.display = 'flex';
+        window.setModalState(true);
+        return; 
+    }
+
+    // Inicia sequência de carregamento original
     var splash = document.getElementById('splash');
-    if(splash) splash.style.display = 'flex';
+    splash.style.display = 'flex';
     runSplashSequence();
 }
 
@@ -7575,14 +7288,12 @@ async function loadData(){
     window.setStatus('saving');
     var data=null;
     try{
-        var dashPromise = getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
-        var dashTimeout = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 2500); });
-        var snap = await Promise.race([dashPromise, dashTimeout]);
-        if(snap && snap.exists && snap.exists()) {
+        var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
+        if(snap.exists()) {
             data=snap.data();
             if(CLIENT_ID) localStorage.setItem('cv_dashboard_cache_' + CLIENT_ID, JSON.stringify(data));
         }
-    }catch(e){console.warn("Firestore demorou ou offline, utilizando cache:", e);}
+    }catch(e){console.error("Erro ao carregar do Firestore:", e);}
 
     // Fallback de contingência: se Firestore não respondeu ou deu erro de permissão, lê do cache local
     if(!data && CLIENT_ID) {
@@ -8329,20 +8040,8 @@ async function runSplashSequence(skipIntro) {
     // Fase 4: Tagline aparece (um pouco depois do greeting)
     setTimeout(function(){ splash.classList.add('phase4'); }, phase2Delay + 400);
 
-    // Safety fallback timer: NUNCA deixa o splash preso por mais de 3.2 segundos
-    var splashSafetyTimer = setTimeout(function() {
-        console.warn("[Clearview] Forçando saída da splash screen por segurança.");
-        var a = document.getElementById('app');
-        if (a) a.classList.add('visible');
-        if (splash) {
-            splash.classList.add('exit');
-            setTimeout(function(){ splash.style.display = 'none'; }, 600);
-        }
-    }, 3200);
-
     try {
-        var maxWait = new Promise(function(r){ setTimeout(r, 2600); });
-        await Promise.race([Promise.all([minWait, loadP]), maxWait]);
+        await Promise.all([minWait,loadP]);
         initCharts(); 
         initIncomeData();
         renderMonthLabel();
@@ -8351,16 +8050,11 @@ async function runSplashSequence(skipIntro) {
     } catch(e) {
         console.error("Erro durante o carregamento inicial:", e);
     } finally {
-        clearTimeout(splashSafetyTimer);
         window.scrollTo(0, 0);
-        var appEl = document.getElementById('app');
-        if (appEl) appEl.classList.add('visible');
+        document.getElementById('app').classList.add('visible');
         splash.classList.add('exit');
         setTimeout(function(){
             splash.style.display='none';
-            if(typeof window.checkInstallPrompt === 'function') {
-                window.checkInstallPrompt();
-            }
         },850);
     }
 }
