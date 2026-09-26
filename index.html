@@ -1817,6 +1817,13 @@
             </div>
         </div>
 
+        <div style="background:rgba(255,170,0,0.08);border:1px solid rgba(255,170,0,0.3);border-radius:10px;padding:12px;margin-bottom:16px;font-size:0.78rem;color:#fde047;line-height:1.4">
+            <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px">
+                <i class="fa-solid fa-triangle-exclamation"></i> Ambiente de Testes Pluggy (Trial):
+            </div>
+            Em contas de teste gratuitas, a Pluggy bloqueia bancos reais. Para testar extratos, faturas e investimentos de 12 meses agora, use o botão de demonstração abaixo ou pesquise por <b>Pluggy Bank (Sandbox)</b> no widget.
+        </div>
+
         <div id="ofLoadingBox" style="display:none;background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.25);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
             <i class="fa-solid fa-circle-notch fa-spin" style="font-size:1.5rem;color:var(--accent);margin-bottom:8px"></i>
             <div style="font-size:0.88rem;color:#fff;font-weight:600">Abrindo ambiente seguro Pluggy...</div>
@@ -1824,8 +1831,11 @@
         </div>
 
         <div id="ofActionBox">
-            <button class="btn-auth-v2 btn-auth-gold" id="btnStartOfConnect" style="width:100%;margin-bottom:10px" onclick="startPluggyConnectFlow()">
+            <button class="btn-auth-v2 btn-auth-gold" id="btnStartOfConnect" style="width:100%;margin-bottom:8px" onclick="startPluggyConnectFlow()">
                 <i class="fa-solid fa-lock" style="margin-right:6px"></i> Iniciar Conexão Segura
+            </button>
+            <button type="button" class="btn-auth-v2" style="width:100%;margin-bottom:10px;background:rgba(255,204,0,0.12);color:var(--accent);border:1px solid rgba(255,204,0,0.35);font-size:0.8rem;padding:8px 12px;cursor:pointer" onclick="window.connectDemoSandboxBank()">
+                <i class="fa-solid fa-flask" style="margin-right:6px"></i> Testar 12 Meses com Banco Sandbox (Demo)
             </button>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
                 <button type="button" onclick="openPluggyDevConfigModal()" style="background:none;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;display:flex;align-items:center;gap:4px">
@@ -3226,6 +3236,12 @@ window.startPluggyConnectFlow = async function() {
                         return;
                     }
                 }
+                if (errMsg.includes('TRIAL_CLIENT_ITEM_CREATE_NOT_ALLOWED') || errMsg.includes('Trial clients can only create Sandbox') || errMsg.includes('CONNECTOR_RESTRICTED')) {
+                    alert('⚠️ Limitação da Conta Pluggy (Modo Trial / Teste Grátis):\n\nSua conta na Pluggy está no plano de testes (Trial). A Pluggy bloqueia a criação de conexões com bancos reais (Nubank, Itaú, BB, etc.) em contas gratuitas de teste.\n\n👉 Para testar os 12 meses de extrato, faturas e investimentos agora:\n1. Clique no botão "Testar 12 Meses com Banco Sandbox (Demo)" no modal do Open Finance;\n2. OU no widget, pesquise por "Pluggy Bank (Sandbox)" e use:\n   - Usuário: user-ok\n   - Senha: password-ok\n\nIsso carregará contas correntes, faturas de cartão e investimentos imediatamente no dashboard!');
+                    if (loadingBox) loadingBox.style.display = 'none';
+                    if (actionBox) actionBox.style.display = 'block';
+                    return;
+                }
                 alert('Notificação na conexão bancária: ' + errMsg);
                 if (loadingBox) loadingBox.style.display = 'none';
                 if (actionBox) actionBox.style.display = 'block';
@@ -3248,6 +3264,63 @@ window.startPluggyConnectFlow = async function() {
     } catch(err) {
         console.error('Erro startPluggyConnectFlow:', err);
         alert('Erro ao iniciar Open Finance: ' + (err.message || 'Verifique as configurações.'));
+        if (loadingBox) loadingBox.style.display = 'none';
+        if (actionBox) actionBox.style.display = 'block';
+    }
+};
+
+// Conecta instantaneamente o Banco Sandbox de demonstração da Pluggy (12 meses de extratos e faturas)
+window.connectDemoSandboxBank = async function() {
+    var loadingBox = document.getElementById('ofLoadingBox');
+    var actionBox = document.getElementById('ofActionBox');
+    if (loadingBox) loadingBox.style.display = 'block';
+    if (actionBox) actionBox.style.display = 'none';
+
+    try {
+        var devClientId = localStorage.getItem('cv_pluggy_client_id') || DEFAULT_PLUGGY_CLIENT_ID;
+        var devClientSecret = localStorage.getItem('cv_pluggy_client_secret') || DEFAULT_PLUGGY_CLIENT_SECRET;
+
+        // 1. Obtém API KEY da Pluggy
+        var authResp = await fetch('https://api.pluggy.ai/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clientId: devClientId, clientSecret: devClientSecret })
+        });
+        if (!authResp.ok) throw new Error('Não foi possível autenticar na Pluggy API.');
+        var authData = await authResp.json();
+        var apiKey = authData.apiKey;
+
+        // 2. Cria ou reutiliza item sandbox (Pluggy Bank Sandbox)
+        var sandboxItemRes = await fetch('https://api.pluggy.ai/items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey },
+            body: JSON.stringify({
+                connectorId: 2,
+                parameters: { user: 'user-ok', password: 'password-ok' }
+            })
+        });
+
+        var itemData;
+        if (sandboxItemRes.ok) {
+            itemData = await sandboxItemRes.json();
+        } else {
+            var errJson = await sandboxItemRes.json().catch(function(){ return {}; });
+            if (errJson.codeDescription === 'ITEM_USER_ALREADY_EXISTS' && errJson.data?.items?.[0]) {
+                var existId = errJson.data.items[0];
+                var getResp = await fetch('https://api.pluggy.ai/items/' + existId, { headers: { 'X-API-KEY': apiKey } });
+                itemData = await getResp.json();
+            } else {
+                throw new Error(errJson.message || 'Erro ao inicializar Sandbox.');
+            }
+        }
+
+        if (itemData && itemData.id) {
+            window.closeOpenFinanceInfoModal();
+            await window.registerOpenFinanceConnection(itemData);
+        }
+    } catch(err) {
+        console.error('Erro connectDemoSandboxBank:', err);
+        alert('Erro ao conectar banco Sandbox: ' + err.message);
         if (loadingBox) loadingBox.style.display = 'none';
         if (actionBox) actionBox.style.display = 'block';
     }
@@ -7371,8 +7444,11 @@ window._saveAllData=function(){
     window.setStatus('saving');
     saveTimer=setTimeout(async function(){
         try{
-            if(CLIENT_ID) localStorage.setItem('cv_dashboard_cache_' + CLIENT_ID, JSON.stringify(payload));
-            await setDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'),payload);
+            var cacheKey = CLIENT_ID ? ('cv_dashboard_cache_' + CLIENT_ID) : 'cv_dashboard_cache_local';
+            localStorage.setItem(cacheKey, JSON.stringify(payload));
+            if(CLIENT_ID && typeof setDoc === 'function') {
+                await setDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'),payload);
+            }
             window.setStatus('saved');
         }catch(e){console.error("Erro ao salvar no Firestore:", e);window.setStatus('offline');}
     },1500);
@@ -7382,17 +7458,20 @@ async function loadData(){
     window.setStatus('saving');
     var data=null;
     try{
-        var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
-        if(snap.exists()) {
-            data=snap.data();
-            if(CLIENT_ID) localStorage.setItem('cv_dashboard_cache_' + CLIENT_ID, JSON.stringify(data));
+        if(CLIENT_ID && typeof getDoc === 'function') {
+            var snap=await getDoc(doc(db,'clientes',CLIENT_ID,'dados','dashboard'));
+            if(snap.exists()) {
+                data=snap.data();
+                localStorage.setItem('cv_dashboard_cache_' + CLIENT_ID, JSON.stringify(data));
+            }
         }
     }catch(e){console.error("Erro ao carregar do Firestore:", e);}
 
     // Fallback de contingência: se Firestore não respondeu ou deu erro de permissão, lê do cache local
-    if(!data && CLIENT_ID) {
+    if(!data) {
         try {
-            var cached = localStorage.getItem('cv_dashboard_cache_' + CLIENT_ID);
+            var cacheKey = CLIENT_ID ? ('cv_dashboard_cache_' + CLIENT_ID) : 'cv_dashboard_cache_local';
+            var cached = localStorage.getItem(cacheKey);
             if(cached) {
                 data = JSON.parse(cached);
                 console.log("[Clearview] Dados recuperados do cache local.");
