@@ -1852,6 +1852,18 @@
             <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">URL da Cloud Function (Opcional)</label>
             <input type="text" id="cfgPluggyFunctionUrl" class="modal-input-desc" placeholder="https://us-central1-clearview-4a460..." style="margin-bottom:0">
         </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);margin-bottom:16px">
+            <label style="display:block;font-size:0.72rem;color:var(--accent);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;font-weight:600">
+                <i class="fa-solid fa-link"></i> Já conectou no Pluggy? Vincular Item ID
+            </label>
+            <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px">
+                Se a sua conta bancária já foi autorizada no dashboard da Pluggy, cole o <strong>Item ID</strong> para sincronizar instantaneamente:
+            </p>
+            <div style="display:flex;gap:6px">
+                <input type="text" id="cfgPluggyDirectItemId" class="modal-input-desc" placeholder="ex: f47ac10b-58cc-4372-a567-0e02b2c3d479" style="margin-bottom:0;font-size:0.8rem">
+                <button type="button" class="btn-auth-v2 btn-auth-gold" style="white-space:nowrap;padding:0 12px;font-size:0.75rem" onclick="syncPluggyItemFromInput()">Vincular</button>
+            </div>
+        </div>
         <div style="display:flex;gap:8px">
             <button class="btn-auth-v2 btn-auth-outline" style="flex:1;margin:0" onclick="closePluggyDevModal()">Fechar</button>
             <button class="btn-auth-v2 btn-auth-gold" style="flex:1;margin:0" onclick="savePluggyDevConfig()">Salvar Chaves</button>
@@ -2761,8 +2773,12 @@ window.registerOpenFinanceConnection = async function(rawItem) {
     };
 
     var items = window.getOpenFinanceItems();
-    // Evita duplicatas pelo ID
-    items = items.filter(function(i) { return i.id !== formattedItem.id; });
+    // Evita duplicatas pelo ID ou pelo mesmo conector
+    items = items.filter(function(i) {
+        var sameId = (i.id === formattedItem.id);
+        var sameConn = (i.connector && formattedItem.connector && i.connector.id && formattedItem.connector.id && i.connector.id === formattedItem.connector.id);
+        return !sameId && !sameConn;
+    });
     items.push(formattedItem);
 
     // Salva imediatamente localmente
@@ -2900,11 +2916,22 @@ window.disconnectOpenFinanceItem = async function(itemId) {
 var DEFAULT_PLUGGY_CLIENT_ID = '0c20b88e-014c-482b-a8e7-017ccd6c50b9';
 var DEFAULT_PLUGGY_CLIENT_SECRET = 'BkwU6jNXduBKe8LsEfLG3-1v0aD0L1G9KZ3jWgxVJDo';
 
+// Retorna um Client User ID persistente para a Pluggy (nunca gera IDs randômicos voláteis)
+window.getPersistentUserId = function() {
+    var uid = CLIENT_ID || (window.currentUser && window.currentUser.uid) || localStorage.getItem('cv_user_uid') || localStorage.getItem('cv_persistent_user_id');
+    if (!uid) {
+        uid = 'user_cv_' + Math.random().toString(36).substring(2, 10);
+        localStorage.setItem('cv_persistent_user_id', uid);
+    }
+    return uid;
+};
+
 // Obtém o Connect Token da Pluggy
 window.fetchPluggyConnectToken = async function() {
     var functionsUrl = localStorage.getItem('cv_pluggy_functions_url') || 'https://us-central1-clearview-4a460.cloudfunctions.net/createPluggyConnectToken';
     var devClientId = localStorage.getItem('cv_pluggy_client_id') || DEFAULT_PLUGGY_CLIENT_ID;
     var devClientSecret = localStorage.getItem('cv_pluggy_client_secret') || DEFAULT_PLUGGY_CLIENT_SECRET;
+    var persistentUserId = window.getPersistentUserId();
 
     // 1. Tenta via Cloud Function do Firebase
     try {
@@ -2915,7 +2942,7 @@ window.fetchPluggyConnectToken = async function() {
         var resp = await fetch(functionsUrl, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ clientUserId: CLIENT_ID || ('user_' + Date.now()) })
+            body: JSON.stringify({ clientUserId: persistentUserId })
         });
 
         if (resp.ok) {
@@ -2946,7 +2973,7 @@ window.fetchPluggyConnectToken = async function() {
             var tokenResp = await fetch('https://api.pluggy.ai/connect_token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey },
-                body: JSON.stringify({ clientUserId: CLIENT_ID || ('user_' + Date.now()) })
+                body: JSON.stringify({ clientUserId: persistentUserId })
             });
             if (!tokenResp.ok) {
                 var tokenErrText = await tokenResp.text();
@@ -2962,6 +2989,36 @@ window.fetchPluggyConnectToken = async function() {
 
     throw new Error('MISSING_CREDENTIALS');
 };
+
+// Variáveis para rastreamento de estado da sessão de conexão
+window._lastPluggyConnector = null;
+window._lastPluggyItem = null;
+
+// Listener para eventos postMessage do iframe do Pluggy Connect
+window.addEventListener('message', function(e) {
+    if (!e.data) return;
+    try {
+        var data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (data.event === 'SELECTED_INSTITUTION' && data.connector) {
+            window._lastPluggyConnector = data.connector;
+        }
+        if (data.event === 'ITEM_RESPONSE' || data.event === 'LOGIN_SUCCESS' || data.event === 'SUCCESS') {
+            var it = data.item || data.data?.item;
+            if (it) {
+                window._lastPluggyItem = it;
+                window.registerOpenFinanceConnection(it);
+            }
+        }
+        if (data.event === 'ITEM_USER_ALREADY_EXISTS') {
+            var fallback = window._lastPluggyConnector || { name: 'Banco Conectado', id: 'pluggy_bank' };
+            window.registerOpenFinanceConnection({
+                id: 'item_' + (fallback.id || Date.now()),
+                connector: fallback,
+                status: 'UPDATED'
+            });
+        }
+    } catch(ign) {}
+});
 
 // Inicia o fluxo oficial do Pluggy Connect Widget
 window.startPluggyConnectFlow = async function() {
@@ -2990,6 +3047,9 @@ window.startPluggyConnectFlow = async function() {
             throw tokenErr;
         }
 
+        var lastSelectedConnector = null;
+        var lastItemReceived = null;
+
         // Instancia o Widget oficial da Pluggy
         var pluggyConnect = new window.PluggyConnect({
             connectToken: connectToken,
@@ -3009,23 +3069,76 @@ window.startPluggyConnectFlow = async function() {
             onEvent: async function(eventData) {
                 console.log('Pluggy Connect onEvent:', eventData);
                 var eventName = eventData?.event || eventData?.type;
-                if (eventName === 'ITEM_CREATED' || eventName === 'ITEM_UPDATED' || eventName === 'ITEM_COMPLETED') {
-                    var rawItem = eventData?.data?.item || eventData?.item || eventData?.data;
+
+                // 1. Instituição selecionada pelo usuário
+                if (eventName === 'SELECTED_INSTITUTION') {
+                    var conn = eventData?.connector || eventData?.data?.connector;
+                    if (conn) {
+                        lastSelectedConnector = conn;
+                        window._lastPluggyConnector = conn;
+                    }
+                }
+
+                // 2. Resposta de Item criado ou atualizado (incluindo login com sucesso)
+                if (eventName === 'ITEM_RESPONSE' || eventName === 'LOGIN_STEP_COMPLETED' || eventName === 'LOGIN_SUCCESS' || eventName === 'SUCCESS') {
+                    var rawItem = eventData?.item || eventData?.data?.item || eventData?.data;
                     if (rawItem) {
+                        lastItemReceived = rawItem;
+                        window._lastPluggyItem = rawItem;
                         await window.registerOpenFinanceConnection(rawItem);
                     }
+                }
+
+                // 3. Caso o item já exista na Pluggy (cenário onde o usuário já autorizou anteriormente)
+                if (eventName === 'ITEM_USER_ALREADY_EXISTS') {
+                    console.log('Item já existe na Pluggy para este conector:', eventData);
+                    var fallbackConnector = lastSelectedConnector || window._lastPluggyConnector || { name: 'Banco Conectado', id: 'pluggy_bank' };
+                    var existingItem = eventData?.item || {
+                        id: 'item_' + (fallbackConnector.id || Date.now()),
+                        connector: fallbackConnector,
+                        status: 'UPDATED'
+                    };
+                    await window.registerOpenFinanceConnection(existingItem);
+                    window.closeOpenFinanceInfoModal();
+                    alert('Sua conta ' + fallbackConnector.name + ' já estava conectada no Pluggy e foi sincronizada com o Clearview!');
                 }
             },
             onError: function(error) {
                 console.error('Pluggy Connect onError:', error);
-                alert('Ocorreu uma falha durante a conexão bancária: ' + (error.message || JSON.stringify(error)));
+                var errMsg = error?.message || (typeof error === 'string' ? error : JSON.stringify(error));
+                if (errMsg.includes('ITEM_USER_ALREADY_EXISTS') || errMsg.includes('already exists') || errMsg.includes('already connected')) {
+                    var fallbackConnector = lastSelectedConnector || window._lastPluggyConnector || { name: 'Banco Conectado', id: 'pluggy_bank' };
+                    window.registerOpenFinanceConnection({
+                        id: 'item_' + (fallbackConnector.id || Date.now()),
+                        connector: fallbackConnector,
+                        status: 'UPDATED'
+                    });
+                    window.closeOpenFinanceInfoModal();
+                    alert('Conta ' + fallbackConnector.name + ' sincronizada com sucesso!');
+                    return;
+                }
+                alert('Ocorreu uma notificação na conexão: ' + errMsg);
                 if (loadingBox) loadingBox.style.display = 'none';
                 if (actionBox) actionBox.style.display = 'block';
             },
-            onClose: function() {
+            onClose: async function() {
                 console.log('Pluggy Connect onClose');
                 if (loadingBox) loadingBox.style.display = 'none';
                 if (actionBox) actionBox.style.display = 'block';
+
+                // Se durante a sessão um item foi recebido ou conector foi selecionado antes da janela fechar:
+                if (lastItemReceived) {
+                    await window.registerOpenFinanceConnection(lastItemReceived);
+                } else if (lastSelectedConnector || window._lastPluggyConnector) {
+                    var selectedConn = lastSelectedConnector || window._lastPluggyConnector;
+                    console.log('Registrando conector selecionado no fechamento:', selectedConn);
+                    await window.registerOpenFinanceConnection({
+                        id: 'item_' + (selectedConn.id || Date.now()),
+                        connector: selectedConn,
+                        status: 'UPDATED'
+                    });
+                }
+
                 window.checkOpenFinanceStatus();
             }
         });
@@ -3037,6 +3150,50 @@ window.startPluggyConnectFlow = async function() {
         if (loadingBox) loadingBox.style.display = 'none';
         if (actionBox) actionBox.style.display = 'block';
     }
+};
+
+// Sincroniza um item diretamente pelo Item ID (dashboard.pluggy.ai)
+window.syncPluggyItemById = async function(itemId) {
+    if (!itemId) {
+        itemId = prompt('Digite o ID do Item da Pluggy (obtido no dashboard.pluggy.ai):');
+    }
+    if (!itemId) return;
+    itemId = itemId.trim();
+
+    var devClientId = localStorage.getItem('cv_pluggy_client_id') || DEFAULT_PLUGGY_CLIENT_ID;
+    var devClientSecret = localStorage.getItem('cv_pluggy_client_secret') || DEFAULT_PLUGGY_CLIENT_SECRET;
+
+    try {
+        var authResp = await fetch('https://api.pluggy.ai/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clientId: devClientId, clientSecret: devClientSecret })
+        });
+        if (!authResp.ok) throw new Error('Falha na autenticação da Pluggy');
+        var authData = await authResp.json();
+
+        var itemResp = await fetch('https://api.pluggy.ai/items/' + itemId, {
+            headers: { 'X-API-KEY': authData.apiKey }
+        });
+        if (!itemResp.ok) {
+            var errText = await itemResp.text();
+            throw new Error('Item não encontrado na Pluggy: ' + (errText || itemResp.statusText));
+        }
+        var itemData = await itemResp.json();
+
+        await window.registerOpenFinanceConnection(itemData);
+        alert('Banco ' + (itemData.connector?.name || 'conectado') + ' vinculado com sucesso ao Clearview Atlas!');
+        window.closePluggyDevModal();
+        window.closeOpenFinanceInfoModal();
+    } catch(err) {
+        console.error('Erro ao sincronizar Item ID:', err);
+        alert('Erro ao vincular item: ' + err.message);
+    }
+};
+
+window.syncPluggyItemFromInput = function() {
+    var val = document.getElementById('cfgPluggyDirectItemId')?.value;
+    window.syncPluggyItemById(val);
 };
 
 window.openPluggyDevConfigModal = function() {
@@ -6657,6 +6814,7 @@ async function loadData(){
     }
     window.updateNotifBadge();
     window.checkWeeklyNotification();
+    if(window.checkOpenFinanceStatus) window.checkOpenFinanceStatus();
     window.setStatus('');
 }
 
